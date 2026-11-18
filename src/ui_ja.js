@@ -16,7 +16,7 @@ const JA = {
   "Type a site's address or a homepage (asahi.com, https://www.example.co.jp/) to add its newest posts. Press a name to remove it.": 'サイトのアドレスや企業などのホームページ（asahi.com、https://www.example.co.jp/）を入れて「追加」を押すと、そのサイトの新着を読み込みます。名前を押すと外せます。',
   "Reports are chosen by this page's own rules, not by a search engine or ads: newest first from open sources (GDELT and Wikipedia's current events), the same share for every genre, at most two from one site, and drawn at random.":
     '記事は、検索エンジンや広告の順位ではなく、このページ独自のルールで選びます。公開されている情報源（GDELT とウィキペディアの「最近の出来事」）から新しい順に集め、どのジャンルも同じ数ずつ、1つのサイトから2件まで、その中からランダムに選びます。',
-  "Type the site's address, like asahi.com": 'asahi.com のようにサイトのアドレスを入れてください',
+  "Type the site's address, like https://www.example.co.jp/": 'https://www.example.co.jp/ のようにサイトのアドレスを入れてください',
   'Reply News': 'リプライニュース', 'Reply News settings': 'リプライニュースの設定', 'Opening Reply News…': 'リプライニュースを開いています…',
   'Humor': 'ユーモア', 'News': 'ニュース', 'Pull down to refresh': '引っ張って更新', 'Release to refresh': '離すと更新',
   'Back to video': '動画に戻る', 'Play': '再生', 'Pause': '一時停止', 'Update': '更新', 'Creating…': '作成中…',
@@ -24,6 +24,8 @@ const JA = {
   'Story length': '1話の長さ', 'Wallpaper': '壁紙', 'Music': '音楽', 'Items': '表示数',
   'Download': 'ダウンロード', 'Saving…': '保存中…', 'Could not save the video.': '動画を保存できませんでした。', 'Making MP4…': '作成中…', 'Save': '保存',
   'The MP4 is ready. Press Save to keep it.': 'MP4ができました。「保存」を押すと保存できます。',
+  'Choose Save Video to keep it.': '「ビデオを保存」を選ぶと保存できます。', 'Not saved yet. Press Save again.': 'まだ保存されていません。もう一度「保存」を押してください。',
+  'If the video was not saved, open this page in Safari or Chrome and try again.': '保存されないときは、このページを Safari か Chrome で開いて、もう一度お試しください。',
   'Each story is 3.2 seconds. 4.2s and 5.2s add one or two seconds.': '1話は3.2秒です。4.2秒と5.2秒は1〜2秒長くなります。',
   'Opening the news video…': 'ニュース動画を開いています…', 'Opening the humor video…': 'ユーモア動画を開いています…',
   // Wallpapers and music
@@ -116,7 +118,9 @@ const PATTERNS = [
   [/^Recording… (\d+)%$/, m => `録画中… ${m[1]}%`],
   [/^Exported: (.*)$/, m => `書き出しました：${m[1]}`],
   [/^Downloaded (.+)$/, m => `${m[1]}をダウンロードしました`],
+  [/^Saved to Downloads: (.+)$/, m => `「ダウンロード」フォルダに保存しました：${m[1]}`],
   [/^Saved to (.+)$/, m => `${m[1]}に保存しました`],
+  [/^Saved (.+)$/, m => `${m[1]}を保存しました`],
   [/^Could not load news \((\d+)\)\.$/, m => `ニュースを読み込めませんでした（${m[1]}）。`],
   [/^Could not load (.+?)\.?$/, m => `${tr(m[1])}を読み込めませんでした。`],
   [/^Script loaded \((\d+) stories, ([\d.]+)s\)\.$/, m => `スクリプトを読み込みました（${m[1]}本、${m[2]}秒）。`],

@@ -221,29 +221,24 @@ pre#sources { white-space: pre-wrap; font: 12px/1.5 ui-monospace,Menlo,monospace
       <label for="lineup">Lineup</label>
       <button type="button" id="lineupGo">Lineup</button>
       <textarea id="lineup" rows="8" spellcheck="false" placeholder="Shibuya&#10;2002 World Cup final&#10;Romance&#10;Jokes"></textarea>
-      <p class="note">One request on each line: a genre, or anything you like, such as a place or an event (Shibuya, 2002 World Cup final). The video then plays posts on X about it. Jokes sets where the jokes play. Romance adds couples' talk, marked 恋愛 in the corner, and Travel adds what people said at famous places, marked 観光. Each comment shows its short part first, then the whole comment. What is typed in the box under the video is added here, and the video is made again. A word, an @account or a post's address plays the posts with the replies under them. The number of items comes from Items in these settings. Leave the lineup empty for a mix of all genres.</p>
       <button id="applyLine" type="button">Apply lineup</button>
       <div class="music hides">
         <button type="button" id="hideSensitive" aria-pressed="false">Hide sensitive posts</button>
       </div>
-      <p class="note">Sensitive posts play at the start: couples' talk in Romance may be suggestive or sexual; jokes and places stay clean. Light Hide sensitive posts to leave them out everywhere. Violence and hard news such as deaths, accidents, disasters, illness, bullying and discrimination never play.</p>
       <label>Sources</label>
       <div id="sourceFilters" class="filters"></div>
       <label for="mediaIn">Media</label>
       <div class="x-add">
-        <input id="mediaIn" type="text" inputmode="url" spellcheck="false" placeholder="asahi.com / https://www.example.co.jp/">
+        <input id="mediaIn" type="text" inputmode="url" spellcheck="false" placeholder="https://www.example.co.jp/">
         <button type="button" id="addMedia">Add</button>
       </div>
       <div id="mediaList" class="music"></div>
-      <p class="note">Type a site's address or a homepage (asahi.com, https://www.example.co.jp/) to add its newest posts. Press a name to remove it.</p>
-      <p class="note">Reports are chosen by this page's own rules, not by a search engine or ads: newest first from open sources (GDELT and Wikipedia's current events), the same share for every genre, at most two from one site, and drawn at random.</p>
       <label for="xUser">X accounts</label>
       <div class="x-add">
         <input id="xUser" type="text" autocomplete="username" spellcheck="false" placeholder="@name">
         <button type="button" id="addX">Add</button>
       </div>
       <div id="xAccounts" class="music"></div>
-      <p class="note">Add an account to load its posts and the replies to them.</p>
       <label for="date">Date</label>
       <input type="date" id="date">
       <label class="check"><input type="checkbox" id="autoExport"> Export MP4 files after the stories are ready</label>
@@ -2200,7 +2195,7 @@ const JA = {
   "Type a site's address or a homepage (asahi.com, https://www.example.co.jp/) to add its newest posts. Press a name to remove it.": 'サイトのアドレスや企業などのホームページ（asahi.com、https://www.example.co.jp/）を入れて「追加」を押すと、そのサイトの新着を読み込みます。名前を押すと外せます。',
   "Reports are chosen by this page's own rules, not by a search engine or ads: newest first from open sources (GDELT and Wikipedia's current events), the same share for every genre, at most two from one site, and drawn at random.":
     '記事は、検索エンジンや広告の順位ではなく、このページ独自のルールで選びます。公開されている情報源（GDELT とウィキペディアの「最近の出来事」）から新しい順に集め、どのジャンルも同じ数ずつ、1つのサイトから2件まで、その中からランダムに選びます。',
-  "Type the site's address, like asahi.com": 'asahi.com のようにサイトのアドレスを入れてください',
+  "Type the site's address, like https://www.example.co.jp/": 'https://www.example.co.jp/ のようにサイトのアドレスを入れてください',
   'Reply News': 'リプライニュース', 'Reply News settings': 'リプライニュースの設定', 'Opening Reply News…': 'リプライニュースを開いています…',
   'Humor': 'ユーモア', 'News': 'ニュース', 'Pull down to refresh': '引っ張って更新', 'Release to refresh': '離すと更新',
   'Back to video': '動画に戻る', 'Play': '再生', 'Pause': '一時停止', 'Update': '更新', 'Creating…': '作成中…',
@@ -2208,6 +2203,8 @@ const JA = {
   'Story length': '1話の長さ', 'Wallpaper': '壁紙', 'Music': '音楽', 'Items': '表示数',
   'Download': 'ダウンロード', 'Saving…': '保存中…', 'Could not save the video.': '動画を保存できませんでした。', 'Making MP4…': '作成中…', 'Save': '保存',
   'The MP4 is ready. Press Save to keep it.': 'MP4ができました。「保存」を押すと保存できます。',
+  'Choose Save Video to keep it.': '「ビデオを保存」を選ぶと保存できます。', 'Not saved yet. Press Save again.': 'まだ保存されていません。もう一度「保存」を押してください。',
+  'If the video was not saved, open this page in Safari or Chrome and try again.': '保存されないときは、このページを Safari か Chrome で開いて、もう一度お試しください。',
   'Each story is 3.2 seconds. 4.2s and 5.2s add one or two seconds.': '1話は3.2秒です。4.2秒と5.2秒は1〜2秒長くなります。',
   'Opening the news video…': 'ニュース動画を開いています…', 'Opening the humor video…': 'ユーモア動画を開いています…',
   // Wallpapers and music
@@ -2300,7 +2297,9 @@ const PATTERNS = [
   [/^Recording… (\d+)%$/, m => `録画中… ${m[1]}%`],
   [/^Exported: (.*)$/, m => `書き出しました：${m[1]}`],
   [/^Downloaded (.+)$/, m => `${m[1]}をダウンロードしました`],
+  [/^Saved to Downloads: (.+)$/, m => `「ダウンロード」フォルダに保存しました：${m[1]}`],
   [/^Saved to (.+)$/, m => `${m[1]}に保存しました`],
+  [/^Saved (.+)$/, m => `${m[1]}を保存しました`],
   [/^Could not load news \((\d+)\)\.$/, m => `ニュースを読み込めませんでした（${m[1]}）。`],
   [/^Could not load (.+?)\.?$/, m => `${tr(m[1])}を読み込めませんでした。`],
   [/^Script loaded \((\d+) stories, ([\d.]+)s\)\.$/, m => `スクリプトを読み込みました（${m[1]}本、${m[2]}秒）。`],
@@ -3139,16 +3138,26 @@ const SOURCES = [
 ];
 /* Words for each genre, in each country. One or two are drawn at random each time, so no single word leads. */
 const GENRE_WORDS = {
-  space: { JP: ['宇宙', 'ロケット', '人工衛星', 'JAXA', '天体'], US: ['space', 'NASA', 'rocket', 'satellite', 'astronomy'] },
-  politics: { JP: ['政治', '国会', '選挙', '首相', '政府'], US: ['politics', 'Congress', 'election', 'senate', 'governor'] },
-  science: { JP: ['科学', '研究', '発見', '実験', '論文'], US: ['science', 'research', 'scientists', 'discovery', 'study'] },
-  culture: { JP: ['文化', '美術', '展覧会', '伝統', '博物館'], US: ['culture', 'museum', 'art', 'exhibition', 'heritage'] },
-  local: { JP: ['地域', '町', '村', '市役所', '商店街'], US: ['local', 'town', 'city council', 'community', 'neighborhood'] },
-  entertainment: { JP: ['芸能', '映画', 'ドラマ', 'アニメ', '音楽'], US: ['movie', 'TV show', 'music', 'celebrity', 'concert'] },
-  safety: { JP: ['警察', '防犯', '交通安全', '消防'], US: ['police', 'public safety', 'fire department', 'traffic safety'] },
-  sports: { JP: ['スポーツ', '野球', 'サッカー', '大相撲', 'バスケ'], US: ['sports', 'NFL', 'NBA', 'baseball', 'soccer'] },
-  food: { JP: ['食べ物', 'グルメ', 'スイーツ', 'ラーメン', '料理'], US: ['food', 'recipe', 'snack', 'dessert', 'cooking'] },
-  restaurant: { JP: ['レストラン', 'カフェ', '飲食店', '新店舗'], US: ['restaurant', 'cafe', 'diner', 'chef'] },
+  space: { JP: ['宇宙', 'ロケット', '人工衛星', 'JAXA', '天体', '月', '火星', '星空', '流れ星', '天文台', 'プラネタリウム', '宇宙飛行士', 'ISS', '望遠鏡', '銀河', '日食', '月食', '惑星', 'オーロラ', '宇宙食'],
+    US: ['space', 'NASA', 'rocket', 'satellite', 'astronomy', 'moon', 'Mars', 'telescope', 'astronaut', 'ISS', 'galaxy', 'eclipse', 'planet', 'meteor shower', 'stargazing', 'aurora', 'comet', 'black hole'] },
+  politics: { JP: ['政治', '国会', '選挙', '首相', '政府', '議員', '知事', '市長', '投票', '政策', '予算', '税金', '法案', '記者会見', '内閣', '都議会', '市議会', '公約', '演説', '世論調査'],
+    US: ['politics', 'Congress', 'election', 'senate', 'governor', 'mayor', 'vote', 'policy', 'budget', 'taxes', 'bill', 'press conference', 'White House', 'campaign', 'debate', 'poll', 'city hall', 'ballot'] },
+  science: { JP: ['科学', '研究', '発見', '実験', '論文', '化学', '物理', '生物', '恐竜', '化石', 'ロボット', 'AI', '数学', '深海', '細胞', '遺伝子', '気象', '昆虫', '植物', 'ノーベル賞'],
+    US: ['science', 'research', 'scientists', 'discovery', 'study', 'chemistry', 'physics', 'biology', 'dinosaur', 'fossil', 'robot', 'AI', 'math', 'deep sea', 'genetics', 'weather', 'insects', 'Nobel'] },
+  culture: { JP: ['文化', '美術', '展覧会', '伝統', '博物館', '美術館', '祭り', '書道', '茶道', '着物', '歌舞伎', '落語', '俳句', '読書', '図書館', '建築', '写真展', '陶芸', '神社', 'お寺'],
+    US: ['culture', 'museum', 'art', 'exhibition', 'heritage', 'gallery', 'festival', 'theater', 'poetry', 'books', 'library', 'architecture', 'photography', 'pottery', 'opera', 'ballet', 'sculpture', 'history'] },
+  local: { JP: ['地域', '町', '村', '市役所', '商店街', '地元', '駅前', '公園', '図書館', '朝市', '道の駅', '町内会', '夏祭り', '回覧板', '銭湯', '田舎', '方言', 'ご当地', '路線バス', '近所'],
+    US: ['local', 'town', 'city council', 'community', 'neighborhood', 'small town', 'main street', 'farmers market', 'park', 'library', 'county fair', 'hometown', 'downtown', 'neighbors', 'town hall', 'parade', 'block party', 'local bus'] },
+  entertainment: { JP: ['芸能', '映画', 'ドラマ', 'アニメ', '音楽', 'ライブ', '漫画', 'ゲーム', 'お笑い', 'アイドル', '声優', '紅白', '舞台', 'ミュージカル', 'バラエティ', 'ラジオ', '特撮', '主題歌', '最終回', '推し'],
+    US: ['movie', 'TV show', 'music', 'celebrity', 'concert', 'anime', 'video game', 'comedy', 'album', 'sitcom', 'musical', 'podcast', 'trailer', 'finale', 'sequel', 'box office', 'award show', 'streaming'] },
+  safety: { JP: ['警察', '防犯', '交通安全', '消防', '防災', '避難訓練', '消防団', '交番', '白バイ', 'パトカー', '救急車', '見守り', '横断歩道', '自転車', 'ヘルメット', 'シートベルト', '落とし物', '迷子'],
+    US: ['police', 'public safety', 'fire department', 'traffic safety', 'firefighters', 'crosswalk', 'seat belt', 'helmet', 'lost and found', 'lifeguard', 'fire drill', 'bike lane', 'speed limit', 'park ranger', 'crossing guard'] },
+  sports: { JP: ['スポーツ', '野球', 'サッカー', '大相撲', 'バスケ', 'テニス', 'ゴルフ', 'マラソン', '駅伝', '卓球', 'バレーボール', 'ラグビー', '水泳', '柔道', 'フィギュアスケート', '甲子園', 'Jリーグ', '陸上', 'バドミントン', 'ボクシング', 'スケボー', '筋トレ'],
+    US: ['sports', 'NFL', 'NBA', 'baseball', 'soccer', 'tennis', 'golf', 'marathon', 'hockey', 'college football', 'MLB', 'swimming', 'gymnastics', 'boxing', 'track and field', 'volleyball', 'skateboarding', 'fantasy football', 'playoffs', 'gym'] },
+  food: { JP: ['食べ物', 'グルメ', 'スイーツ', 'ラーメン', '料理', 'カレー', '寿司', 'おにぎり', '弁当', 'パン', 'ケーキ', 'アイス', '焼肉', 'うどん', 'そば', '餃子', '唐揚げ', 'コンビニ', '自炊', '朝ごはん', 'おやつ', '鍋'],
+    US: ['food', 'recipe', 'snack', 'dessert', 'cooking', 'pizza', 'burger', 'tacos', 'pasta', 'barbecue', 'breakfast', 'sandwich', 'ice cream', 'baking', 'coffee', 'fries', 'leftovers', 'meal prep', 'cookies', 'ramen'] },
+  restaurant: { JP: ['レストラン', 'カフェ', '飲食店', '新店舗', '居酒屋', '定食屋', '喫茶店', '食堂', 'ファミレス', '回転寿司', '焼肉屋', 'ラーメン屋', 'パン屋', 'ケーキ屋', '食べ放題', 'ランチ', 'モーニング', '行列', '常連', '店員さん'],
+    US: ['restaurant', 'cafe', 'diner', 'chef', 'brunch', 'bakery', 'food truck', 'drive thru', 'buffet', 'waiter', 'menu', 'takeout', 'steakhouse', 'pizzeria', 'coffee shop', 'happy hour', 'reservation', 'tip'] },
 };
 function genreWords(g) {
   const c = market().country.id;
@@ -3161,8 +3170,8 @@ const pick = list => list[Math.floor(Math.random() * list.length)];
    (サッカー 試合 for one post, サッカー alone for the next, サッカー 選手 after that), and the words
    used lately wait their turn. Kept in memory for this visit only. */
 const FACETS = {
-  ja: ['今日', '最近', '話題', '感想', '好き', '初めて', '思い出', '写真', 'ついに', '久しぶり', 'みんな', 'やっぱり'],
-  en: ['today', 'just', 'finally', 'love', 'first time', 'remember', 'photo', 'again', 'everyone', 'best'],
+  ja: ['今日', '最近', '話題', '感想', '好き', '初めて', '思い出', '写真', 'ついに', '久しぶり', 'みんな', 'やっぱり', '昨日', '今年', '子供の頃', '友達', '家族', '先輩', '地元', '結局', 'まさか', 'なぜか', '毎日', '週末', '朝', '夜', '本当に', 'びっくり', '懐かしい', '憧れ', '苦手', '得意'],
+  en: ['today', 'just', 'finally', 'love', 'first time', 'remember', 'photo', 'again', 'everyone', 'best', 'yesterday', 'this year', 'as a kid', 'my friend', 'my family', 'somehow', 'every day', 'weekend', 'morning', 'tonight', 'honestly', 'surprised', 'nostalgic', 'never', 'always', 'worst', 'favorite', 'why'],
 };
 const USED_Q = new Map();
 function variantsFor(base, extra, lang, k, tag) {
@@ -3411,7 +3420,7 @@ function addMedia() {
   const raw = $('mediaIn').value.trim();
   $('mediaIn').value = '';
   if (!raw) return;
-  if (!domainOf(raw)) { say("Type the site's address, like asahi.com"); return; }
+  if (!domainOf(raw)) { say("Type the site's address, like https://www.example.co.jp/"); return; }
   if (mediaList().some(m => domainOf(m) === domainOf(raw))) { say('Already added ' + raw); return; }
   saveMedia(mediaList().concat(raw));
   say('Added ' + raw);
@@ -3923,7 +3932,16 @@ function takeRows(rows, used, count, perSource) {
 async function homeNews(used, need) { return webNews(used, need); }
 
 /* ---------- jokes ---------- */
-const FUNNY_Q = { ja: '(笑 OR 草 OR ワロタ OR 面白い)', en: '(lol OR lmao OR haha OR hilarious)' };
+/* The laughing words searched for also change, so one way of laughing does not lead. */
+const FUNNY_QS = {
+  ja: ['(笑 OR 草 OR ワロタ OR 面白い)', '(笑 OR ウケる OR 冗談)', '(草 OR www OR 面白い)', '(笑った OR 爆笑 OR ワロタ)', '(😂 OR 🤣 OR 笑)'],
+  en: ['(lol OR lmao OR haha OR hilarious)', '(lol OR 😂 OR 🤣)', '(lmao OR "I\'m dead" OR hilarious)', '(haha OR hahaha OR lol)'],
+};
+/* Words that fit any day; three are drawn each time. */
+const ANY_Q = {
+  ja: ['ニュース', '今日', '話題', 'トレンド', '天気', '電車', '仕事', '学校', '家族', '買い物', '休日', 'ペット', '猫', '犬', '朝', '夜', '実家', '会社', 'コンビニ', '寝坊'],
+  en: ['news', 'today', 'trending', 'weird', 'weather', 'commute', 'work', 'my boss', 'family', 'shopping', 'weekend', 'my cat', 'my dog', 'morning', 'my mom', 'my dad', 'roommate', 'office', 'grocery store', 'overslept'],
+};
 function isFunny(text, lang) {
   if (lang === 'en') return /\b(lol|lmao|lmfao|rofl|haha\w*|hilarious|i'?m dead|dying)\b|😂|🤣|💀|😆/i.test(text);
   const t = String(text || '').replace(/笑顔|笑み|民草|草の根/g, '');
@@ -4013,7 +4031,9 @@ function keywordsFor(headline, lang) {
   return out;
 }
 function pickFunny(rows, n) {
-  const ranked = rows.slice().sort((a, b) => b.score - a.score || a.text.length - b.text.length);
+  /* Good jokes are drawn at random, not by rank; the weaker ones come only after them. */
+  const good = rows.filter(r => r.score >= 8);
+  const ranked = shuffle(good).concat(rows.filter(r => r.score < 8).sort((a, b) => b.score - a.score || a.text.length - b.text.length));
   const out = [];
   const handles = new Set();
   /* One search gives only its share, so the jokes come from many different searches. */
@@ -4051,18 +4071,35 @@ async function collectJokes(topics, need, opts) {
   const queries = [];
   const baseOf = new Map();
   const addQ = (q, base) => { if (q && queries.indexOf(q) < 0) { queries.push(q); baseOf.set(q, base || q); } };
-  /* Each word: two different searches (サッカー 試合, サッカー), changing every time. */
-  const words = topics.map(t => String(t).trim()).filter(Boolean);
+  /* Each word: two different searches (サッカー 試合, サッカー), changing every time.
+     The words are searched in a random order: every word once, then their second searches. */
+  const words = shuffle([...new Set(topics.map(t => String(t).trim()).filter(Boolean))]);
+  const second = [];
   words.forEach(t => {
-    if (/^to:/.test(t)) addQ(t, t);
-    else variantsFor(t, [], lang, words.length <= 6 ? 2 : 1, 'joke').forEach(q => addQ(q, t));
+    if (/^to:/.test(t)) { addQ(t, t); return; }
+    const v = variantsFor(t, [], lang, words.length <= 6 ? 2 : 1, 'joke');
+    addQ(v[0], t);
+    if (v[1]) second.push([v[1], t]);
   });
-  if (!(opts && opts.only)) (lang === 'en' ? ['news', 'today', 'trending', 'weird'] : ['ニュース', '今日', '話題', 'トレンド']).forEach(addQ);
-  const build = q => `${q} ${FUNNY_Q[lang]} ${replies && !/^to:/.test(q) ? 'filter:replies ' : ''}lang:${lang}${xRange()}`;
+  const firstRound = queries.length;
+  shuffle(second).forEach(([q, t]) => addQ(q, t));
+  if (!(opts && opts.only)) rotate(ANY_Q[lang] || ANY_Q.en, 'any:' + lang, 3).forEach(q => addQ(q));
+  /* Today's video: half of the searches look at a day drawn at random from the last few days,
+     so the same newest posts do not come back every time. */
+  const dayOf = new Map();
+  const range = q => {
+    if (xRange() || !(opts && opts.anyDay)) return xRange();
+    if (!dayOf.has(q)) {
+      const d = addDays(todayJST(), -(1 + Math.floor(Math.random() * 5)));
+      dayOf.set(q, Math.random() < 0.5 ? '' : ' since:' + d + ' until:' + addDays(d, 1));
+    }
+    return dayOf.get(q);
+  };
+  const build = q => `${q} ${pick(FUNNY_QS[lang] || FUNNY_QS.en)} ${replies && !/^to:/.test(q) ? 'filter:replies ' : ''}lang:${lang}${range(q)}`;
   const headlines = (opts && opts.headlines) || [];
   const rows = [];
   const keys = new Set();
-  for (let i = 0; i < queries.length && rows.length < need * 2 && i < 24; i += 6) {
+  for (let i = 0; i < queries.length && (rows.length < need * 2 || i < Math.min(firstRound, 12)) && i < 24; i += 6) {
     if (S.again) break;
     const batch = queries.slice(i, i + 6);
     const lists = await Promise.all(batch.map(q => fxJson('https://api.fxtwitter.com/2/search?q=' + encodeURIComponent(build(q))).then(d => ((d && d.results) || []).map(st => ({ st, q }))).catch(() => [])));
@@ -4567,7 +4604,7 @@ async function collectAsk(raw, need) {
       const hits = words.filter(w => body.includes(w)).length;
       if (words.length && !hits) return;
       const many = typeof st.replies === 'number' ? Math.min(4, Math.log2(1 + st.replies)) : 1;
-      mine.push({ ...post, score: (hits === words.length ? 5 : hits) + many + (n <= 70 ? 2 : 0) + Math.random() * 2 });
+      mine.push({ ...post, score: (hits === words.length ? 5 : hits) + many + (n <= 70 ? 2 : 0) + Math.random() * 6 });
     });
     return mine.sort((a, b) => b.score - a.score);
   });
@@ -4906,7 +4943,7 @@ async function collect() {
   const threadNeed = xAccounts().length ? Math.ceil(left0 / 3) + 1 : 0;
   const [found, couples, trips, topics, threadRows] = await Promise.all([
     collectJokes(topicWords, onlySpecial ? 0 : left0, {
-      headlines, only: freeSlots.length > 0,
+      headlines, only: freeSlots.length > 0, anyDay: mode === 'x',
       must: freeSlots.length && topicSlots.every(s => s.free) ? [...new Set(freeSlots.flatMap(s => termsOf(s.label, jokeLang())).map(w => w.toLowerCase()))] : [],
     }),
     collectRomance(romanceNeed, romancePlace).catch(e => { console.warn(e); return []; }),
@@ -5163,6 +5200,8 @@ async function setScript(raw, autoplay) {
   $('play').disabled = false;
   $('seek').disabled = false;
   $('exportBtn').disabled = false;
+  /* An MP4 that waits to be saved stays ready; one whose save was already tried makes room for the new video. */
+  if (S.ready && S.ready.tried) S.ready = null;
   resetDownload();
   $('seek').value = '0';
   draw(0);
@@ -5184,6 +5223,7 @@ function setBusy(b) {
   $('update').disabled = !!b;
   $('update').textContent = b ? 'Creating…' : 'Update';
   ['go', 'apply', 'exportBtn', 'dl'].forEach(id => { $(id).disabled = !!b || ((id === 'exportBtn' || id === 'dl') && !S.show); });
+  if (S.ready) $('dl').disabled = false;
 }
 async function runAll(opts) {
   opts = opts || {};
@@ -5528,6 +5568,8 @@ async function exportMP4(formats) {
 /* Download: the video on screen as an MP4 in the current layout.
    Phones open the share sheet (Save Video); computers download the file. */
 const PHONE = !!(window.matchMedia && matchMedia('(pointer: coarse)').matches);
+const IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const INAPP = /; wv\)|\bLine\/|Twitter|FBAN|FBAV|Instagram|MicroMessenger/i.test(navigator.userAgent);
 function shareable(out) {
   if (!PHONE || !navigator.canShare) return null;
   const file = new File([out.blob], out.name, { type: out.blob.type });
@@ -5536,9 +5578,9 @@ function shareable(out) {
 function resetDownload() {
   const b = $('dl');
   if (!b) return;
-  b.textContent = 'Download';
-  delete b.dataset.ready;
-  b.disabled = !S.show || !!S.busy;
+  b.textContent = S.ready ? 'Save' : 'Download';
+  if (S.ready) b.dataset.ready = '1'; else delete b.dataset.ready;
+  b.disabled = !S.ready && (!S.show || !!S.busy);
 }
 /* In the Android app the MP4 goes to the phone's Movies folder through the app (window.AndroidApp). */
 async function saveToApp(out) {
@@ -5564,20 +5606,42 @@ async function saveToApp(out) {
   }
   resetDownload();
 }
+/* How a phone keeps the file:
+   iPhone and iPad: the share sheet, where Save Video puts it in Photos.
+   Android: a plain download, which lands in the Downloads folder (the share sheet there has no Save).
+   A browser inside another app (X, LINE, Instagram) often cannot download, so the share sheet is tried there too.
+   When one way fails, the other is tried, and the page says what happened. */
+function anchorSave(out) {
+  const a = document.createElement('a');
+  a.href = out.url; a.download = out.name; a.rel = 'noopener';
+  document.body.appendChild(a); a.click(); a.remove();
+}
+function savedDone() { S.ready = null; resetDownload(); }
 function saveOut(out) {
-  if (window.AndroidApp && window.AndroidApp.saveStart) { saveToApp(out); return; }
+  if (window.AndroidApp && window.AndroidApp.saveStart) { S.ready = null; saveToApp(out); return; }
   const file = shareable(out);
-  if (file) navigator.share({ files: [file], title: 'Reply News' }).catch(() => {});
-  else {
-    const a = document.createElement('a');
-    a.href = out.url; a.download = out.name; a.rel = 'noopener';
-    document.body.appendChild(a); a.click(); a.remove();
-    say(`Downloaded ${out.name}`);
+  out.tried = true;
+  if (file && (IOS || INAPP)) {
+    say('Choose Save Video to keep it.');
+    navigator.share({ files: [file] }).then(() => { say(`Saved ${out.name}`); savedDone(); }).catch(e => {
+      if (e && e.name === 'AbortError') { say('Not saved yet. Press Save again.'); return; }
+      console.warn(e);
+      anchorSave(out);
+      say(INAPP ? 'If the video was not saved, open this page in Safari or Chrome and try again.' : `Downloaded ${out.name}`, INAPP);
+      savedDone();
+    });
+    return;
   }
-  resetDownload();
+  anchorSave(out);
+  if (PHONE && INAPP) say('If the video was not saved, open this page in Safari or Chrome and try again.', true);
+  else say(PHONE ? `Saved to Downloads: ${out.name}` : `Downloaded ${out.name}`);
+  savedDone();
 }
 async function download() {
-  if (!S.script || S.busy) return;
+  /* An MP4 that is ready is saved as it is, even if the video on screen has changed since
+     (at its end the video updates itself) or a new one is being made. */
+  if (S.ready) { saveOut(S.ready); return; }
+  if (S.busy || !S.script) return;
   const fmt = S.format;
   const mine = () => S.outs.find(o => o.fmt === fmt && o.script === S.script && o.muted === !!S.mute);
   if (mine()) { saveOut(mine()); return; }
@@ -5590,10 +5654,10 @@ async function download() {
   resetDownload();
   if (!out) return;
   if (was && !S.playing) toggle();
-  if (shareable(out)) {
-    /* Making the MP4 took a while, so the share sheet needs one more tap. */
-    b.textContent = 'Save';
-    b.dataset.ready = '1';
+  if (PHONE && !(window.AndroidApp && window.AndroidApp.saveStart)) {
+    /* Making the MP4 took a while, and a phone saves only on a tap, so it needs one more tap. */
+    S.ready = out;
+    resetDownload();
     say('The MP4 is ready. Press Save to keep it.');
   } else saveOut(out);
 }
@@ -6021,7 +6085,7 @@ E.setMusicCredit(TRACKS[0].credit);
 /* A newer copy on the site: load it, so a copy the browser kept from before is not shown.
    version.json names the latest build of each page; it is read past the browser's cache. */
 function watchVersion(key, url) {
-  const BUILD = '75a658d4b26b';
+  const BUILD = '7b151b6fd5be';
   if (location.protocol === 'file:' || BUILD.indexOf('BUILD_ID') >= 0) return;
   /* At the start it may reload at once; later it waits while a video is being made or saved. */
   const check = first => {
