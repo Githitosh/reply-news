@@ -189,6 +189,11 @@ pre#sources { white-space: pre-wrap; font: 12px/1.5 ui-monospace,Menlo,monospace
       <select id="country"></select>
       <label for="lang">Language</label>
       <select id="lang"></select>
+      <label for="endMode">At the end</label>
+      <select id="endMode">
+        <option value="update">Update</option>
+        <option value="loop">Repeat</option>
+      </select>
       <label for="feed">Feed</label>
       <select id="feed">
         <option value="x">X comments only</option>
@@ -2160,6 +2165,7 @@ if (typeof module === "object" && typeof module.exports === "object") Object.ass
 const JA = {
   // Header and buttons
   'Shibuya': '渋谷', '2002 World Cup final': '2002年のワールドカップ決勝',
+  'At the end': '最後まで再生したら', 'Repeat': '繰り返す',
   'Reply News': 'リプライニュース', 'Reply News settings': 'リプライニュースの設定', 'Opening Reply News…': 'リプライニュースを開いています…',
   'Humor': 'ユーモア', 'News': 'ニュース', 'Pull down to refresh': '引っ張って更新', 'Release to refresh': '離すと更新',
   'Back to video': '動画に戻る', 'Play': '再生', 'Pause': '一時停止', 'Update': '更新', 'Creating…': '作成中…',
@@ -4615,11 +4621,15 @@ function beginPlayback(T0) {
   paintSound();
   if (!S.raf) S.raf = requestAnimationFrame(tick);
 }
+function endMode() { const el = $('endMode'); return el && el.value === 'loop' ? 'loop' : 'update'; }
 function tick() {
   S.raf = 0;
   if (!S.playing || !S.show) return;
   let T = currentT();
   if (S.show.duration > 0 && T >= S.show.duration) {
+    /* At the end: a new video (Update, the default) or the same one again (Repeat).
+       If nothing new is found, the video plays again and the next end tries again (at most every 30 s). */
+    if (!S.busy && endMode() === 'update' && Date.now() - (S.endTry || 0) > 30000) { S.endTry = Date.now(); refreshMarket(); }
     if (S.busy) {
       draw(Math.max(0, S.show.duration - 1 / E.FPS));
       $('seek').value = '1000';
@@ -4934,7 +4944,7 @@ async function recordRealtime(show) {
   const AC = window.AudioContext || window.webkitAudioContext;
   const ac = new AC();
   let abuf = null;
-  try { abuf = await ac.decodeAudioData(S.music.slice().buffer); } catch (e) { console.warn(e); }
+  if (!S.mute) { try { abuf = await ac.decodeAudioData(S.music.slice().buffer); } catch (e) { console.warn(e); } }
   const dest = ac.createMediaStreamDestination();
   const vs = $('cv').captureStream(E.FPS);
   const stream = new MediaStream([...vs.getVideoTracks(), ...dest.stream.getAudioTracks()]);
@@ -4965,7 +4975,7 @@ async function recordRealtime(show) {
 function addOut(fmt, blob) {
   const name = fileName(S.script.date, fmt).replace(/\.mp4$/, blob.type.includes('webm') ? '.webm' : '.mp4');
   const url = URL.createObjectURL(blob);
-  S.outs = S.outs.filter(o => o.fmt !== fmt); S.outs.push({ fmt, name, blob, url, script: S.script });
+  S.outs = S.outs.filter(o => o.fmt !== fmt); S.outs.push({ fmt, name, blob, url, script: S.script, muted: !!S.mute });
   const box = $('out'); box.innerHTML = '';
   const order = ['x', 'youtube', 'pc'];
   S.outs.sort((a, b) => order.indexOf(a.fmt) - order.indexOf(b.fmt)).forEach(o => {
@@ -4986,8 +4996,9 @@ async function exportMP4(formats) {
   formats = (formats && formats.length ? formats : [S.format]).filter(f => FORMATS[f]);
   stop();
   setBusy(true);
+  /* Sound off: the MP4 has no music either. */
   let aac = null;
-  try { aac = parseM4A(S.music); } catch (e) { console.warn('m4a', e); }
+  if (!S.mute) { try { aac = parseM4A(S.music); } catch (e) { console.warn('m4a', e); } }
   try {
     const names = [];
     for (let i = 0; i < formats.length; i++) {
@@ -5063,7 +5074,7 @@ function saveOut(out) {
 async function download() {
   if (!S.script || S.busy) return;
   const fmt = S.format;
-  const mine = () => S.outs.find(o => o.fmt === fmt && o.script === S.script);
+  const mine = () => S.outs.find(o => o.fmt === fmt && o.script === S.script && o.muted === !!S.mute);
   if (mine()) { saveOut(mine()); return; }
   const was = S.playing;
   const b = $('dl');
@@ -5293,6 +5304,8 @@ function initUI() {
   themeBox.value = [...themeBox.options].some(o => o.value === savedTheme) ? savedTheme : 'dark';
   paintTheme();
   themeBox.addEventListener('change', () => { store.set('theme', themeBox.value); paintTheme(); });
+  $('endMode').value = store.get('endMode', 'update') === 'loop' ? 'loop' : 'update';
+  $('endMode').onchange = () => store.set('endMode', $('endMode').value);
   const savedPace = Number(Q.get('pace') || store.get('pace', '3.2'));
   usePace(PACES.some(p => p.sec === savedPace) ? savedPace : 3.2);
   const countryBox = $('country');
@@ -5470,7 +5483,7 @@ E.setMusicCredit(TRACKS[0].credit);
 /* A newer copy on the site: load it, so a copy the browser kept from before is not shown.
    version.json names the latest build of each page; it is read past the browser's cache. */
 function watchVersion(key, url) {
-  const BUILD = '0bb98488bd68';
+  const BUILD = '45182824e63e';
   if (location.protocol === 'file:' || BUILD.indexOf('BUILD_ID') >= 0) return;
   /* At the start it may reload at once; later it waits while a video is being made or saved. */
   const check = first => {
