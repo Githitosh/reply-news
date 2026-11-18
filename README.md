@@ -1,5 +1,9 @@
 # Reply News
 
+**The page is not public at the moment.** https://githitosh.github.io/reply-news/ shows a short notice. The
+program is all here: delete the file `CLOSED`, run `python build.py` and push to open it again. While it is
+closed, the data collection in githito.xapi is switched off too (`"source": "off"` in its config.json).
+
 https://githitosh.github.io/reply-news/
 
 A short video of a post on X and a reply to it, made in the browser. Each talk is one set of three
