@@ -143,13 +143,13 @@ pre#sources { white-space: pre-wrap; font: 12px/1.5 ui-monospace,Menlo,monospace
 </style>
 </head>
 <body>
-<header><div><button type="button" id="home" class="title">Reply News</button><span class="pull">Pull down to refresh</span></div><div class="hright"><button type="button" id="gear" aria-label="Settings" aria-expanded="false">*</button></div></header>
+<header><div><button type="button" id="home" class="title">Reply News</button></div><div class="hright"><button type="button" id="gear" aria-label="Settings" aria-expanded="false">*</button></div></header>
 <button type="button" id="backDock" class="back-dock" hidden>Back to video</button>
 <main>
   <div id="watch" class="watch">
     <form id="ask" class="ask" autocomplete="off">
       <input type="text" id="askText" enterkeyhint="search" placeholder="Words, @account or post URL">
-      <button type="submit" id="askGo">Replies</button>
+      <button type="submit" id="askGo">Update</button>
       <button type="button" id="askClear" aria-label="Clear" hidden>✕</button>
     </form>
     <div class="frame">
@@ -5703,7 +5703,8 @@ function initUI() {
   $('backVideo').onclick = closeStudio;
   $('backDock').onclick = closeStudio;
   $('home').onclick = () => { closeStudio(); window.scrollTo(0, 0); refreshMarket(); };
-  /* The box: Replies plays the replies to what was typed; Update keeps to it until ✕ clears it. */
+  /* The box: Update plays the replies to what was typed, or, with the box empty, a new video from
+     the lineup. Update keeps to the typed words until ✕ clears them. */
   const askPaint = () => {
     $('askClear').hidden = !$('askText').value && !S.ask;
     $('askText').classList.toggle('live', !!S.ask);
@@ -5713,7 +5714,6 @@ function initUI() {
     e.preventDefault();
     const v = $('askText').value.trim();
     $('askText').blur();
-    if (!v && !S.ask) return;
     S.ask = v;
     askPaint();
     refreshMarket();
@@ -5980,7 +5980,7 @@ E.setMusicCredit(TRACKS[0].credit);
 /* A newer copy on the site: load it, so a copy the browser kept from before is not shown.
    version.json names the latest build of each page; it is read past the browser's cache. */
 function watchVersion(key, url) {
-  const BUILD = 'f416e7c8ad1f';
+  const BUILD = 'c28a9bd32162';
   if (location.protocol === 'file:' || BUILD.indexOf('BUILD_ID') >= 0) return;
   /* At the start it may reload at once; later it waits while a video is being made or saved. */
   const check = first => {

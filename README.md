@@ -9,7 +9,7 @@ Download saves the video as an MP4.
 
 ## The box above the video
 
-Type something in the box above the video and press リプライ (Replies):
+Type something in the box above the video and press 更新 (Update):
 
 - words (渋谷, 新しいiPhone): posts on X about them that people replied to, each followed by the replies under it
 - @account: that account's newest posts, each followed by its replies
@@ -17,7 +17,8 @@ Type something in the box above the video and press リプライ (Replies):
 
 Only posts and replies that people wrote are shown; the page writes nothing itself.
 The same safety rules apply (no violence, no hard news, no ads). Update and the end
-of the video keep to the same words until ✕ clears the box.
+of the video keep to the same words until ✕ clears the box. With the box empty,
+更新 makes a new video from the lineup.
 
 ## How posts and reports are chosen
 
