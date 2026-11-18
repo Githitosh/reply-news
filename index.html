@@ -33,20 +33,22 @@ a.jump { color: var(--acc); font: 700 14px/1 "Noto Sans JP",sans-serif; text-dec
 #gear.on { background: var(--acc); border-color: var(--acc); color: var(--on); }
 main { padding: 0 16px calc(24px + env(safe-area-inset-bottom)); max-width: 1100px; margin: 0 auto; }
 /* The portrait video is as tall as the screen allows, leaving room for the title and the buttons. */
-.frame { width: min(100%, max(280px, calc((100vh - 205px) * 9 / 16))); width: min(100%, max(280px, calc((100dvh - 205px) * 9 / 16))); }
+.frame { width: min(100%, max(280px, calc((100vh - 150px) * 9 / 16))); width: min(100%, max(280px, calc((100dvh - 150px) * 9 / 16))); }
 .ctl, .seekrow, .caption, .music, .music-label, .ask { max-width: 560px; margin-left: auto; margin-right: auto; }
-/* The box on the main screen: words, @account or a post's address; the replies to it play. */
-.ask { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
+/* The box under the video: what is typed joins the genres, and the video is made again. */
+.ask { display: flex; gap: 8px; align-items: center; margin-top: 14px; }
 .ask input[type=text] { flex: 1 1 auto; width: auto; min-width: 0; font-size: 16px; padding: 10px 12px; }
-.ask input[type=text].live { border-color: var(--acc); }
 .ask button { flex: none; padding: 10px 12px; font-size: 14px; white-space: nowrap; }
 .ask #askGo { background: var(--acc); border-color: var(--acc); color: var(--on); }
-.ask #askClear { width: 42px; padding: 10px 0; }
-.watch.is-full .ask { display: none; }
+/* Genres on the main screen: the fixed ones, then what was typed (lit; a press removes it). */
+#genreChips { justify-content: center; }
+#genreChips button.mine { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+/* Settings: the rows of buttons that were under the video. */
+.studio .music { margin-top: 2px; }
 .frame { position: relative; max-width: 100%; margin: 0 auto; transition: transform .18s ease; }
 .frame.pulling { transition: none; }
 /* PC layout: landscape, as wide as the page and the screen height allow. */
-.land .frame { width: min(100%, max(320px, calc((100vh - 205px) * 16 / 9))); width: min(100%, max(320px, calc((100dvh - 205px) * 16 / 9))); }
+.land .frame { width: min(100%, max(320px, calc((100vh - 150px) * 16 / 9))); width: min(100%, max(320px, calc((100dvh - 150px) * 16 / 9))); }
 .land canvas#cv { aspect-ratio: 16 / 9; }
 canvas#cv { position: relative; z-index: 1; display: block; width: 100%; aspect-ratio: 9 / 16; height: auto; background: var(--frame); border-radius: 12px; }
 /* iPhone: a copy of the picture as a video, behind the canvas, for the system full-screen player. */
@@ -147,11 +149,6 @@ pre#sources { white-space: pre-wrap; font: 12px/1.5 ui-monospace,Menlo,monospace
 <button type="button" id="backDock" class="back-dock" hidden>Back to video</button>
 <main>
   <div id="watch" class="watch">
-    <form id="ask" class="ask" autocomplete="off">
-      <input type="text" id="askText" enterkeyhint="search" placeholder="Words, @account or post URL">
-      <button type="submit" id="askGo">Update</button>
-      <button type="button" id="askClear" aria-label="Clear" hidden>✕</button>
-    </form>
     <div class="frame">
       <canvas id="cv" width="1080" height="1920"></canvas>
     </div>
@@ -168,15 +165,13 @@ pre#sources { white-space: pre-wrap; font: 12px/1.5 ui-monospace,Menlo,monospace
       <span id="time">0.0 / 0.0</span>
     </div>
   </div>
+  <form id="ask" class="ask" autocomplete="off">
+    <input type="text" id="askText" enterkeyhint="go" placeholder="Words, @account or post URL">
+    <button type="submit" id="askGo">Update</button>
+  </form>
   <p id="caption" class="caption">Opening Reply News…</p>
-  <p class="music-label">Items</p>
-  <div class="music" id="counts"></div>
-  <p class="music-label">Story length</p>
-  <div class="music" id="paces"></div>
-  <p class="music-label">Wallpaper</p>
-  <div class="music" id="walls"></div>
-  <p class="music-label">Music</p>
-  <div class="music" id="music"></div>
+  <p class="music-label">Genres</p>
+  <div id="genreChips" class="music"></div>
 
   <div id="studio" class="studio" hidden>
     <div class="studio-bar"><button type="button" id="backVideo">Back to video</button></div>
@@ -199,6 +194,14 @@ pre#sources { white-space: pre-wrap; font: 12px/1.5 ui-monospace,Menlo,monospace
         <option value="sky">Sky blue</option>
         <option value="mint">Mint</option>
       </select>
+      <label>Items</label>
+      <div class="music" id="counts"></div>
+      <label>Story length</label>
+      <div class="music" id="paces"></div>
+      <label>Wallpaper</label>
+      <div class="music" id="walls"></div>
+      <label>Music</label>
+      <div class="music" id="music"></div>
       <label for="country">Country</label>
       <select id="country"></select>
       <label for="lang">Language</label>
@@ -213,11 +216,10 @@ pre#sources { white-space: pre-wrap; font: 12px/1.5 ui-monospace,Menlo,monospace
         <option value="x">X comments only</option>
         <option value="news">News, then comments</option>
       </select>
-      <label>Genres</label>
-      <div id="genreChips" class="music"></div>
+      <label for="lineup">Lineup</label>
       <button type="button" id="lineupGo">Lineup</button>
       <textarea id="lineup" rows="8" spellcheck="false" placeholder="Shibuya&#10;2002 World Cup final&#10;Romance&#10;Jokes"></textarea>
-      <p class="note">One request on each line: a genre, or anything you like, such as a place or an event (Shibuya, 2002 World Cup final). The video then plays posts on X about it. Jokes sets where the jokes play. Romance adds couples' talk, marked 恋愛 in the corner, and Travel adds what people said at famous places, marked 観光. Each comment shows its short part first, then the whole comment. The number of items comes from Items under the video. Leave the lineup empty for a mix of all genres.</p>
+      <p class="note">One request on each line: a genre, or anything you like, such as a place or an event (Shibuya, 2002 World Cup final). The video then plays posts on X about it. Jokes sets where the jokes play. Romance adds couples' talk, marked 恋愛 in the corner, and Travel adds what people said at famous places, marked 観光. Each comment shows its short part first, then the whole comment. What is typed in the box under the video is added here, and the video is made again. A word, an @account or a post's address plays the posts with the replies under them. The number of items comes from Items in these settings. Leave the lineup empty for a mix of all genres.</p>
       <button id="applyLine" type="button">Apply lineup</button>
       <div class="music hides">
         <button type="button" id="hideSensitive" aria-pressed="false">Hide sensitive posts</button>
@@ -2225,8 +2227,8 @@ const JA = {
   'Genres': 'ジャンル', 'Lineup': 'ラインナップ', 'Apply lineup': 'ラインナップを反映',
   'One request on each line. The number of stories comes from Items under the video.':
     '1行に1つずつ書きます。本数は動画の下の「表示数」で決まります。',
-  "One request on each line: a genre, or anything you like, such as a place or an event (Shibuya, 2002 World Cup final). The video then plays posts on X about it. Jokes sets where the jokes play. Romance adds couples' talk, marked 恋愛 in the corner, and Travel adds what people said at famous places, marked 観光. Each comment shows its short part first, then the whole comment. The number of items comes from Items under the video. Leave the lineup empty for a mix of all genres.":
-    '1行に1つずつ書きます。ジャンルのほか、場所や出来事など何でも書けます（例：渋谷、2002年のワールドカップ決勝）。書いたことについてのXの投稿を流します。「ジョーク」はジョークを入れる位置を決めます。「恋愛」はカップルの会話を入れ（右上に「恋愛」と表示）、「観光」は観光地での投稿を入れます（右上に「観光」と表示）。コメントは、まず短いひと言を出し、次にコメント全体を出します。本数は動画の下の「表示数」で決まります。空にすると全ジャンルから選びます。',
+  "One request on each line: a genre, or anything you like, such as a place or an event (Shibuya, 2002 World Cup final). The video then plays posts on X about it. Jokes sets where the jokes play. Romance adds couples' talk, marked 恋愛 in the corner, and Travel adds what people said at famous places, marked 観光. Each comment shows its short part first, then the whole comment. What is typed in the box under the video is added here, and the video is made again. A word, an @account or a post's address plays the posts with the replies under them. The number of items comes from Items in these settings. Leave the lineup empty for a mix of all genres.":
+    '1行に1つずつ書きます。ジャンルのほか、場所や出来事など何でも書けます（例：渋谷、2002年のワールドカップ決勝）。書いたことについてのXの投稿を流します。「ジョーク」はジョークを入れる位置を決めます。「恋愛」はカップルの会話を入れ（右上に「恋愛」と表示）、「観光」は観光地での投稿を入れます（右上に「観光」と表示）。コメントは、まず短いひと言を出し、次にコメント全体を出します。動画の下の入力欄に書いた言葉はここに追加され、動画を作り直します。言葉・@アカウント・投稿のURLは、その投稿と下に付いたリプライを流します。本数は設定の「表示数」で決まります。空にすると全ジャンルから選びます。',
   'Space': '宇宙', 'Politics': '政治', 'Science': '科学', 'Culture': '文化', 'Local': '地域', 'Entertainment': 'エンタメ',
   'Public safety': '治安', 'Sports': 'スポーツ', 'Food': '食', 'Restaurant': 'レストラン', 'Romance': '恋愛',
   'Musk X': 'マスク氏のX', 'SpaceX': 'SpaceX', 'Nikkei': '日経', 'ABC': 'ABC', 'Jokes': 'ジョーク',
@@ -3097,7 +3099,9 @@ function shares(n, k) {
 }
 /* Lineup lines are names only; an old count after the name is dropped. */
 function noCount(line) {
-  return String(line || '').replace(/^\s*\d+\s*[\.\)、]\s*/, '').replace(/\s*[,、]?\s*\d+\s*(?:個|件|本)?\s*$/, '').trim();
+  const t = String(line || '').trim();
+  if (/:\/\/|(?:x|twitter)\.com\//i.test(t)) return t;
+  return t.replace(/^\s*\d+\s*[\.\)、]\s*/, '').replace(/\s*[,、]\s*\d{1,2}\s*(?:個|件|本)?\s*$|\s+\d{1,2}\s*(?:個|件|本)\s*$/, '').trim();
 }
 const PACES = [
   { sec: 3.2, name: '3.2s' },
@@ -3175,7 +3179,7 @@ const CJK = /[぀-ヿ一-鿿]/;
 const S = {
   bgs: {}, music: null, show: null, script: null, format: 'x', playing: false, raf: 0, origin: 0, t0perf: 0,
   audioOn: false, el: null, musicUrl: '', busy: false, again: null, pseudo: false, mute: true,
-  vfull: false, fv: null, lastDraw: 0, tracks: {}, track: TRACKS[0], outs: [], jsonClean: '', ask: '',
+  vfull: false, fv: null, lastDraw: 0, tracks: {}, track: TRACKS[0], outs: [], jsonClean: '', 
 };
 const TAP = ' Press Sound for music.';
 
@@ -4365,56 +4369,7 @@ async function wikiOf(text, lang) {
   } catch (e) { console.warn(e); return { title: '', words: [] }; }
 }
 const AD = /PR|広告|キャンペーン|プレゼント企画|応募|フォロー[&＆]|RTで|リツイートで|セール|クーポン|予約受付|販売中|\bgiveaway\b|\bsale\b|\bpromo\b|\bdiscount\b|\bsponsored\b/i;
-/* Posts and replies on X about a free request. The request is read in the language of the posts. */
-async function collectTopic(slot, need) {
-  if (!need || !sourceOn('x')) return [];
-  const lang = jokeLang();
-  let text = String(slot.label || '').trim();
-  try {
-    if (lang === 'en' && CJK.test(text)) text = (await translateMany([text], 'en'))[0] || text;
-    else if (lang === 'ja' && !CJK.test(text) && /[A-Za-z]/.test(text)) { const t = (await translateMany([text], 'ja'))[0]; if (t && CJK.test(t)) text = t; }
-  } catch (e) { console.warn(e); }
-  say('Searching ' + slot.label);
-  const main = termsOf(text, lang);
-  const wiki = await wikiOf(text, lang);
-  const key = main.slice().sort((a, b) => b.length - a.length)[0] || text;
-  const queries = [main.join(' ')];
-  const titleTerms = termsOf(wiki.title, lang);
-  if (titleTerms.length && squash(titleTerms.join('')) !== squash(main.join(''))) queries.push(titleTerms.join(' '));
-  if (wiki.words.length) queries.push(`${key} (${wiki.words.join(' OR ')})`);
-  const lists = await Promise.all(queries.map(q => searchX(`${q} -filter:retweets lang:${lang}${xRange()}`)));
-  const terms = [...new Set(main.concat(titleTerms, wiki.words).map(w => w.toLowerCase()))];
-  const past = seenSet(SEEN_JOKES);
-  const now = playingKeys();
-  const keys = new Set();
-  const authors = new Set();
-  const rows = [];
-  lists.flat().forEach(st => {
-    const handle = handleOf(st);
-    const raw = String((st && st.text) || '');
-    const body = postText(st);
-    if (!handle || !body || authors.has(handle.toLowerCase())) return;
-    if (UNSAFE.test(body) || VIOLENT.test(body) || sensitive(body, st) || AD.test(raw) || (raw.match(/[#＃]/g) || []).length > 3) return;
-    const n = charLen(body);
-    if (lang === 'ja' ? (n < 6 || n > 90 || !/[぀-ヿ]/.test(body)) : (n < 12 || n > 220)) return;
-    const low = (raw + ' ' + body).toLowerCase();
-    const hits = terms.filter(w => low.includes(w)).length;
-    if (!hits) return;
-    const url = st.url || '';
-    const ks = jokeKeys({ text: body, link: url });
-    if (ks.some(k => past.has(k) || now.has(k) || keys.has(k))) return;
-    ks.forEach(k => keys.add(k));
-    authors.add(handle.toLowerCase());
-    const allMain = main.every(w => low.includes(w.toLowerCase()));
-    const react = (WOW[lang] && WOW[lang].test(body)) || isFunny(body, lang);
-    rows.push({ handle, text: body, url, score: (allMain ? 6 : low.includes(key.toLowerCase()) ? 4 : 1) + Math.min(3, hits) + (react ? 3 : 0) + (n <= 60 ? 2 : 0) + Math.random() * 2 });
-  });
-  const corner = charLen(slot.label) <= 12 ? slot.label : [...slot.label].slice(0, 11).join('') + '…';
-  return rows.sort((a, b) => b.score - a.score).slice(0, need)
-    .map(t => ({ headline: t.text, text: t.text, link: t.url, source: 'X @' + t.handle, x: true, cat: 'REPLY', joke: true, corner, place: 'middle' }));
-}
-
-/* ---------- the box on the main screen: the replies to what was typed ---------- */
+/* ---------- free lineup lines (the box under the video adds them): the replies under posts ---------- */
 /* Words: posts on X about them, each followed by the replies under it.
    @account: that account's posts and their replies. A post's address: that post and its replies.
    Only replies people posted are shown; nothing is written by this page. */
@@ -4561,36 +4516,6 @@ async function collectAsk(raw, need) {
   }
   return threads.map(t => toRow(t, short));
 }
-/* The video for the box: only the replies to what was typed. */
-async function askScript() {
-  const { country, lang } = market();
-  const N = total();
-  progress(0.1);
-  const rows = await collectAsk(S.ask, N);
-  if (S.again) return null;
-  if (!rows.length) return { empty: true, ask: true };
-  say('Reading the text');
-  progress(0.75);
-  const cards = await cardsFrom(rows, lang.id);
-  if (S.again) return null;
-  let left = N;
-  const items = [];
-  rows.forEach((r, i) => {
-    let c = cards[i];
-    if (!c.length || left < 2) return;
-    if (c.length > left) {
-      c = c.slice(0, left);
-      r.story.replies = r.story.replies.slice(0, left - 1);
-      r.keys = threadKeys(r.story);
-      c.forEach(card => { card.key = r.keys; });
-    }
-    items.push(...c);
-    left -= c.length;
-  });
-  if (!items.length) return { empty: true, ask: true };
-  return { date: chosenDate(), items, market: country.name + ' · ' + lang.name, played: { news: [], jokes: rows.flatMap(r => r.keys || []) } };
-}
-
 /* ---------- accounts: their posts, each with the replies to it ---------- */
 function threadKeys(t) { return [t.post, ...t.replies].flatMap(m => jokeKeys({ text: m.text, link: m.url })); }
 async function collectAccounts(need) {
@@ -4795,7 +4720,6 @@ async function cardsFrom(rows, langId) {
 /* ---------- making the video ---------- */
 async function collect() {
   beginCollect();
-  if (S.ask) return askScript();
   const { country, lang } = market();
   const mode = feedMode();
   const N = total();
@@ -4878,8 +4802,10 @@ async function collect() {
   progress(0.55);
   /* Jokes fill whatever the couples and places leave, so ask for enough to fill the rest on their own. */
   const left0 = Math.max(0, N - sequence.length);
-  /* Free requests: posts about each, about two cards a post, with a few spare. */
-  const perFree = freeSlots.length ? Math.ceil(left0 / 2 / freeSlots.length) + 2 : 0;
+  /* Free requests (words, @account, a post's address): posts with the replies under them.
+     Alone in the lineup they fill the video; with genres they share it. */
+  const others = slots.length - freeSlots.length;
+  const perFree = freeSlots.length ? Math.max(2, Math.ceil(left0 / (others ? slots.length : freeSlots.length))) : 0;
   /* Accounts: their posts with the replies, about three cards each. */
   const threadNeed = xAccounts().length ? Math.ceil(left0 / 3) + 1 : 0;
   const [found, couples, trips, topics, threadRows] = await Promise.all([
@@ -4889,7 +4815,7 @@ async function collect() {
     }),
     collectRomance(romanceNeed, romancePlace).catch(e => { console.warn(e); return []; }),
     collectTravel(travelNeed, travelPlace).catch(e => { console.warn(e); return []; }),
-    Promise.all(freeSlots.map(s => collectTopic(s, perFree).catch(e => { console.warn(e); return []; }))),
+    Promise.all(freeSlots.map(s => sourceOn('x') ? collectAsk(s.label, perFree).catch(e => { console.warn(e); return []; }) : [])),
     collectAccounts(threadNeed).catch(e => { console.warn(e); return []; }),
   ]);
   const topicRows = topics.flat();
@@ -5175,11 +5101,6 @@ async function runAll(opts) {
   /* A newer request came in while collecting: collect again instead of showing the older result. */
   if (again) return runAll(again);
   if (!script) return;
-  if (script.empty && script.ask) {
-    progress(0);
-    say('No replies found for “' + S.ask + '”. Try other words.', !S.show);
-    return;
-  }
   if (script.empty) {
     progress(0);
     say(S.show ? 'No new stories or jokes yet. This video keeps playing. Press Update again later.' : 'No new stories or jokes yet. Press Update again later.', !S.show);
@@ -5703,28 +5624,6 @@ function initUI() {
   $('backVideo').onclick = closeStudio;
   $('backDock').onclick = closeStudio;
   $('home').onclick = () => { closeStudio(); window.scrollTo(0, 0); refreshMarket(); };
-  /* The box: Update plays the replies to what was typed, or, with the box empty, a new video from
-     the lineup. Update keeps to the typed words until ✕ clears them. */
-  const askPaint = () => {
-    $('askClear').hidden = !$('askText').value && !S.ask;
-    $('askText').classList.toggle('live', !!S.ask);
-  };
-  $('askText').oninput = askPaint;
-  $('ask').onsubmit = e => {
-    e.preventDefault();
-    const v = $('askText').value.trim();
-    $('askText').blur();
-    S.ask = v;
-    askPaint();
-    refreshMarket();
-  };
-  $('askClear').onclick = () => {
-    const had = !!S.ask;
-    $('askText').value = '';
-    S.ask = '';
-    askPaint();
-    if (had) refreshMarket();
-  };
   if (Q.get('edit') === '1') openStudio();
   /* Reply News starts on Auto: portrait on phones, landscape on computers, until another layout is chosen. */
   const forced = Q.get('format');
@@ -5848,11 +5747,32 @@ function initUI() {
   const lineup = $('lineup');
   lineup.value = store.get('lineup', '').split(/\n/).map(noCount).filter(Boolean).join('\n');
   store.set('lineup', lineup.value);
-  const paintChips = () => {
-    const keys = new Set(lineup.value.split(/\n/).map(chipKey).filter(Boolean));
-    document.querySelectorAll('#genreChips button').forEach(b => b.classList.toggle('on', keys.has(b.dataset.line)));
-    lineup.classList.toggle('live', !!lineup.value.trim());
+  const fixedKeys = new Set(CHIPS.map(c => c.label.toLowerCase()));
+  const lineList = () => lineup.value.split(/\n/).map(x => x.trim()).filter(Boolean);
+  const setLines = lines => { lineup.value = lines.join('\n'); store.set('lineup', lineup.value); paintChips(); };
+  /* What was typed shows as a lit genre after the fixed ones; a press takes it out. */
+  const chipName = line => {
+    const m = line.match(/(?:x|twitter)\.com\/(?:([A-Za-z0-9_]{1,15})\/)?status/i);
+    const t = m ? '@' + (m[1] || 'X') + ' ↩' : line;
+    return charLen(t) > 18 ? [...t].slice(0, 17).join('') + '…' : t;
   };
+  function paintChips() {
+    const lines = lineList();
+    const keys = new Set(lines.map(chipKey).filter(Boolean));
+    document.querySelectorAll('#genreChips button:not(.mine)').forEach(b => b.classList.toggle('on', keys.has(b.dataset.line)));
+    document.querySelectorAll('#genreChips button.mine').forEach(b => b.remove());
+    lines.filter(line => !fixedKeys.has(chipKey(line))).forEach(line => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'mine on';
+      b.dataset.noi18n = '';
+      b.textContent = chipName(line);
+      b.title = line;
+      b.onclick = () => { setLines(lineList().filter(x => x !== line)); scheduleRefresh(800); };
+      $('genreChips').appendChild(b);
+    });
+    lineup.classList.toggle('live', !!lineup.value.trim());
+  }
   CHIPS.forEach(chip => {
     const b = document.createElement('button');
     b.type = 'button';
@@ -5873,6 +5793,20 @@ function initUI() {
     $('genreChips').appendChild(b);
   });
   paintChips();
+  /* The box under the video: what is typed joins the lineup as a genre, and the video is made again.
+     With the box empty, Update makes a new video from the lineup as it is. */
+  $('ask').onsubmit = e => {
+    e.preventDefault();
+    const v = $('askText').value.replace(/\s+/g, ' ').trim();
+    $('askText').blur();
+    if (v) {
+      const lines = lineList();
+      if (!lines.some(line => chipKey(line) === chipKey(v))) lines.push(v);
+      setLines(lines);
+      $('askText').value = '';
+    }
+    refreshMarket();
+  };
   lineup.addEventListener('input', () => {
     store.set('lineup', lineup.value);
     paintChips();
@@ -5980,7 +5914,7 @@ E.setMusicCredit(TRACKS[0].credit);
 /* A newer copy on the site: load it, so a copy the browser kept from before is not shown.
    version.json names the latest build of each page; it is read past the browser's cache. */
 function watchVersion(key, url) {
-  const BUILD = 'c28a9bd32162';
+  const BUILD = '02eab785747f';
   if (location.protocol === 'file:' || BUILD.indexOf('BUILD_ID') >= 0) return;
   /* At the start it may reload at once; later it waits while a video is being made or saved. */
   const check = first => {

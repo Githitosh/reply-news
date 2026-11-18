@@ -7,18 +7,19 @@ posts from famous places (観光), made in the browser. Settings, the item count
 (5 / 10 / 20), story length, wallpaper and music are chosen on the page, and
 Download saves the video as an MP4.
 
-## The box above the video
+## The box under the video and the genres
 
-Type something in the box above the video and press 更新 (Update):
+The genres sit under the video. Type something in the box and press 更新 (Update):
+it joins the genres (lit) and the lineup in Settings, and the video is made again.
+Press a lit genre to take it out. With the box empty, 更新 makes a new video.
 
 - words (渋谷, 新しいiPhone): posts on X about them that people replied to, each followed by the replies under it
 - @account: that account's newest posts, each followed by its replies
 - a post's address (https://x.com/…/status/…): that post, then its replies
 
 Only posts and replies that people wrote are shown; the page writes nothing itself.
-The same safety rules apply (no violence, no hard news, no ads). Update and the end
-of the video keep to the same words until ✕ clears the box. With the box empty,
-更新 makes a new video from the lineup.
+The same safety rules apply (no violence, no hard news, no ads). Items, story length,
+wallpaper and music are in Settings.
 
 ## How posts and reports are chosen
 
