@@ -251,8 +251,8 @@ function stackPlan(head, sub, jp, sh0, ss0) {
       sub.forEach((t, j) => L.sub.push({ t, base: sc0 + P.head.cap * Ss + j * P.sub.lh * Ss }));
       last = L.sub[L.sub.length - 1].base;
       L.short = last + P.gap.subShort[0] + P.gap.subShort[1] * Ss;
-    } else L.short = L.rule + 24;
-    let jt = L.short + P.gap.shortJp * jpScale;
+    } else L.short = L.rule + (OPT.rules === false ? 0 : 24);
+    let jt = L.short + P.gap.shortJp * jpScale * (OPT.rules === false ? 0.6 : 1);
     jp.forEach((l, k) => {
       if (k > 0) jt += (l.para ? P.jp.para : P.jp.line) * jpScale;
       L.jp.push({ t: l.t, base: jt + P.jp.ascent * P.jp.size * jpScale });
@@ -365,7 +365,32 @@ function uniformLayout(all) {
     }
     it.L = layoutAt(it, OPT.jp || 1, { lines: top.lines, Sh: top.size });
   });
-  const items = all.filter(it => !it.big);
+  /* A card with small lines above its headline (it.pre: a post, then the reply to it) is not held to
+     the size of the others either: the headline is as large as fits under the small lines, up to the
+     size of a three-line headline. */
+  const own = it => !it.big && it.pre && it.pre.length;
+  all.filter(own).forEach(it => {
+    const text = headText(it) || String(it.kw || 'NEWS');
+    const cap = P.head.max[Math.min(2, P.head.max.length - 1)];
+    const list = [];
+    for (let n = 1; n <= 3; n++) {
+      const lines = splitHead(text, n);
+      if (n > 1 && lines.length < n) break;
+      list.push({ lines, size: Math.min(cap, sizeOf(lines)) });
+    }
+    list.sort((a, b) => b.size - a.size);
+    let L = null;
+    for (let J = OPT.jp || 1; !L && J >= 0.5; J *= 0.9) {
+      for (let f = 1; !L && f >= 0.45; f -= 0.08) {
+        for (const c of list) {
+          const tryL = layoutAt(it, J, { lines: c.lines, Sh: c.size * f });
+          if (tryL.blockH <= avail + 0.5 && (tryL.jpH || 0) <= avail + 0.5) { L = tryL; break; }
+        }
+      }
+    }
+    it.L = L || layoutAt(it, OPT.jp || 1);
+  });
+  const items = all.filter(it => !it.big && !own(it));
   if (!items.length) return;
   const choices = items.map(it => {
     const text = headText(it) || String(it.kw || 'NEWS');
@@ -393,7 +418,14 @@ function uniformLayout(all) {
   }
   items.forEach(it => { it.L = layoutAt(it, J0); });
 }
+/* Lines shown small above the headline (it.pre): half the size of the news lines. */
+const preScaleOf = scale => Math.max(0.5, scale * 0.5);
 function layoutAt(it, scale, forced) {
+  const pre = [];
+  if (it.pre && it.pre.length) {
+    jpScale = preScaleOf(scale);
+    it.pre.forEach((p, pi) => wrapJp(p).forEach((t, li) => pre.push({ t, para: li === 0 && pi > 0 })));
+  }
   jpScale = scale;
   const jp = [];
   (it.jp || []).forEach((p, pi) => wrapJp(p).forEach((t, li) => jp.push({ t, para: li === 0 && pi > 0 })));
@@ -433,11 +465,23 @@ function layoutAt(it, scale, forced) {
     }
     L = best.L; head = hl;
   }
+  if (pre.length) {
+    /* The small lines take the top of the block, and everything else moves down under them. */
+    const ps = preScaleOf(scale);
+    let y = 0;
+    L.pre = [];
+    pre.forEach((l, k) => { if (k > 0) y += (l.para ? P.jp.para : P.jp.line) * ps; L.pre.push({ t: l.t, base: y + P.jp.ascent * P.jp.size * ps }); });
+    const down = y + P.jp.inkH * ps + P.gap.shortJp * ps;
+    L.head.forEach(l => { l.base += down; }); L.sub.forEach(l => { l.base += down; }); L.jp.forEach(l => { l.base += down; });
+    L.rule += down; if (L.short != null) L.short += down; L.bottom += down;
+    L.preSize = P.jp.size * ps;
+  }
   /* Align the block vertically. */
   const blockH = L.bottom;
   L.blockH = blockH;
   const off = Math.max(P.box.top, P.box.center - L.bottom / 2);
   L.head.forEach(l => l.base += off); L.sub.forEach(l => l.base += off);
+  if (L.pre) L.pre.forEach(l => { l.base += off; });
   L.rule += off; L.bottom += off;
   if (P.layout === 'columns') {
     L.cxHead = P.colL.cx; L.ruleX = [P.colL.left, P.colL.right]; L.cxJp = P.colR.cx;
@@ -492,12 +536,12 @@ function prepare(script, preset, opts) {
   if (script.coffee && !items.some(it => it.kind === 'coffee')) items.push({ ...script.coffee, kind: 'coffee', bg: 'E', kw: script.coffee.kw || 'COFFEE BREAK', head: script.coffee.head || ['COFFEE', 'BREAK'] });
   const total = items.length;
   items.forEach((it, i) => {
-    const no = pad2(i + 1);
+    const no = pad2(it.no || i + 1);
     const lead = String(it.kw || it.topic || 'NOTE').toUpperCase();
     it.catLeft = it.kind === 'coffee' ? `NOTE ${no}  /  COFFEE BREAK` : `${lead} ${no}  /  ${String(it.cat || lead).toUpperCase()}`;
     it.catRight = it.kind === 'coffee' ? '' : String(it.topic || '').toUpperCase();
     it.foot = it.kind === 'coffee' ? (it.src || 'COFFEE BREAK') : `${it.src || ''}${it.date ? '\u2006｜\u2006' + it.date : ''}`;
-    it.page = `${no} / ${pad2(total)}`;
+    it.page = `${no} / ${pad2(it.of || total)}`;
     it.credit2 = it.kind === 'coffee' ? (it.bgCredit || CREDIT_COFFEE) : CREDIT_PHOTO;
     it.tags = (it.tags || []).map(s => String(s).toUpperCase());
     if (!(OPT.uniform && it.kind === 'news')) it.L = layout(it);
@@ -610,9 +654,12 @@ function drawItem(ctx, show, i, t, bgs) {
     return;
   }
 
-  const T = TIMING, a1 = smooth(T.t1, T.t1 + T.fade, t), a2 = smooth(T.t2, T.t2 + T.fade, t), a3 = smooth(T.t3, T.t3 + T.fade, t);
+  /* it.big: the word alone, for the whole card. it.direct: no word first, the text comes at once. */
+  const T = TIMING, lead = it.direct ? T.t1 : 0;
+  const a1 = it.big ? 0 : smooth(T.t1 - lead, T.t1 - lead + T.fade, t), a2 = smooth(T.t2 - lead, T.t2 - lead + T.fade, t), a3 = smooth(T.t3 - lead, T.t3 - lead + T.fade, t);
+  const rules = OPT.rules !== false;
   /* Keyword. */
-  if (a1 < 1) {
+  if (a1 < 1 && !it.direct) {
     ctx.globalAlpha = 1 - a1;
     ctx.font = font(900, L.kw.size, F_SERIF);
     textX(ctx, L.kw.t, L.kw.x, L.kw.base, L.kw.sx, 'left');
@@ -623,12 +670,19 @@ function drawItem(ctx, show, i, t, bgs) {
     textX(ctx, it.catLeft, P.left, P.cat.base, P.cat.sx, 'left');
     textX(ctx, it.catRight, P.cat.right, P.cat.base, P.cat.sx, 'right');
     ctx.fillRect(P.left, P.rule1, P.right - P.left, P.rule);
+    if (L.pre) {
+      /* The small lines first; the headline under them comes a beat later. */
+      ctx.font = font(P.jp.w, L.preSize, F_SERIF);
+      L.pre.forEach(l => textX(ctx, l.t, L.cxHead, l.base, P.jp.sx, 'center'));
+      ctx.globalAlpha = a1 * a2;
+    }
     ctx.font = font(900, L.Sh, F_SERIF);
     L.head.forEach(l => textX(ctx, l.t, L.cxHead, l.base, P.head.sx, 'center'));
-    ctx.fillRect(L.ruleX[0], L.rule, L.ruleX[1] - L.ruleX[0], P.rule);
+    ctx.globalAlpha = a1;
+    if (rules) ctx.fillRect(L.ruleX[0], L.rule, L.ruleX[1] - L.ruleX[0], P.rule);
     L.sub.forEach(l => subLine(ctx, l.t, L.Ss, l.base, L.cxHead));
     if (P.layout === 'columns') ctx.fillRect(P.divider - 1, P.box.top + 10, 2, P.box.bottom - P.box.top - 20);
-    else ctx.fillRect(P.cx - P.short.w / 2, L.short, P.short.w, P.rule);
+    else if (rules) ctx.fillRect(P.cx - P.short.w / 2, L.short, P.short.w, P.rule);
     ctx.fillRect(P.left, P.rule2, P.right - P.left, P.rule);
     ctx.font = font(P.foot.w, P.foot.size, F_SERIF);
     textX(ctx, it.foot, P.left, P.foot.base, P.foot.sx, 'left');
@@ -638,7 +692,7 @@ function drawItem(ctx, show, i, t, bgs) {
   if (a2 > 0) {
     ctx.globalAlpha = a2 * a1;
     ctx.font = font(P.jp.w, L.jpSize || P.jp.size, F_SERIF);
-    if (P.layout === 'columns' && L.jp.length) ctx.fillRect(L.cxJp - P.short.w / 2, L.short, P.short.w, P.rule);
+    if (rules && P.layout === 'columns' && L.jp.length) ctx.fillRect(L.cxJp - P.short.w / 2, L.short, P.short.w, P.rule);
     L.jp.forEach(l => textX(ctx, l.t, L.cxJp, l.base, P.jp.sx, 'center'));
   }
   if (a3 > 0 && it.tags.length) {
@@ -667,7 +721,7 @@ function fontSpecs() {
 function allText(script) {
   const s = [];
   (script.items || []).concat(script.coffee ? [script.coffee] : []).forEach(it => {
-    s.push(it.kw, it.cat, it.topic, ...(it.head || []), ...(it.sub || []).map(x => x + x.toUpperCase()), ...(it.jp || []), ...(it.replies || []), ...(it.tags || []), it.src, it.date);
+    s.push(it.kw, it.cat, it.topic, ...(it.head || []), ...(it.sub || []).map(x => x + x.toUpperCase()), ...(it.jp || []), ...(it.pre || []), ...(it.replies || []), ...(it.tags || []), it.src, it.date);
   });
   s.push('0123456789 NEWS NOTE COFFEE BREAK News Shorts Reply News 年月日速報ニュース リプライニュース ｜ / -', musicCredit, CREDIT_PHOTO, CREDIT_COFFEE);
   return s.filter(Boolean).join(' ');

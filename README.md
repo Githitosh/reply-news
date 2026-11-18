@@ -3,8 +3,9 @@
 https://githitosh.github.io/reply-news/
 
 A short video of a post on X and a reply to it, made in the browser. Each talk is one set of three
-cards: a word taken out of the post, shown large; the whole post; the post with its reply under it.
-A video joins six sets.
+cards: a word taken out of the post, alone and as large as the picture allows; the whole post; the
+same post shown small with the reply under it, large. The three cards of a set keep one photo and one
+number (1 of 6), and no word is flashed before the text. A video joins six sets.
 Download saves the video as an MP4.
 
 ## Where the talks come from
@@ -34,7 +35,7 @@ wrote to some other post, drawn at random, the way a matching app puts two peopl
   and replies that bring no subject of their own (a laugh, a "really?"). Each reply lists the words it
   needs the post to say (`needs`), so a reply like "いっぱい買った？" is only matched to a post that says 買.
 - A match never pairs a reply with the post it was really written to, nor with its writer.
-- Every card says ランダムマッチング (Random match), the last card of a match names both people
+- Every card that shows a post or a reply says ランダムマッチング (Random match), the last card of a match names both people
   (`X @a × @b`), and under the video there are two links, one to each person's own post.
 - The **Replies** button goes back to Reply News: the replies really written to each post.
 
