@@ -4012,8 +4012,8 @@ const ROMANCE_Q = {
 };
 /* Playful hints between couples (今夜は寝かさない😏). Searched only while sensitive posts are shown. */
 const FLIRT_Q = {
-  ja: ['(寝かさない OR 覚悟してね OR 今夜は OR 😏 OR 🍆 OR 🍑) (好き OR 大好き OR ♡ OR 😘 OR 🥰) filter:replies'],
-  en: ['(😏 OR "you\'re trouble" OR "come here" OR "behave") (babe OR baby OR "love you") filter:replies'],
+  ja: ['(寝かさない OR 覚悟してね OR 今夜は OR 離さない) (好き OR 大好き OR ♡ OR 😘 OR 🥰) filter:replies'],
+  en: ['("you\'re trouble" OR "come here" OR "behave") (babe OR baby OR "love you") filter:replies'],
 };
 /* The loving, lovey-dovey kind of talk comes first; playful hints next. */
 const ICHA = {
@@ -4021,8 +4021,9 @@ const ICHA = {
   en: /i love you|love you so much|love you forever|cuddle|snuggle|can'?t wait to (?:see|hold) you/i,
 };
 const HINT = {
-  ja: /寝かさない|覚悟し|今夜は|😏|🍆|🍑|🔞/,
-  en: /😏|you'?re trouble|behave|come here/i,
+  /* Words only: emoji such as 🍑 are never searched for or ranked up, so they do not pile up. */
+  ja: /寝かさない|覚悟し|今夜は|離さない/,
+  en: /you'?re trouble|behave|come here/i,
 };
 /* Cute, loving ways of saying things are preferred to plain greetings. */
 const CUTE = {
@@ -4033,10 +4034,12 @@ const PLAIN = {
   ja: /^(?:おやすみ(?:なさい)?|おはよ(?:う|ー)?|ただいま|おかえり|おつかれ(?:さま)?|お疲れ(?:様)?)[。！!〜~ー]?\s*[\p{Extended_Pictographic}\u200d\ufe0f\s]*$/u,
   en: /^(?:good ?night|good ?morning|night|morning|hi|hey)[.!]?\s*[\p{Extended_Pictographic}\u200d\ufe0f\s]*$/iu,
 };
+/* Innuendo emoji: never searched for, and at most one such story per video. */
+const EMOJI_HINT = /🍑|🍆|😏|🔞|💦|👅/u;
 /* The kind of talk, so a video does not play two good-nights. */
 function talkKind(text) {
   const t = String(text || '');
-  if (/寝かさない|覚悟して|😏|🍆|🍑|🔞|you'?re trouble|behave/i.test(t)) return 'hint';
+  if (/寝かさない|覚悟して|今夜は|離さない|you'?re trouble|behave/i.test(t)) return 'hint';
   if (/愛してる|あいしてる|いちゃ|イチャ|くっつ|甘え|一生離さない|ずっと一緒|i love you|cuddle|snuggle/i.test(t)) return 'icha';
   if (/おやす|ねんね|すや|寝|眠|night|sleep|dream|💤|😴/i.test(t)) return 'night';
   if (/おは|朝|morning|rise and shine|sunshine|☀/i.test(t)) return 'morning';
@@ -4047,8 +4050,8 @@ function talkKind(text) {
 }
 /* Everyday couple talk: greetings, thanks, missing each other, and love. */
 const LOVE = {
-  ja: /大好き|だいすき|だいしゅき|しゅき|好き|すき|愛して|あいして|いちゃ|イチャ|くっつ|甘え|寝かさない|😏|会いたい|あいたい|ぎゅ|ちゅ|なでなで|よしよし|かわいい|可愛い|かっこいい|おやす|ねんね|すや|おはよ|おはおは|おっはー|おつかれ|お疲れ|ただいま|おかえり|いってらっしゃ|いってきます|気をつけて|がんばったね|ありがと|ずっと一緒|一緒に|ハグ|彼氏|彼女|旦那|嫁|♡|❤|♥|💕|💗|💓|💖|💘|💞|🥰|😘|😚|😍|🤗|💤|😴|☺/,
-  en: /love you|love ya|luv u|\bily\b|cuddle|snuggle|😏|miss you|my love|\bbabe\b|\bbaby\b|honey|sweetheart|cutie|handsome|beautiful|xoxo|xxx|forever|good ?night|night night|nighty|good ?morning|sunshine|rise and shine|sleep well|sleep tight|sweet dreams|home safe|take care|thank you|boyfriend|girlfriend|husband|wife|❤|♥|💕|💗|🥰|😘|😚|😍|🤗|💤|😴/i,
+  ja: /大好き|だいすき|だいしゅき|しゅき|好き|すき|愛して|あいして|いちゃ|イチャ|くっつ|甘え|寝かさない|会いたい|あいたい|ぎゅ|ちゅ|なでなで|よしよし|かわいい|可愛い|かっこいい|おやす|ねんね|すや|おはよ|おはおは|おっはー|おつかれ|お疲れ|ただいま|おかえり|いってらっしゃ|いってきます|気をつけて|がんばったね|ありがと|ずっと一緒|一緒に|ハグ|彼氏|彼女|旦那|嫁|♡|❤|♥|💕|💗|💓|💖|💘|💞|🥰|😘|😚|😍|🤗|💤|😴|☺/,
+  en: /love you|love ya|luv u|\bily\b|cuddle|snuggle|miss you|my love|\bbabe\b|\bbaby\b|honey|sweetheart|cutie|handsome|beautiful|xoxo|xxx|forever|good ?night|night night|nighty|good ?morning|sunshine|rise and shine|sleep well|sleep tight|sweet dreams|home safe|take care|thank you|boyfriend|girlfriend|husband|wife|❤|♥|💕|💗|🥰|😘|😚|😍|🤗|💤|😴/i,
 };
 /* What onlookers say about a couple. */
 const CHEER = {
@@ -4122,7 +4125,9 @@ async function collectRomance(need, place) {
     const cute = CUTE[lang].test(text) ? 5 : 0;
     const plain = PLAIN[lang].test(text) ? -5 : 0;
     const icha = (ICHA[lang].test(text) ? 6 : 0) + (HINT[lang].test(text) ? 4 : 0);
-    cands.push({ b: { handle, text, url: st.url || '', id }, parent, score: (charLen(text) <= SHORT[lang] ? 4 : 0) + cute + icha + plain + Math.random() * 3 });
+    /* Innuendo emoji (🍑 🍆 😏 🔞) never raise a post; they lower it so they do not crowd the video. */
+    const emoji = EMOJI_HINT.test(text) ? -6 : 0;
+    cands.push({ b: { handle, text, url: st.url || '', id }, parent, score: (charLen(text) <= SHORT[lang] ? 4 : 0) + cute + icha + plain + emoji + Math.random() * 3 });
   });
   const ranked = cands.sort((x, y) => y.score - x.score).slice(0, need * 4);
   const parents = await Promise.all(ranked.map(c => fetchStatus(c.parent.id).catch(() => null)));
@@ -4140,6 +4145,7 @@ async function collectRomance(need, place) {
   /* One story of each kind per video (one good-night, one good-morning...), unless there are not enough. */
   const kinds = new Set();
   const spare = [];
+  let emojiStories = 0;
   const mutualOf = i => { const back = parents[i] ? parentOf(parents[i]) : { who: '' }; return !!back.who && back.who.toLowerCase() === ranked[i].b.handle.toLowerCase(); };
   /* A famous account's post with a fan's reply is not a couple. */
   const famous = st => { const a = st && st.author; const n = a && (a.followers ?? a.followers_count); return typeof n === 'number' && n > 20000; };
@@ -4156,6 +4162,9 @@ async function collectRomance(need, place) {
     /* The pair read together: nothing suggestive next to children or school life, from either side. */
     const pairText = aText + ' ' + c.b.text;
     if (suggestive(pairText) && (CHILD.test(pairText) || YOUTH.test(pairText))) return;
+    /* At most one story with innuendo emoji per video. */
+    if (EMOJI_HINT.test(pairText) && emojiStories >= 1) return;
+    if (EMOJI_HINT.test(pairText)) emojiStories++;
     const long = charLen(aText) > SHORT[lang] || charLen(c.b.text) > SHORT[lang];
     if (long && longs >= 1) return;
     const kind = talkKind(aText + ' ' + c.b.text);
@@ -5750,7 +5759,7 @@ E.setMusicCredit(TRACKS[0].credit);
 /* A newer copy on the site: load it, so a copy the browser kept from before is not shown.
    version.json names the latest build of each page; it is read past the browser's cache. */
 function watchVersion(key, url) {
-  const BUILD = 'a857b233d09e';
+  const BUILD = 'c5e66ee04f99';
   if (location.protocol === 'file:' || BUILD.indexOf('BUILD_ID') >= 0) return;
   /* At the start it may reload at once; later it waits while a video is being made or saved. */
   const check = first => {
