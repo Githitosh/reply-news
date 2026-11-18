@@ -1,0 +1,2656 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111214">
+<script>/* The chosen color, before the page draws, so it does not flash another color. */
+document.documentElement.dataset.theme = 'dark';
+try { document.documentElement.dataset.theme = localStorage.getItem('replyNews.theme') || 'dark'; } catch (e) {}</script>
+<title>Reply News</title>
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=2">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=2">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link id="gf" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&family=Noto+Serif+JP:wght@700;900&family=Tinos:wght@700&display=swap" rel="stylesheet">
+<style>
+/* White: the page is white and the buttons, links and lit buttons are gray. */
+:root { --bg:#ffffff; --card:#f1f2f4; --line:#d9dbe0; --ink:#16181c; --mute:#62666d; --acc:#6b7078; --field:#ffffff; --on:#ffffff; --frame:#f2f3f5; }
+/* Colors, chosen in Settings. Dark is the default (set on the page before it draws). */
+:root[data-theme="beige"] { --bg:#f7f1e6; --card:#fffaf2; --line:#e4d8c4; --ink:#1c140c; --mute:#6d6458; --acc:#9a5b12; --field:#ffffff; --on:#fffaf2; --frame:#f4efe4; }
+:root[data-theme="pink"] { --bg:#fff6f9; --card:#ffffff; --line:#f2d4df; --ink:#2b1620; --mute:#7c5e6a; --acc:#d6457a; --field:#ffffff; --on:#ffffff; --frame:#fdeef3; }
+:root[data-theme="sky"] { --bg:#f3f8fd; --card:#ffffff; --line:#d3e2f2; --ink:#10202f; --mute:#58697a; --acc:#2a7bc8; --field:#ffffff; --on:#ffffff; --frame:#eaf2fa; }
+:root[data-theme="mint"] { --bg:#f2fbf7; --card:#ffffff; --line:#cfe9dd; --ink:#11231b; --mute:#56706a; --acc:#1f9a6a; --field:#ffffff; --on:#ffffff; --frame:#e6f5ee; }
+:root[data-theme="dark"] { --bg:#111214; --card:#1b1c1f; --line:#2d2f34; --ink:#f1f2f4; --mute:#9ea3ab; --acc:#f0c36b; --field:#15161a; --on:#151515; --frame:#1b1c1f; }
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.6 "Noto Sans JP","Hiragino Sans",system-ui,sans-serif; overscroll-behavior-y: none; }
+header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: calc(10px + env(safe-area-inset-top)) 16px 8px; position: sticky; top: 0; z-index: 40; background: var(--bg); touch-action: none; }
+button.title { background: none; border: 0; padding: 0; color: var(--ink); font: 700 20px/1.2 "Noto Serif JP",serif; cursor: pointer; }
+header .pull { display: block; color: var(--mute); font-size: 12px; letter-spacing: .04em; }
+a.jump { color: var(--acc); font: 700 14px/1 "Noto Sans JP",sans-serif; text-decoration: none; }
+.hright { display: flex; align-items: center; gap: 12px; }
+#gear { width: 48px; height: 44px; padding: 0; font-size: 22px; line-height: 1; touch-action: manipulation; }
+#gear.on { background: var(--acc); border-color: var(--acc); color: var(--on); }
+main { padding: 0 16px calc(24px + env(safe-area-inset-bottom)); max-width: 1100px; margin: 0 auto; }
+/* The portrait video is as tall as the screen allows, leaving room for the title and the buttons. */
+.frame { width: min(100%, max(280px, calc((100vh - 150px) * 9 / 16))); width: min(100%, max(280px, calc((100dvh - 150px) * 9 / 16))); }
+.ctl, .seekrow, .caption, .music, .music-label { max-width: 560px; margin-left: auto; margin-right: auto; }
+.frame { position: relative; max-width: 100%; margin: 0 auto; transition: transform .18s ease; }
+.frame.pulling { transition: none; }
+/* PC layout: landscape, as wide as the page and the screen height allow. */
+.land .frame { width: min(100%, max(320px, calc((100vh - 150px) * 16 / 9))); width: min(100%, max(320px, calc((100dvh - 150px) * 16 / 9))); }
+.land canvas#cv { aspect-ratio: 16 / 9; }
+canvas#cv { position: relative; z-index: 1; display: block; width: 100%; aspect-ratio: 9 / 16; height: auto; background: var(--frame); border-radius: 12px; }
+/* iPhone: a copy of the picture as a video, behind the canvas, for the system full-screen player. */
+/* A tap or click on the picture pauses and plays. */
+canvas#cv { cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+video#fsv { position: absolute; inset: 0; z-index: 0; width: 100%; height: 100%; object-fit: contain; pointer-events: none; border-radius: 12px; background: var(--frame); }
+/* Full screen: the class is set for the browser's full screen and for the page's own full screen. */
+.watch.is-full { background: var(--bg); width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; padding: 8px 12px calc(8px + env(safe-area-inset-bottom)); box-sizing: border-box; }
+.watch.is-full .frame { flex: 1 1 auto; display: flex; align-items: center; justify-content: center; min-height: 0; width: 100%; }
+.watch.is-full canvas#cv { width: 100%; height: 100%; object-fit: contain; aspect-ratio: auto; border-radius: 0; }
+.watch.is-full .ctl { flex: none; width: 100%; max-width: 640px; }
+.watch.is-full .ctl #update { background: var(--acc); border-color: var(--acc); color: var(--on); }
+.watch.is-full .seekrow { flex: none; width: 100%; max-width: 640px; }
+.watch.is-full .linkbox { flex: none; }
+.watch.is-full .source-url { flex: none; }
+.watch.pseudo { position: fixed; top: 0; left: 0; z-index: 100; width: 100vw; height: 100vh; width: 100dvw; height: 100dvh; }
+body.lock { overflow: hidden; }
+/* The post's link: always shown, large and easy to tap. */
+.source-url { display: block; width: fit-content; max-width: 100%; margin: 6px auto 0; padding: 8px 10px; color: var(--acc); font-size: 26px; line-height: 1.3; text-align: center; word-break: break-all; text-decoration: underline; text-underline-offset: 4px; border-radius: 8px; touch-action: manipulation; }
+.source-url:active { background: var(--card); }
+.ctl { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; margin-top: 10px; }
+.ctl button { white-space: nowrap; padding: 10px 11px; font-size: 14px; }
+/* Sound: lit while the music plays, outlined while the video plays without it. */
+button#sound.ask { border-color: var(--acc); color: var(--acc); }
+button#sound.on { background: var(--acc); border-color: var(--acc); color: var(--on); }
+/* On a narrow phone the seek bar and time move to a second row instead of running off the screen. */
+.ctl input[type=range] { flex: 1 1 200px; min-width: 0; accent-color: var(--acc); }
+/* The seek bar has its own row, so buttons whose words change (Play / Pause) never move it. */
+.seekrow { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+.seekrow input[type=range] { flex: 1 1 auto; min-width: 0; margin: 0; accent-color: var(--acc); }
+.seekrow span { flex: none; color: var(--mute); font-variant-numeric: tabular-nums; min-width: 84px; text-align: right; font-size: 13px; }
+/* Play/Pause and Update/Creating keep one width, so the buttons stay on one row and in place. */
+#play, #update { min-width: 5.4em; }
+#dl { width: 7.4em; overflow: hidden; text-overflow: ellipsis; }
+@media (max-width: 480px) { .ctl { gap: 6px; } .ctl button { padding: 9px 8px; font-size: 13px; } }
+/* The link keeps the same height for every story, so nothing below it moves. */
+.linkbox { height: calc(2 * 1.3 * 26px + 22px); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.linkbox .source-url { margin: 0 auto; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+@media (min-width: 820px) { .linkbox { height: calc(1.3 * 26px + 22px); } .linkbox .source-url { -webkit-line-clamp: 1; } }
+button, .btn { appearance: none; border: 1px solid var(--line); background: var(--card); color: var(--ink); font: 700 15px "Noto Sans JP",sans-serif; padding: 11px 14px; border-radius: 10px; cursor: pointer; text-decoration: none; display: inline-block; text-align: center; }
+button:disabled { opacity: .45; cursor: default; }
+.music button.on, .row button.on, #genreChips button.on, #xAccounts button { background: var(--acc); border-color: var(--acc); color: var(--on); }
+.caption { text-align: center; color: var(--mute); font-size: 13px; margin-top: 10px; margin-bottom: 0; }
+.caption.err { color: #9a3b28; }
+#sprog i { display: block; height: 100%; width: 0; background: var(--acc); }
+.music-label { text-align: center; color: var(--mute); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; margin-top: 14px; margin-bottom: 4px; }
+.music { display: flex; flex-wrap: wrap; gap: 6px; }
+.music button { flex: 1 1 28%; padding: 8px 6px; font-size: 13px; }
+/* Settings: the same panel as the News page. */
+.studio { display: grid; gap: 12px; margin-top: 16px; }
+.studio:not([hidden]) { position: fixed; z-index: 35; left: 0; right: 0; bottom: 0; top: var(--header-h, 64px); margin: 0; padding: 8px 16px calc(92px + env(safe-area-inset-bottom)); overflow: auto; background: var(--bg); }
+.studio > * { width: 100%; max-width: 640px; margin-left: auto; margin-right: auto; }
+.studio-bar { position: sticky; top: -8px; z-index: 2; padding: 12px 0 8px; margin-top: -8px; background: var(--bg); }
+#backVideo, #lineupGo, #applyLine { width: 100%; }
+.back-dock { position: fixed; z-index: 60; left: 12px; right: 12px; bottom: calc(10px + env(safe-area-inset-bottom)); width: auto; background: var(--acc); color: var(--on); border-color: var(--acc); font-size: 17px; padding: 14px; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
+#status { min-height: 1.6em; color: var(--ink); font-size: 14px; margin-top: 10px; white-space: pre-wrap; }
+#status.err { color: #9a3b28; }
+#sprog { height: 4px; background: var(--line); border-radius: 2px; margin-top: 8px; overflow: hidden; }
+details { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 0 12px; }
+details[open] { padding-bottom: 12px; }
+summary { cursor: pointer; padding: 12px 0; font-weight: 700; }
+label { display: block; color: var(--mute); font-size: 13px; margin: 8px 0 4px; }
+input[type=text], input[type=date], select, textarea { width: 100%; background: var(--field); color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 10px; font: 15px "Noto Sans JP",sans-serif; }
+textarea { min-height: 260px; font: 12px/1.5 ui-monospace,Menlo,monospace; }
+#lineup { min-height: 180px; }
+#lineup.live { border-color: var(--acc); }
+.check { display: flex; align-items: center; gap: 8px; color: var(--ink); font-size: 14px; margin-top: 10px; }
+.check input { width: 18px; height: 18px; accent-color: var(--acc); }
+.filter-row:has(input:checked), .check:has(input:checked) { color: var(--acc); }
+.note { color: var(--mute); font-size: 12px; margin: 6px 0 0; }
+.filters { display: grid; gap: 6px; margin: 4px 0 8px; }
+.source-group { color: var(--mute); font-size: 12px; margin: 14px 0 0; }
+.x-add { display: flex; gap: 8px; align-items: center; }
+.x-add input { flex: 1 1 auto; width: auto; }
+.x-add button { flex: 0 0 auto; }
+#xAccounts { margin-top: 8px; }
+#xAccounts button, #genreChips button { flex: 0 1 auto; }
+.filter-row { display: flex; align-items: center; gap: 8px; }
+.filter-row .check { margin: 0; flex: 1; }
+.filter-row select { width: 7.2em; }
+button.primary { background: var(--acc); color: var(--on); border-color: var(--acc); width: 100%; font-size: 17px; padding: 14px; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; }
+.row > * { flex: 1 1 auto; }
+.hides { margin-top: 12px; }
+.hides button { flex: 1 1 40%; }
+pre#sources { white-space: pre-wrap; font: 12px/1.5 ui-monospace,Menlo,monospace; color: var(--ink); margin: 0 0 8px; }
+#out { display: none; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+#out.show { display: flex; }
+#out .btn { flex: 1 1 30%; font-size: 14px; }
+.set-title { margin: 0; font: 700 18px "Noto Serif JP",serif; color: var(--ink); }
+[hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<header><div><button type="button" id="home" class="title">Reply News</button><span class="pull">Pull down to refresh</span></div><div class="hright"><button type="button" id="gear" aria-label="Settings" aria-expanded="false">*</button></div></header>
+<button type="button" id="backDock" class="back-dock" hidden>Back to video</button>
+<main>
+  <div id="watch" class="watch">
+    <div class="frame">
+      <canvas id="cv" width="1080" height="1920"></canvas>
+    </div>
+    <div class="linkbox"><a id="storyLink" class="source-url" href="" target="_blank" rel="noopener" hidden></a></div>
+    <div class="ctl">
+      <button id="play" disabled>Play</button>
+      <button id="sound" type="button" aria-pressed="false">Sound</button>
+      <button id="full" type="button">Full screen</button>
+      <button id="update" type="button">Update</button>
+      <button id="dl" type="button" disabled>Download</button>
+    </div>
+    <div class="seekrow">
+      <input type="range" id="seek" min="0" max="1000" value="0" disabled>
+      <span id="time">0.0 / 0.0</span>
+    </div>
+  </div>
+  <p id="caption" class="caption">Opening Reply News…</p>
+  <p class="music-label">Items</p>
+  <div class="music" id="counts"></div>
+  <p class="music-label">Story length</p>
+  <div class="music" id="paces"></div>
+  <p class="music-label">Wallpaper</p>
+  <div class="music" id="walls"></div>
+  <p class="music-label">Music</p>
+  <div class="music" id="music"></div>
+
+  <div id="studio" class="studio" hidden>
+    <div class="studio-bar"><button type="button" id="backVideo">Back to video</button></div>
+    <section class="card" id="setBox">
+      <p class="set-title">Reply News settings</p>
+      <label for="layout">Layout</label>
+      <select id="layout">
+        <option value="auto">Auto</option>
+        <option value="phone">Phone</option>
+        <option value="x">X</option>
+        <option value="youtube">YouTube</option>
+        <option value="pc">PC</option>
+      </select>
+      <label for="theme">Color</label>
+      <select id="theme">
+        <option value="dark">Dark</option>
+        <option value="white">White</option>
+        <option value="beige">Beige</option>
+        <option value="pink">Pink</option>
+        <option value="sky">Sky blue</option>
+        <option value="mint">Mint</option>
+      </select>
+      <label for="country">Country</label>
+      <select id="country"></select>
+      <label for="lang">Language</label>
+      <select id="lang"></select>
+      <label for="feed">Feed</label>
+      <select id="feed">
+        <option value="x">X comments only</option>
+        <option value="news">News, then comments</option>
+      </select>
+      <label>Genres</label>
+      <div id="genreChips" class="music"></div>
+      <button type="button" id="lineupGo">Lineup</button>
+      <textarea id="lineup" rows="8" spellcheck="false" placeholder="Politics&#10;Sports&#10;Romance&#10;Jokes"></textarea>
+      <p class="note">One request on each line. Jokes sets where the jokes play. Romance adds couples: a loving post, the partner's reply, and what others said, marked 恋愛 in the corner. Travel adds what people said at famous places, marked 観光. Each comment shows its short part first, then the whole comment. The number of items comes from Items under the video. Leave the lineup empty for a mix of all genres.</p>
+      <button id="applyLine" type="button">Apply lineup</button>
+      <div class="music hides">
+        <button type="button" id="hideSensitive" aria-pressed="false">Hide sensitive posts</button>
+      </div>
+      <p class="note">Sensitive posts play at the start: couples' talk in Romance may be suggestive or sexual; jokes and places stay clean. Light Hide sensitive posts to leave them out everywhere. Violence and hard news such as deaths, accidents, disasters, illness, bullying and discrimination never play.</p>
+      <label>Sources</label>
+      <div id="sourceFilters" class="filters"></div>
+      <label for="xUser">X accounts</label>
+      <div class="x-add">
+        <input id="xUser" type="text" autocomplete="username" spellcheck="false" placeholder="@name">
+        <button type="button" id="addX">Add</button>
+      </div>
+      <div id="xAccounts" class="music"></div>
+      <p class="note">Add an account to load funny replies to its posts. Press Add again for another account. Press a name to remove it.</p>
+      <label for="date">Date</label>
+      <input type="date" id="date">
+      <label class="check"><input type="checkbox" id="autoExport"> Export MP4 files after the stories are ready</label>
+      <label>Formats to export</label>
+      <label class="check"><input type="checkbox" class="fx" value="x" checked> Phone and X (portrait 1080×1920)</label>
+      <label class="check"><input type="checkbox" class="fx" value="youtube" checked> YouTube (portrait 1080×1920, room for buttons)</label>
+      <label class="check"><input type="checkbox" class="fx" value="pc" checked> PC (landscape 1920×1080)</label>
+      <button id="go" class="primary">Collect and play</button>
+      <div id="status">Opening Reply News…</div>
+      <div id="sprog"><i></i></div>
+      <div id="out" class="row"></div>
+      <label class="check"><input type="checkbox" id="forget"> Forget what has played (stories and jokes can play again)</label>
+    </section>
+
+    <details>
+      <summary>Script (JSON)</summary>
+      <textarea id="json" spellcheck="false"></textarea>
+      <div class="row" style="margin-top:8px">
+        <button id="apply">Apply script</button>
+        <button id="exportBtn" disabled>Export MP4</button>
+      </div>
+    </details>
+
+    <details>
+      <summary>Sources</summary>
+      <pre id="sources"></pre>
+      <button id="copySrc">Copy sources</button>
+    </details>
+  </div>
+</main>
+<script>/*__MUXER__*/</script>
+<script>/*__UIJA__*/</script>
+<script>/*__ENGINE__*/</script>
+<script>
+(() => {
+'use strict';
+const ASSETS = /*__ASSETS__*/;
+const E = window.NSEngine;
+const $ = id => document.getElementById(id);
+const ctx = $('cv').getContext('2d');
+const Q = new URLSearchParams(location.search);
+const REDUCE = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+const WATCH = Q.get('watch') !== '0' && !REDUCE;
+const store = {
+  get(k, d) { try { const v = localStorage.getItem('replyNews.' + k); return v === null ? d : v; } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem('replyNews.' + k, v); } catch (e) {} },
+};
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const pad2 = n => String(n).padStart(2, '0');
+/* Items: how many cards one video plays. Chosen under the video. */
+const COUNTS = [5, 10, 20];
+const MAX_ITEMS = 24;
+/* Every card in a video gets the same headline size, and the Japanese lines below it are twice the usual size. */
+/* lang: the date line at the top is in the chosen language only. */
+const LOOK = { uniform: true, jp: 2, brand: { ja: 'リプライニュース', en: 'Reply News' }, get lang() { const el = document.getElementById('lang'); return el && el.value === 'en' ? 'en' : 'ja'; } };
+
+/* ---------- the same choices as the News page ---------- */
+const FORMATS = { x: 'Phone', youtube: 'YouTube', pc: 'PC' };
+/* PC uses the wide single-column layout, which keeps the large Japanese text whole. */
+const PRESET = { x: 'x', youtube: 'youtube', pc: 'wide' };
+const COUNTRIES = [
+  { id: 'JP', name: 'Japan', lang: 'ja' },
+  { id: 'US', name: 'United States', lang: 'en' },
+];
+const LANGS = [
+  { id: 'en', name: 'English' },
+  { id: 'ja', name: 'Japanese' },
+];
+const WALLS = [
+  { id: 'morning', name: 'Morning' },
+  { id: 'bright', name: 'Bright' },
+  { id: 'day', name: 'Day' },
+  { id: 'evening', name: 'Evening' },
+  { id: 'night', name: 'Night' },
+  { id: 'pop', name: 'Pop' },
+];
+function total() {
+  const n = Number(store.get('count', '10'));
+  return COUNTS.includes(n) ? n : 10;
+}
+/* Split n over k lines: as even as possible, the first lines get the extra ones. */
+function shares(n, k) {
+  return Array.from({ length: k }, (_, i) => Math.floor(n / k) + (i < n % k ? 1 : 0));
+}
+/* Lineup lines are names only; an old count after the name is dropped. */
+function noCount(line) {
+  return String(line || '').replace(/^\s*\d+\s*[\.\)、]\s*/, '').replace(/\s*[,、]?\s*\d+\s*(?:個|件|本)?\s*$/, '').trim();
+}
+const PACES = [
+  { sec: 3.2, name: '3.2s' },
+  { sec: 4.2, name: '4.2s' },
+  { sec: 5.2, name: '5.2s' },
+];
+/* Jupiter is inside the page. The others load from assets/ the first time they are chosen. */
+const TRACKS = [
+  { id: 'jupiter', name: 'Jupiter', file: '', credit: 'Music: Holst ‘Jupiter’ – Holst / London Symphony Orchestra (Columbia, 1922–23), Wikimedia Commons' },
+  { id: 'neptune', name: 'Neptune', file: 'neptune_1923.m4a', credit: 'Music: Holst ‘Neptune’ – Holst / London Symphony Orchestra (Columbia, 1923), Wikimedia Commons' },
+  { id: 'stripes', name: 'Stars and Stripes', file: 'stripes_1909.m4a', credit: 'Music: Sousa ‘Stars and Stripes Forever’ – Sousa’s Band (Edison, 1909), Wikimedia Commons' },
+];
+const VIOLENT = /murder|stabbed|shot dead|shooting|killed|beheading|homicide|massacre|rape|sexual assault|robbery|凶悪|殺人|殺害|刺殺|遺体|刺され|死傷|銃乱射|暴行|強盗|レイプ|強姦/i;
+const GENRES = [
+  { id: 'space', name: 'Space', place: 'middle', q: { JP: '宇宙', US: 'space NASA' } },
+  { id: 'politics', name: 'Politics', place: 'top', q: { JP: '政治', US: 'politics' } },
+  { id: 'science', name: 'Science', place: 'middle', q: { JP: '科学', US: 'science' } },
+  { id: 'culture', name: 'Culture', place: 'bottom', q: { JP: '文化', US: 'culture arts' } },
+  { id: 'local', name: 'Local', place: 'bottom', q: { JP: '地域 ニュース', US: 'local news' } },
+  { id: 'entertainment', name: 'Entertainment', place: 'bottom', q: { JP: '芸能', US: 'entertainment' } },
+  { id: 'safety', name: 'Public safety', place: 'top', q: { JP: '治安 警察', US: 'public safety police' } },
+  { id: 'sports', name: 'Sports', place: 'middle', q: { JP: 'スポーツ', US: 'sports' } },
+  { id: 'food', name: 'Food', place: 'bottom', q: { JP: '食べ物', US: 'food' } },
+  { id: 'restaurant', name: 'Restaurant', place: 'bottom', q: { JP: 'レストラン', US: 'restaurant' } },
+  { id: 'romance', name: 'Romance', place: 'middle', q: { JP: '恋愛', US: 'dating relationship' } },
+  { id: 'travel', name: 'Travel', place: 'middle', q: { JP: '観光', US: 'travel sightseeing' } },
+];
+const SOURCES = [
+  { id: 'x', name: 'X', group: 'X and web' },
+  { id: 'web', name: 'Other web', group: 'X and web' },
+  { id: 'bbc', name: 'BBC', group: 'International' },
+  { id: 'abc', name: 'ABC', group: 'International' },
+  { id: 'reuters', name: 'Reuters', group: 'International' },
+  { id: 'nikkei', name: 'Nikkei', group: 'Japanese media' },
+];
+const RSS = {
+  nikkei: 'https://assets.wor.jp/rss/rdf/nikkei/news.rdf',
+  bbc: 'https://feeds.bbci.co.uk/news/rss.xml',
+  abc: 'https://feeds.abcnews.com/abcnews/topstories',
+  sport: 'https://feeds.bbci.co.uk/sport/rss.xml',
+  science: 'https://feeds.bbci.co.uk/news/science_and_environment/rss.xml',
+  politics: 'https://feeds.bbci.co.uk/news/politics/rss.xml',
+  culture: 'https://feeds.bbci.co.uk/news/entertainment_and_arts/rss.xml',
+};
+const SOURCE_LABEL = { nikkei: 'Nikkei', bbc: 'BBC', abc: 'ABC', reuters: 'Reuters' };
+/* Reuters has no open feed: its stories come from a news search limited to reuters.com. */
+function feedOf(id) {
+  if (id !== 'reuters') return RSS[id];
+  return searchFeed('site:reuters.com').replace('(site%3Areuters.com)', 'site%3Areuters.com');
+}
+/* Feeds for an empty lineup, by country. */
+const HOME_FEEDS = { JP: ['nikkei'], US: ['bbc', 'abc', 'reuters'] };
+const HOME_TOPICS = {
+  JP: ['話題', '日本', '政治', '経済', 'スポーツ', '科学', '国際', '社会', '文化', '芸能', 'グルメ', '動物'],
+  US: ['news', 'politics', 'business', 'sports', 'technology', 'world', 'science', 'entertainment', 'odd news', 'animals', 'food', 'travel'],
+};
+const CHIPS = [
+  { label: 'Space', line: 'Space' },
+  { label: 'Politics', line: 'Politics' },
+  { label: 'Science', line: 'Science' },
+  { label: 'Culture', line: 'Culture' },
+  { label: 'Local', line: 'Local' },
+  { label: 'Entertainment', line: 'Entertainment' },
+  { label: 'Public safety', line: 'Public safety' },
+  { label: 'Sports', line: 'Sports' },
+  { label: 'Food', line: 'Food' },
+  { label: 'Restaurant', line: 'Restaurant' },
+  { label: 'Romance', line: 'Romance' },
+  { label: 'Travel', line: 'Travel' },
+  { label: 'Musk X', line: 'Musk X' },
+  { label: 'SpaceX', line: 'SpaceX' },
+  { label: 'Nikkei', line: 'Nikkei' },
+  { label: 'ABC', line: 'ABC' },
+  { label: 'Jokes', line: 'Jokes' },
+];
+const SMALL = new Set(['to', 'and', 'of', 'on', 'for', 'from', 'in', 'at', 'by', 'with', 'the', 'a', 'an', 'into', 'vs']);
+const STOP = new Set(['NEWS','REPORT','LATEST','SAYS','SAID','AFTER','AMID','OVER','INTO','ITS','HIS','HER','ONE','TWO','NEW','WORLD','UPDATE','LIVE','VIDEO','TODAY','YEAR','JAPAN','OFFICIALS','GOVERNMENT','PEOPLE','ABOUT','THEIR','THEY','BEEN','WERE','WAS','ARE','HAS','HAD','NOT','BUT','YOU','WHO','WHAT','WHEN','WHERE','WHICH','ALSO','MORE','THAN','JUST','MAY','CAN','NOW','WILL','HAVE','FROM','WITH','THAT','THIS','AND','THE','FOR','HEADLINE','BREAKING','HOW','VIEW','SEE','LOOK','HERE','COMING','SOON','LIKE','GET','GOT','OUT','OUR','YOUR','BACK','NEXT','FIRST','EVER','WATCH']);
+const arr = v => Array.isArray(v) ? v.map(x => String(x).trim()).filter(Boolean) : (v ? String(v).split(/\n/).map(s => s.trim()).filter(Boolean) : []);
+const up = s => String(s || '').trim().toUpperCase();
+const CJK = /[぀-ヿ一-鿿]/;
+
+const S = {
+  bgs: {}, music: null, show: null, script: null, format: 'x', playing: false, raf: 0, origin: 0, t0perf: 0,
+  audioOn: false, el: null, musicUrl: '', busy: false, again: null, pseudo: false, mute: true,
+  vfull: false, fv: null, lastDraw: 0, tracks: {}, track: TRACKS[0], outs: [], jsonClean: '',
+};
+const TAP = ' Press Sound for music.';
+
+/* ---------- small helpers ---------- */
+function say(msg, err) {
+  [$('caption'), $('status')].forEach(el => {
+    if (!el) return;
+    el.textContent = msg || '';
+    el.classList.toggle('err', !!err);
+  });
+}
+function progress(p) {
+  const w = (Math.max(0, Math.min(1, p)) * 100).toFixed(1) + '%';
+  ['prog', 'sprog'].forEach(id => { const el = $(id); if (el) el.firstElementChild.style.width = w; });
+}
+function todayJST() {
+  const d = new Date(Date.now() + 9 * 3600e3);
+  return `${d.getUTCFullYear()}-${pad2(d.getUTCMonth() + 1)}-${pad2(d.getUTCDate())}`;
+}
+function addDays(iso, n) { const d = new Date(iso + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); }
+function b64bytes(b64) { const s = atob(b64), u = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i); return u; }
+function shuffle(list) {
+  const a = list.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+function withTimeout(job, ms) {
+  return Promise.race([job, new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), ms))]);
+}
+async function getText(url, ms) {
+  const res = await withTimeout(fetch(url), ms || 12000);
+  if (!res.ok) throw new Error('Could not load (' + res.status + ').');
+  return res.text();
+}
+async function loadAssets() {
+  await Promise.all('ABCDE'.split('').map(async g => {
+    const im = new Image();
+    im.src = 'data:image/jpeg;base64,' + ASSETS['bg_' + g];
+    await im.decode();
+    S.bgs[g] = im;
+  }));
+  S.music = S.tracks.jupiter = b64bytes(ASSETS.track);
+}
+
+/* ---------- settings: market, accounts, filters ---------- */
+function market() {
+  const country = COUNTRIES.find(c => c.id === $('country').value) || COUNTRIES[0];
+  const lang = LANGS.find(l => l.id === $('lang').value) || LANGS.find(l => l.id === country.lang) || LANGS[0];
+  return { country, lang };
+}
+function feedMode() { return $('feed').value === 'x' ? 'x' : 'news'; }
+function chosenDate() { const v = $('date').value; return /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : todayJST(); }
+function pastDay() { const d = chosenDate(); return d !== todayJST() ? d : ''; }
+function edition() {
+  const { country, lang } = market();
+  const feed = lang.id === 'both' ? (country.id === 'JP' ? 'ja' : 'en') : lang.id;
+  const hl = feed === 'ja' ? 'ja' : 'en-US';
+  return { hl, gl: country.id, ceid: country.id + ':' + (feed === 'ja' ? 'ja' : 'en') };
+}
+function searchFeed(query) {
+  const e = edition();
+  const day = pastDay();
+  const range = day ? ' after:' + day + ' before:' + addDays(day, 1) : ' when:2d';
+  return 'https://news.google.com/rss/search?q=' + encodeURIComponent('(' + query + ')' + range) + '&hl=' + encodeURIComponent(e.hl) + '&gl=' + e.gl + '&ceid=' + encodeURIComponent(e.ceid);
+}
+/* The language of the jokes: Japanese replies in Japanese, English replies in English. */
+function jokeLang() {
+  const { country, lang } = market();
+  if (lang.id === 'en') return 'en';
+  if (lang.id === 'ja') return 'ja';
+  return country.id === 'JP' ? 'ja' : 'en';
+}
+function xRange() { const day = pastDay(); return day ? ' since:' + day + ' until:' + addDays(day, 1) : ''; }
+function cleanHandle(v) {
+  const raw = String(v || '').trim();
+  const url = raw.match(/(?:x|twitter)\.com\/([A-Za-z0-9_]{1,15})/i);
+  return (url ? url[1] : raw).replace(/^@+/, '').split(/[\s/?#]/)[0];
+}
+function validHandle(name) { return /^[A-Za-z0-9_]{1,15}$/.test(name); }
+function xAccounts() {
+  let list = [];
+  try { list = JSON.parse(store.get('xAccounts', '[]')); } catch (e) { list = []; }
+  if (!Array.isArray(list)) list = [];
+  const out = [];
+  const seen = new Set();
+  list.forEach(v => {
+    const name = cleanHandle(v);
+    const key = name.toLowerCase();
+    if (!validHandle(name) || seen.has(key)) return;
+    seen.add(key);
+    out.push(name);
+  });
+  return out.slice(0, 8);
+}
+function saveAccounts(list) {
+  const clean = [];
+  const seen = new Set();
+  (list || []).forEach(v => {
+    const name = cleanHandle(v);
+    const key = name.toLowerCase();
+    if (!validHandle(name) || seen.has(key) || clean.length >= 8) return;
+    seen.add(key);
+    clean.push(name);
+  });
+  store.set('xAccounts', JSON.stringify(clean));
+  paintAccounts();
+  return clean;
+}
+function paintAccounts() {
+  const box = $('xAccounts');
+  box.innerHTML = '';
+  xAccounts().forEach(name => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = '@' + name + ' ×';
+    b.title = 'Remove @' + name;
+    b.onclick = () => {
+      saveAccounts(xAccounts().filter(n => n.toLowerCase() !== name.toLowerCase()));
+      say('Removed @' + name);
+      refreshMarket();
+    };
+    box.appendChild(b);
+  });
+}
+function addAccount() {
+  const name = cleanHandle($('xUser').value);
+  $('xUser').value = '';
+  if (!validHandle(name)) { say('Use an X account name, like @name'); return; }
+  const list = xAccounts();
+  if (list.some(n => n.toLowerCase() === name.toLowerCase())) { say('Already added @' + name); return; }
+  if (list.length >= 8) { say('Eight accounts is the limit'); return; }
+  saveAccounts(list.concat(name));
+  say('Loading @' + name);
+  refreshMarket();
+}
+function savedJson(key) { try { return JSON.parse(store.get(key, '{}')) || {}; } catch (e) { return {}; } }
+/* Every genre is used, in its usual place; the lineup chooses what to play. */
+function genreChoices() { return GENRES.map(g => ({ ...g, on: true })); }
+/* Sources taken out of the settings (NHK, Asahi, Yomiuri, AP, CNN, The New York Times):
+   never read, and their stories are skipped. Abroad means BBC, ABC and Reuters only. */
+const GONE = new Set(['nhk', 'asahi', 'yomiuri', 'ap', 'cnn', 'nyt']);
+function sourceOn(id) {
+  if (GONE.has(id)) return false;
+  const box = document.querySelector('.srcf[value="' + id + '"]');
+  if (box) return box.checked;
+  return savedJson('sourcesOn')[id] !== false;
+}
+function matchedGenre(text, countryId) {
+  const hay = String(text || '').toLowerCase();
+  let hit = null;
+  GENRES.forEach(g => {
+    const words = (g.q[countryId] || g.q.US).toLowerCase().split(/\s+/).filter(w => w.length > 1);
+    const en = g.q.US.toLowerCase().split(/\s+/).filter(w => w.length > 2);
+    if (words.concat(en).some(w => hay.includes(w))) hit = g;
+  });
+  return hit;
+}
+function sourceId(row) {
+  const s = String((row && row.source) || '') + ' ' + String((row && row.link) || '');
+  if (row && (row.x || /^x\b/i.test(String(row.source || '')))) return 'x';
+  if (/nhk/i.test(s)) return 'nhk';
+  if (/reuters|ロイター/i.test(s)) return 'reuters';
+  if (/associated press|\bap news\b|apnews\.com/i.test(s)) return 'ap';
+  if (/nikkei|日経/i.test(s)) return 'nikkei';
+  if (/\bbbc\b|bbc\.co/i.test(s)) return 'bbc';
+  if (/\babc\b|abcnews|abc\.go\.com/i.test(s)) return 'abc';
+  if (/\bcnn\b|cnn\.com/i.test(s)) return 'cnn';
+  if (/new york times|\bnyt\b|nytimes\.com/i.test(s)) return 'nyt';
+  if (/asahi|朝日/i.test(s)) return 'asahi';
+  if (/yomiuri|読売/i.test(s)) return 'yomiuri';
+  return 'web';
+}
+/* Violence never plays in Reply News; there is no setting for it. */
+function violentHidden() { return true; }
+/* Hard news never plays in Reply News, in any setting: deaths, accidents, disasters, illness, bullying, discrimination. */
+const HEAVY = /(?:^|[^必])死(?!ぬほど|ぬかと|んだ笑)|亡くな|遺体|事故|災害|震災|地震|津波|火災|病気|闘病|入院|がん(?!ば|が)|癌|自殺|自死|いじめ|虐待|差別|\bdied\b|\bdeath\b|\bcrash\b|\bdisaster\b|\bcancer\b|\bsuicide\b|\bbull(?:y|ied|ying)\b|\bracis/i;
+/* Sensitive: suggestive words and emoji, sexual words (ADULT, below) and posts X marks as sensitive.
+   Hidden while Hide sensitive posts is lit (the start). When it is off, only couples' talk may be sexual. */
+const SUGGESTIVE = /🔞|🍆|🍑|😏|💋|👅|寝かさない|抱いて|抱かれ|夜這い|ベッドで|一緒にお風呂|色っぽ|セクシー|えちえち|\bsexy\b|\bspicy\b|\bnaughty\b|\bin bed\b/i;
+function sensitiveHidden() { const b = $('hideSensitive'); return !b || b.classList.contains('on'); }
+function heavy(text) { return HEAVY.test(String(text || '')); }
+function flagged(st) { return !!(st && (st.possibly_sensitive || st.sensitive)); }
+/* Jokes, places and reports: hard news and sensitive posts never play. */
+function sensitive(text, st) { return heavy(text) || SUGGESTIVE.test(String(text || '')) || flagged(st); }
+function saveFilters() {
+  const sources = {};
+  SOURCES.forEach(s => {
+    const box = document.querySelector('.srcf[value="' + s.id + '"]');
+    sources[s.id] = !!(box && box.checked);
+  });
+  store.set('sourcesOn', JSON.stringify(sources));
+  store.set('hideSensitive3', sensitiveHidden() ? '1' : '0');
+}
+function buildFilters() {
+  const savedS = savedJson('sourcesOn');
+  /* Hide sensitive posts starts off: sensitive couple talk plays until the button is lit. */
+  [['hideSensitive', 'hideSensitive3']].forEach(([id, key]) => {
+    const b = $(id);
+    const paint = on => { b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false'); };
+    paint(store.get(key, '0') === '1');
+    b.onclick = () => { paint(!b.classList.contains('on')); saveFilters(); refreshMarket(); };
+  });
+  const sbox = $('sourceFilters');
+  let group = '';
+  SOURCES.forEach(s => {
+    if (s.group && s.group !== group) {
+      group = s.group;
+      const heading = document.createElement('p');
+      heading.className = 'source-group';
+      heading.textContent = group;
+      sbox.appendChild(heading);
+    }
+    const lab = document.createElement('label');
+    lab.className = 'check';
+    const input = document.createElement('input');
+    input.type = 'checkbox';
+    input.className = 'srcf';
+    input.value = s.id;
+    input.checked = savedS[s.id] !== false;
+    input.onchange = () => { saveFilters(); refreshMarket(); };
+    lab.appendChild(input);
+    lab.appendChild(document.createTextNode(s.name));
+    sbox.appendChild(lab);
+  });
+}
+
+/* ---------- what has played: never play it again ---------- */
+const SEEN_NEWS = 'seenNews';
+const SEEN_JOKES = 'seenJokes';
+function seenSet(key) {
+  let list = [];
+  try { list = JSON.parse(store.get(key, '[]')); } catch (e) { list = []; }
+  if (key === SEEN_NEWS) { try { list = list.concat(JSON.parse(store.get('seen', '[]'))); } catch (e) {} }
+  return new Set(Array.isArray(list) ? list : []);
+}
+function remember(key, keys, cap) {
+  let prev = [];
+  try { prev = JSON.parse(store.get(key, '[]')); } catch (e) { prev = []; }
+  const all = keys.concat(Array.isArray(prev) ? prev : []).filter((k, i, a) => k && a.indexOf(k) === i).slice(0, cap);
+  store.set(key, JSON.stringify(all));
+}
+function squash(text) { return String(text || '').toLowerCase().replace(/[\s　"'“”‘’「」『』（）()\[\]【】、。，．,.!?！？…・:：;；\-–—~〜ｗw]+/g, ''); }
+function newsKeys(row) {
+  const keys = ['h:' + squash(row.headline).slice(0, 60)];
+  const link = String(row.link || '').replace(/[?#].*$/, '');
+  if (link) keys.push('u:' + link.slice(0, 160));
+  return keys;
+}
+function jokeKeys(row) {
+  const keys = ['t:' + squash(row.text || row.headline).slice(0, 50)];
+  const id = String(row.link || row.url || '').match(/status(?:es)?\/(\d+)/);
+  if (id) keys.push('id:' + id[1]);
+  return keys;
+}
+function playingKeys() {
+  const keys = new Set();
+  ((S.script && S.script.items) || []).forEach(it => {
+    if (it.url) keys.add('u:' + String(it.url).replace(/[?#].*$/, '').slice(0, 160));
+    const id = String(it.url || '').match(/status(?:es)?\/(\d+)/);
+    if (id) keys.add('id:' + id[1]);
+    if (it.key) arr(it.key).forEach(k => keys.add(k));
+  });
+  return keys;
+}
+
+/* ---------- news ---------- */
+let feedMemo = new Map();
+function beginCollect() { feedMemo = new Map(); }
+function rssItems(xml) {
+  const items = [];
+  const re = /<item\b[^>]*>([\s\S]*?)<\/item>/g;
+  let m;
+  const decode = s => String(s || '').replace(/<!\[CDATA\[|\]\]>/g, '').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'").trim();
+  while ((m = re.exec(xml))) {
+    const block = m[1];
+    const title = decode((block.match(/<title>([\s\S]*?)<\/title>/) || [])[1]);
+    const link = decode((block.match(/<link>([\s\S]*?)<\/link>/) || [])[1] || (block.match(/<link\b[^>]*rdf:resource="([^"]+)"/) || [])[1] || (block.match(/<guid[^>]*>([\s\S]*?)<\/guid>/) || [])[1]);
+    const pubDate = decode((block.match(/<pubDate>([\s\S]*?)<\/pubDate>/) || [])[1] || (block.match(/<dc:date>([\s\S]*?)<\/dc:date>/) || [])[1]);
+    if (title) items.push({ title, link, pubDate });
+  }
+  return items;
+}
+async function loadNewsRows(rss) {
+  try {
+    const res = await withTimeout(fetch('https://r.jina.ai/' + rss, { headers: { 'X-Return-Format': 'text' } }), 12000);
+    if (res.ok) {
+      const parsed = rssItems(await res.text());
+      if (parsed.length) return parsed;
+    }
+  } catch (e) { console.warn(e); }
+  try {
+    const res = await withTimeout(fetch('https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(rss) + '&count=20'), 8000);
+    if (res.ok) {
+      const j = await res.json();
+      if (j && j.status === 'ok') return (j.items || []).map(it => ({ title: it.title || '', link: it.link || '', pubDate: it.pubDate || '' }));
+    }
+  } catch (e) { console.warn(e); }
+  return [];
+}
+function cachedNews(url) {
+  if (!feedMemo.has(url)) feedMemo.set(url, loadNewsRows(url));
+  return feedMemo.get(url);
+}
+function splitHeadline(title) {
+  const raw = String(title || '').trim();
+  const parts = raw.split(/\s[-–—]\s/);
+  if (parts.length < 2) return { headline: raw, source: '' };
+  const tail = parts[parts.length - 1].trim();
+  const publisher = tail.length <= 32 && tail.split(/\s+/).length <= 4 && !/[.?!。]/.test(tail);
+  if (!publisher) return { headline: raw, source: '' };
+  return { headline: parts.slice(0, -1).join(' - ').trim(), source: tail };
+}
+function rowsFromItems(items, source, cat) {
+  const rows = [];
+  (items || []).forEach(it => {
+    const sp = splitHeadline(it.title);
+    if (!sp.headline || sp.headline.length < 8) return;
+    rows.push({ headline: sp.headline, link: it.link || '', pubDate: it.pubDate || '', cat: cat || 'NEWS', source: source || sp.source || 'News' });
+  });
+  return rows;
+}
+async function searchRows(query, cat) { return rowsFromItems(await cachedNews(searchFeed(query)), '', cat); }
+function mergeRows(first, second) {
+  const out = [];
+  const seen = new Set();
+  first.concat(second).forEach(r => {
+    const key = squash(r.headline).slice(0, 60);
+    if (!key || seen.has(key)) return;
+    seen.add(key);
+    out.push(r);
+  });
+  return out;
+}
+let gdeltNext = 0;
+async function gdeltRows(query, cat, source) {
+  const wait = gdeltNext - Date.now();
+  if (wait > 0) await sleep(wait);
+  gdeltNext = Date.now() + 5200;
+  const url = 'https://api.gdeltproject.org/api/v2/doc/doc?query=' + encodeURIComponent(query) + '&mode=artlist&maxrecords=12&format=json&sort=datedesc&timespan=7d';
+  try {
+    const res = await withTimeout(fetch(url), 8000);
+    const text = await res.text();
+    if (!res.ok || !text || text[0] !== '{') return [];
+    const j = JSON.parse(text);
+    return (j.articles || []).map(a => ({
+      headline: String(a.title || '').replace(/\s[-–—]\s[^-–—]+$/, '').trim(),
+      link: a.url || '', pubDate: a.seendate || '', cat: cat || 'NEWS', source: source || a.domain || 'News',
+    })).filter(r => r.headline);
+  } catch (e) { console.warn(e); return []; }
+}
+async function fxJson(url) {
+  const res = await withTimeout(fetch(url), 9000);
+  if (!res.ok) return null;
+  return res.json();
+}
+function rowFromStatus(st) {
+  if (!st || (st.type && st.type !== 'status')) return null;
+  const author = String((st.author && st.author.screen_name) || '').replace(/^@+/, '');
+  const text = String(st.text || '').replace(/https?:\/\/\S+/g, ' ').replace(/@\w+/g, ' ').replace(/[#＃][^\s#＃]+/g, ' ').replace(/\s+/g, ' ').trim();
+  if (!author || text.length < 12 || (violentHidden() && VIOLENT.test(text)) || sensitive(text, st)) return null;
+  return { headline: text.slice(0, 480), link: st.url || ('https://x.com/' + author), pubDate: st.created_at || '', cat: 'X', source: 'X @' + author, x: true };
+}
+async function searchPosts(query) {
+  const data = await fxJson('https://api.fxtwitter.com/2/search?q=' + encodeURIComponent(query));
+  const out = [];
+  ((data && data.results) || []).forEach(st => { const r = rowFromStatus(st); if (r) out.push(r); });
+  return out;
+}
+function lineupText() { return $('lineup').value; }
+function lineName(line) { return String(line || '').replace(/^\s*\d+\s*[\.\)、]\s*/, '').split(/[,、]/)[0].trim().toLowerCase(); }
+function parseLineup(text) {
+  const slots = [];
+  String(text || '').split(/\n/).forEach(raw => {
+    const s = noCount(raw);
+    if (!s) return;
+    slots.push(Object.assign({ count: 1 }, classifyRequest(s)));
+  });
+  return slots.slice(0, 12);
+}
+/* A genre name shown in Japanese means the same genre as its English name. */
+function enName(text) {
+  const s = String(text || '').trim();
+  if (!window.UIJA) return s;
+  const hit = CHIPS.find(c => UIJA.tr(c.label) === s);
+  return hit ? hit.label : s;
+}
+function chipKey(line) {
+  return enName(String(line || '').replace(/^\s*\d+\s*[\.\)、]\s*/, '').split(/[,、]/)[0]).toLowerCase();
+}
+function chipLine(chip) {
+  if (!window.UIJA || $('lang').value !== 'ja') return chip.label;
+  return UIJA.tr(chip.label);
+}
+function classifyRequest(text) {
+  const name = enName(text);
+  const low = name.toLowerCase();
+  if (/joke|humou?r|funny|coffee|ジョーク|笑い|ユーモア|ネタ|コーヒー/.test(low)) return { type: 'jokes', label: name };
+  if (/romance|love|couple|dating|恋愛|カップル|恋人|夫婦/.test(low)) return { type: 'romance', cat: 'ROMANCE', label: name };
+  if (/travel|trip|tourism|sightseeing|観光|旅行|名所/.test(low)) return { type: 'travel', cat: 'TRAVEL', label: name };
+  if (/マスク|elon|\bmusk\b/.test(low)) return { type: 'x', q: 'from:elonmusk', who: 'elonmusk', topic: 'Elon Musk', cat: 'X', label: name };
+  if (/spacex|スペース\s*x|スペースｘ/.test(low)) return { type: 'x', q: 'from:SpaceX', who: 'spacex', topic: 'SpaceX', cat: 'SPACEX', label: name };
+  if (/(?:^|\s)x\s*$|エックス\s*$|twitter\s*$/i.test(name)) {
+    const topic = name.replace(/\s*(?:on\s+)?(?:x|twitter|エックス)\s*$/i, '').trim();
+    return { type: 'x', q: topic || 'news', topic: topic || 'news', cat: 'X', label: name };
+  }
+  if (/日経|nikkei/.test(low)) return { type: 'rss', rss: RSS.nikkei, gdelt: '日経 OR nikkei', cat: 'NIKKEI', source: 'Nikkei', label: name };
+  if (/^abc$|abc news/.test(low)) return { type: 'rss', rss: RSS.abc, gdelt: 'ABC news', cat: 'ABC', source: 'ABC', label: name };
+  if (/食文化|food culture|^food$|食べ物/.test(low)) return { type: 'gdelt', q: market().country.id === 'JP' ? '食べ物' : 'food', cat: 'FOOD', source: 'News', label: name };
+  if (/レストラン|^restaurant$/.test(low)) return { type: 'gdelt', q: market().country.id === 'JP' ? 'レストラン' : 'restaurant', cat: 'RESTAURANT', source: 'News', label: name };
+  const genre = GENRES.find(g => g.name.toLowerCase() === low || (g.q.JP && name.includes(g.q.JP.split(' ')[0]) && g.q.JP.split(' ')[0].length > 1));
+  if (genre) return Object.assign(requestForGenre(genre), { label: name });
+  if (/スポーツ|^sports$/.test(low)) return requestForGenre(GENRES.find(g => g.id === 'sports'));
+  return { type: 'gdelt', q: name, cat: name.toUpperCase().slice(0, 16), source: 'News', label: name };
+}
+function requestForGenre(g) {
+  const name = g.name;
+  const { country } = market();
+  const q = g.q[country.id] || g.q.US;
+  if (g.id === 'sports') return { type: 'rss', rss: RSS.sport, gdelt: country.id === 'JP' ? 'スポーツ' : 'sports', cat: 'SPORTS', source: 'BBC', label: name };
+  if (g.id === 'science') return { type: 'rss', rss: RSS.science, gdelt: country.id === 'JP' ? '科学' : 'science', cat: 'SCIENCE', source: 'BBC', label: name };
+  if (g.id === 'politics') return { type: 'rss', rss: RSS.politics, gdelt: country.id === 'JP' ? '政治' : 'politics', cat: 'POLITICS', source: 'BBC', label: name };
+  if (g.id === 'culture' || g.id === 'entertainment') return { type: 'rss', rss: RSS.culture, gdelt: q, cat: name.toUpperCase(), source: 'BBC', label: name };
+  if (g.id === 'food') return { type: 'gdelt', q, cat: 'FOOD', source: 'News', label: name };
+  if (g.id === 'restaurant') return { type: 'gdelt', q, cat: 'RESTAURANT', source: 'News', label: name };
+  if (g.id === 'space') return { type: 'rss', rss: RSS.science, hint: /space|nasa|rocket|satellite|telescope|宇宙|ロケット/i, gdelt: q, cat: 'SPACE', source: 'BBC', label: name };
+  if (g.id === 'local') return { type: 'gdelt', q, cat: 'LOCAL', source: 'News', label: name };
+  if (g.id === 'romance') return { type: 'romance', cat: 'ROMANCE', label: name };
+  if (g.id === 'travel') return { type: 'travel', cat: 'TRAVEL', label: name };
+  if (g.id === 'safety') return { type: 'rss', rss: RSS.bbc, hint: /police|arrest|crime|safety|security|警察|治安|逮捕/i, gdelt: q, cat: 'PUBLIC SAFETY', source: 'BBC', label: name };
+  return { type: 'gdelt', q, cat: name.toUpperCase(), source: 'News', label: name };
+}
+function allowedRow(r) {
+  if (!r || !r.headline) return false;
+  if (violentHidden() && VIOLENT.test(r.headline)) return false;
+  if (sensitive(r.headline)) return false;
+  return sourceOn(sourceId(r));
+}
+async function rowsForSlot(slot) {
+  let rows = [];
+  try {
+    if (slot.type === 'x') {
+      if (!sourceOn('x')) return [];
+      rows = (await searchPosts(slot.q + xRange())).map(r => ({ ...r, cat: slot.cat || 'X' }));
+    } else if (slot.type === 'rss' && slot.rss) {
+      if (!pastDay()) rows = rowsFromItems(await cachedNews(slot.rss), slot.source, slot.cat);
+      if (slot.hint) rows = rows.filter(r => slot.hint.test(r.headline));
+      if (slot.gdelt) rows = mergeRows(rows, await searchRows(slot.gdelt, slot.cat));
+    } else if (slot.type === 'gdelt') {
+      rows = await searchRows(slot.q, slot.cat);
+      if (rows.length < (slot.count || 1)) rows = mergeRows(rows, await gdeltRows(slot.q, slot.cat, slot.source));
+    }
+  } catch (e) { console.warn(e); }
+  return rows.filter(allowedRow);
+}
+/* Fresh rows only: not played before, not playing now, not picked already. */
+function freshRows(rows, used) {
+  const past = seenSet(SEEN_NEWS);
+  const now = playingKeys();
+  return rows.filter(r => {
+    const keys = newsKeys(r);
+    return !keys.some(k => past.has(k) || now.has(k) || used.has(k));
+  });
+}
+function takeRows(rows, used, count, perSource) {
+  const out = [];
+  const bySource = {};
+  const pass = limit => rows.forEach(r => {
+    if (out.length >= count) return;
+    const keys = newsKeys(r);
+    if (keys.some(k => used.has(k))) return;
+    const src = r.source || 'News';
+    if (limit && (bySource[src] || 0) >= limit) return;
+    bySource[src] = (bySource[src] || 0) + 1;
+    keys.forEach(k => used.add(k));
+    out.push(r);
+  });
+  pass(perSource || 0);
+  if (perSource) pass(0);
+  return out;
+}
+/* An empty lineup: the country's papers, then topic searches until five new reports are found. */
+async function homeNews(used, need) {
+  const { country } = market();
+  const ids = HOME_FEEDS[country.id] || HOME_FEEDS.JP;
+  const n = Number(store.get('gen', '0')) || 0;
+  store.set('gen', String(n + 1));
+  const order = ids.slice(n % ids.length).concat(ids.slice(0, n % ids.length));
+  const genres = genreChoices();
+  const shape = rows => rows.map(r => {
+    const g = matchedGenre(r.headline, country.id);
+    const rec = g ? genres.find(x => x.id === g.id) : null;
+    if (rec && !rec.on) return null;
+    return { ...r, place: rec ? rec.place : 'middle', cat: rec ? up(rec.name) : (r.cat || 'NEWS') };
+  }).filter(Boolean);
+  let pool = [];
+  if (!pastDay()) {
+    for (let i = 0; i < order.length; i++) {
+      if (S.again) break;
+      const id = order[i];
+      if (!sourceOn(id)) continue;
+      say('Searching ' + SOURCE_LABEL[id]);
+      progress(0.06 + 0.05 * i);
+      pool = mergeRows(pool, shape(rowsFromItems(await cachedNews(feedOf(id)), id === 'reuters' ? '' : SOURCE_LABEL[id], 'NEWS').filter(allowedRow)));
+    }
+  }
+  let fresh = shuffle(freshRows(pool, used));
+  const topics = shuffle(HOME_TOPICS[country.id] || HOME_TOPICS.JP);
+  for (let t = 0; fresh.length < need && t < topics.length && t < 6; t++) {
+    if (S.again) break;
+    say('Searching ' + topics[t]);
+    const more = shape((await searchRows(topics[t], 'NEWS')).filter(allowedRow));
+    pool = mergeRows(pool, more);
+    fresh = mergeRows(fresh, shuffle(freshRows(more, used)));
+  }
+  const picked = takeRows(fresh, used, need, 2);
+  const band = { top: 0, middle: 1, bottom: 2 };
+  return picked.sort((a, b) => (band[a.place] ?? 1) - (band[b.place] ?? 1));
+}
+
+/* ---------- jokes ---------- */
+const FUNNY_Q = { ja: '(笑 OR 草 OR ワロタ OR 面白い)', en: '(lol OR lmao OR haha OR hilarious)' };
+function isFunny(text, lang) {
+  if (lang === 'en') return /\b(lol|lmao|lmfao|rofl|haha\w*|hilarious|i'?m dead|dying)\b|😂|🤣|💀|😆/i.test(text);
+  const t = String(text || '').replace(/笑顔|笑み|民草|草の根/g, '');
+  return /笑|ワロタ|ワロ[^ッ]|草草|(?:^|[\s　、。！？(（])草(?:$|[\s　、。！？)）])|[てでにのが]草(?=$|[\s　、。！？)）ｗw]|$)|ｗ{2,}|w{2,}|😂|🤣|😆|😅|面白い|冗談|ウケる/.test(t);
+}
+function focusJoke(text, lang) {
+  const chars = [...text];
+  const max = lang === 'en' ? 140 : 42;
+  if (chars.length <= max) return text;
+  const m = lang === 'en' ? text.match(/\b(lol|lmao|haha\w*|hilarious)\b|😂|🤣/i) : text.match(/笑|ワロタ|草草|ｗｗ|www|😂|🤣|😆|面白い|冗談|ウケる/);
+  const at = m ? [...text.slice(0, m.index)].length : 0;
+  const keep = max - 2;
+  const start = Math.max(0, at - Math.floor(keep * 0.4));
+  const slice = chars.slice(start, start + keep).join('').trim();
+  return (start ? '…' : '') + slice + (start + keep < chars.length ? '…' : '');
+}
+/* Comments that never play: adult words, minors, abuse. */
+/* Sexual words: only couples' talk may have them, and only with Hide sensitive posts off. */
+const ADULT = /セックス|エッチ|えっち|ｴｯﾁ|エロ|下ネタ|ヤる|ヤれ|体位|下着|裸|おっぱい|乳首|ちんこ|ちんちん|まんこ|射精|中出し|勃起|ムラムラ|性欲|童貞|処女|ラブホ|\bsex|nsfw|nude|naked|horny|kinky/i;
+/* Never, in any setting: minors, abuse and coercion, sex work and porn. */
+const NEVER = /ヤリモク|風俗|パパ活|ママ活|援交|AV女優|アダルト|porn|onlyfans|中学|小学|ＪＫ|ＪＣ|ＪＳ|\bJ[KCS]\b|高校生|女子高生|男子高生|未成年|ロリ|ショタ|\bteen|high school|middle school|underage|\bloli|\bshota|ＤＶ|\bDV\b|モラハラ|殴られ|abuse|レイプ|強姦|無理やり|盗撮|痴漢/i;
+/* Children: fine in everyday couple talk, never next to anything sexual. */
+const CHILD = /子供|子ども|こども|息子|娘|園児|赤ちゃん|\bkids?\b|\bchild|\bson\b|\bdaughter\b/i;
+const UNSAFE = new RegExp(ADULT.source + '|' + NEVER.source, 'i');
+/* School life: fine in everyday talk, never next to anything suggestive. */
+const YOUTH = /学校|放課後|部活|修学旅行|制服|受験|担任|学年|文化祭|体育祭|\bschool\b|\bprom\b|\bhomework\b|\bgrade\b/i;
+/* Accounts that say they are under 18 are never used for Romance. */
+const MINOR_BIO = /(?:^|[^0-9])1[0-7]\s*(?:歳|才|y\/?o\b|years? old)|高[1-3１-３一二三](?:$|[^0-9０-９])|中[1-3１-３一二三](?:$|[^0-9０-９])|高校生|中学生|ＪＫ|ＪＣ|\bJ[KC]\b|\bminor\b|\bunder ?18\b|\bteen\b/i;
+function minorAccount(st) {
+  const a = st && st.author;
+  return MINOR_BIO.test(String((a && (a.description || a.bio)) || '') + ' ' + String((a && a.name) || ''));
+}
+function suggestive(text, st) { return ADULT.test(text) || SUGGESTIVE.test(text) || flagged(st); }
+function postText(st) {
+  return String((st && st.text) || '').replace(/https?:\/\/\S+/g, ' ').replace(/@\w+/g, ' ').replace(/[#＃]\S+/g, ' ').replace(/\s+/g, ' ').trim();
+}
+function replyOf(st, lang) {
+  const author = String((st && st.author && st.author.screen_name) || '').replace(/^@+/, '');
+  if (!author) return null;
+  let text = postText(st);
+  if (UNSAFE.test(text)) return null;
+  if (violentHidden() && VIOLENT.test(text)) return null;
+  if (sensitive(text, st)) return null;
+  if (lang === 'en') {
+    if ((text.match(/[぀-ヿ一-鿿]/g) || []).length > 2 || !/[A-Za-z]{3,}/.test(text) || text.length < 12) return null;
+    if (/\b(rip|rest in peace|condolences|passed away)\b/i.test(text)) return null;
+  } else {
+    if ((text.match(/[぀-ヿ]/g) || []).length < 1) return null;
+    const at = text.search(/[぀-ヿ一-鿿]/);
+    if (at > 0) {
+      const lead = text.slice(0, at).trim();
+      if (lead.split(/\s+/).filter(w => /[A-Za-z]{4,}/.test(w)).length >= 2) text = text.slice(at);
+    }
+    if ([...text].length < 8 || /ご冥福|追悼|亡くな|お悔やみ|ご逝去|死去/.test(text)) return null;
+  }
+  if (!isFunny(text, lang)) return null;
+  const url = (st && st.url) || '';
+  return { handle: author, text: focusJoke(text, lang), url, link: url, lang };
+}
+function humorScore(text, headlines, lang) {
+  let score = 0;
+  const funny = lang === 'en'
+    ? /\b(lol|lmao|haha\w*|hilarious|dead|joke|bruh)\b|😂|🤣|😆|😭|💀/i.test(text)
+    : /笑|草|ワロタ|ワロ|ウケ|ネタ|やば|マジ|でかっ|でっかい|かわい|面白い|ジョーク|皮肉|ｗ{2,}|w{2,}|😂|🤣|😆|😅|😭|〜|～/.test(text);
+  if (funny) score += 8;
+  if (/[！？!?]{2,}/.test(text)) score += 2;
+  const n = [...text].length;
+  if (lang === 'en') { if (n >= 20 && n <= 120) score += 3; else if (n > 200) score -= 5; }
+  else { if (/[゠-ヿ]{3,}/.test(text)) score += 2; if (n >= 8 && n <= 42) score += 3; else if (n > 70) score -= 5; }
+  if (/市況|株価|金利|為替|首相|政府|発表しました|によると|％|パーセント|\bpercent\b|according to|officials said/i.test(text)) score -= 6;
+  const bits = lang === 'en' ? (text.toLowerCase().match(/[a-z]{5,}/g) || []) : (text.match(/[゠-ヿ]{2,}|[一-鿿]{2,}/g) || []);
+  const blob = (headlines || []).join('\n').toLowerCase();
+  let hit = 0;
+  bits.forEach(b => { if (blob.includes(b.toLowerCase())) hit++; });
+  const over = bits.length ? hit / bits.length : 0;
+  if (over > 0.55 && !funny) score -= 6;
+  else if (over > 0.12) score += 2;
+  return score + Math.random();
+}
+function keywordsFor(headline, lang) {
+  const text = String(headline || '');
+  if (CJK.test(text)) {
+    const chunks = text.match(/[゠-ヿ]{2,}|[一-鿿]{2,}/g) || [];
+    const out = [];
+    chunks.forEach(c => {
+      const word = /[゠-ヿ]/.test(c[0]) ? c.slice(0, 8) : c.slice(0, 2);
+      if (word.length < 2 || /^(日本|今日|本日|政府|発表|首相|大統領|東京|大阪|京都|世界|会社|大学|ニュース)$/.test(word)) return;
+      if (out.indexOf(word) < 0) out.push(word);
+    });
+    return out.slice(0, 2);
+  }
+  const names = (text.match(/\b[A-Z][a-zA-Z]{3,}\b/g) || []).filter(w => !STOP.has(w.toUpperCase()));
+  const words = (text.match(/\b[a-zA-Z]{5,}\b/g) || []).filter(w => !STOP.has(w.toUpperCase()));
+  const out = [];
+  names.concat(words).forEach(w => { if (out.length < 2 && out.indexOf(w) < 0) out.push(w); });
+  return out;
+}
+function pickFunny(rows, n) {
+  const ranked = rows.slice().sort((a, b) => b.score - a.score || a.text.length - b.text.length);
+  const out = [];
+  const handles = new Set();
+  const take = allowSame => ranked.forEach(row => {
+    if (out.length >= n || out.indexOf(row) >= 0) return;
+    const who = row.handle.toLowerCase();
+    if (!allowSame && handles.has(who)) return;
+    handles.add(who);
+    out.push(row);
+  });
+  take(false);
+  if (out.length < n) take(true);
+  return out;
+}
+/* Funny posts about the topics. Jokes that played before are skipped, and more searches run until enough are new. */
+async function collectJokes(topics, need, opts) {
+  if (!need || !sourceOn('x')) return [];
+  const lang = jokeLang();
+  const replies = !(opts && opts.posts);
+  const past = seenSet(SEEN_JOKES);
+  const now = playingKeys();
+  const queries = [];
+  const addQ = q => { if (q && queries.indexOf(q) < 0) queries.push(q); };
+  topics.forEach(t => addQ(String(t).trim()));
+  xAccounts().forEach(h => addQ('to:' + h));
+  (lang === 'en' ? ['news', 'today', 'trending', 'weird'] : ['ニュース', '今日', '話題', 'トレンド']).forEach(addQ);
+  const build = q => `${q} ${FUNNY_Q[lang]} ${replies && !/^to:/.test(q) ? 'filter:replies ' : ''}lang:${lang}${xRange()}`;
+  const headlines = (opts && opts.headlines) || [];
+  const rows = [];
+  const keys = new Set();
+  for (let i = 0; i < queries.length && rows.length < need * 2 && i < 24; i += 6) {
+    if (S.again) break;
+    const batch = queries.slice(i, i + 6);
+    const lists = await Promise.all(batch.map(q => fxJson('https://api.fxtwitter.com/2/search?q=' + encodeURIComponent(build(q))).then(d => ((d && d.results) || []).map(st => ({ st, q }))).catch(() => [])));
+    lists.flat().forEach(({ st, q }) => {
+      const got = replyOf(st, lang);
+      if (!got) return;
+      got.topic = q;
+      const ks = jokeKeys(got);
+      if (ks.some(k => past.has(k) || now.has(k) || keys.has(k))) return;
+      ks.forEach(k => keys.add(k));
+      got.score = humorScore(got.text, headlines, lang);
+      rows.push(got);
+    });
+  }
+  return pickFunny(rows, need);
+}
+
+/* ---------- romance: short, loving exchanges between two people, then what others said ---------- */
+/* Searches for loving replies; each one is read with the post it answers. */
+const ROMANCE_Q = {
+  ja: [
+    '(おやすみん OR おやすー OR ねんね OR すやぁ OR おやぴ OR おやすみなさいませ) filter:replies',
+    '(おはおは OR おはよーだよ OR おっはー OR おはよん OR おはよぉ OR おはよーん) filter:replies',
+    '(だいしゅき OR すきすき OR ぎゅーして OR ちゅー OR 会いたいよ OR なでなで OR ♡) filter:replies',
+    '(ただいまー OR おかえりー OR おつかれさま♡ OR おかえりなさい♡ OR がんばったね) filter:replies',
+    '(彼氏 OR 彼女 OR 旦那 OR 嫁) (すき OR ぎゅー OR だいすき OR ありがと) filter:replies',
+    '(愛してる OR あいしてる OR 愛してるよ OR 大好きすぎ OR ずっと一緒にいようね OR 一生離さない) filter:replies',
+    '(いちゃいちゃ OR イチャイチャ OR くっつきたい OR 甘えたい OR ぎゅーってして OR ちゅーして OR ちゅっ) filter:replies',
+  ],
+  en: [
+    '("night night" OR "nighty night" OR "sweet dreams" OR "sleep tight") filter:replies',
+    '("morning sunshine" OR "morning babe" OR "rise and shine" OR "good morning beautiful") filter:replies',
+    '("love you more" OR "miss you more" OR "love ya" OR "my love" OR babe) filter:replies',
+    '("i love you" OR "love you so much" OR "love you forever" OR cuddle OR snuggle OR "come cuddle") filter:replies',
+  ],
+};
+/* Playful hints between couples (今夜は寝かさない😏). Searched only while sensitive posts are shown. */
+const FLIRT_Q = {
+  ja: ['(寝かさない OR 覚悟してね OR 今夜は OR 😏 OR 🍆 OR 🍑) (好き OR 大好き OR ♡ OR 😘 OR 🥰) filter:replies'],
+  en: ['(😏 OR "you\'re trouble" OR "come here" OR "behave") (babe OR baby OR "love you") filter:replies'],
+};
+/* The loving, lovey-dovey kind of talk comes first; playful hints next. */
+const ICHA = {
+  ja: /愛してる|あいしてる|いちゃ|イチャ|くっつ|甘え|ぎゅーって|ちゅーして|ちゅっ|一生離さない|ずっと一緒|大好きすぎ/,
+  en: /i love you|love you so much|love you forever|cuddle|snuggle|can'?t wait to (?:see|hold) you/i,
+};
+const HINT = {
+  ja: /寝かさない|覚悟し|今夜は|😏|🍆|🍑|🔞/,
+  en: /😏|you'?re trouble|behave|come here/i,
+};
+/* Cute, loving ways of saying things are preferred to plain greetings. */
+const CUTE = {
+  ja: /おやすみん|おやすー|おやぴ|おやすみなさいませ|ねんね|すや|おはおは|おはよーだよ|おっはー|おはよん|おはよぉ|おはよーん|だいしゅき|しゅき|すきすき|大好きだよ|好きだよ|すきだよ|ぎゅー|ちゅ|なでなで|よしよし|がんばったね|会いたいよ|♡|❤|💕|💗|💖|🥰|😘|😚|だよ[〜ー♡❤]|ね[〜ー♡]|よ[〜ー♡]/,
+  en: /night night|nighty|sleep tight|sweet dreams|sunshine|rise and shine|love you more|miss you more|love ya|\bbabe\b|\bbaby\b|honey|cutie|xoxo|xxx|💕|🥰|😘|😚/i,
+};
+const PLAIN = {
+  ja: /^(?:おやすみ(?:なさい)?|おはよ(?:う|ー)?|ただいま|おかえり|おつかれ(?:さま)?|お疲れ(?:様)?)[。！!〜~ー]?\s*[\p{Extended_Pictographic}\u200d\ufe0f\s]*$/u,
+  en: /^(?:good ?night|good ?morning|night|morning|hi|hey)[.!]?\s*[\p{Extended_Pictographic}\u200d\ufe0f\s]*$/iu,
+};
+/* The kind of talk, so a video does not play two good-nights. */
+function talkKind(text) {
+  const t = String(text || '');
+  if (/寝かさない|覚悟して|😏|🍆|🍑|🔞|you'?re trouble|behave/i.test(t)) return 'hint';
+  if (/愛してる|あいしてる|いちゃ|イチャ|くっつ|甘え|一生離さない|ずっと一緒|i love you|cuddle|snuggle/i.test(t)) return 'icha';
+  if (/おやす|ねんね|すや|寝|眠|night|sleep|dream|💤|😴/i.test(t)) return 'night';
+  if (/おは|朝|morning|rise and shine|sunshine|☀/i.test(t)) return 'morning';
+  if (/ただいま|おかえり|おつかれ|お疲れ|がんばった|home|welcome back/i.test(t)) return 'home';
+  if (/会いたい|あいたい|寂し|さみし|miss/i.test(t)) return 'miss';
+  if (/好き|すき|しゅき|愛|ぎゅ|ちゅ|なでなで|love|kiss|hug|♡|❤|💕/i.test(t)) return 'love';
+  return 'other';
+}
+/* Everyday couple talk: greetings, thanks, missing each other, and love. */
+const LOVE = {
+  ja: /大好き|だいすき|だいしゅき|しゅき|好き|すき|愛して|あいして|いちゃ|イチャ|くっつ|甘え|寝かさない|😏|会いたい|あいたい|ぎゅ|ちゅ|なでなで|よしよし|かわいい|可愛い|かっこいい|おやす|ねんね|すや|おはよ|おはおは|おっはー|おつかれ|お疲れ|ただいま|おかえり|いってらっしゃ|いってきます|気をつけて|がんばったね|ありがと|ずっと一緒|一緒に|ハグ|彼氏|彼女|旦那|嫁|♡|❤|♥|💕|💗|💓|💖|💘|💞|🥰|😘|😚|😍|🤗|💤|😴|☺/,
+  en: /love you|love ya|luv u|\bily\b|cuddle|snuggle|😏|miss you|my love|\bbabe\b|\bbaby\b|honey|sweetheart|cutie|handsome|beautiful|xoxo|xxx|forever|good ?night|night night|nighty|good ?morning|sunshine|rise and shine|sleep well|sleep tight|sweet dreams|home safe|take care|thank you|boyfriend|girlfriend|husband|wife|❤|♥|💕|💗|🥰|😘|😚|😍|🤗|💤|😴/i,
+};
+/* What onlookers say about a couple. */
+const CHEER = {
+  ja: /尊い|てぇてぇ|可愛い|かわいい|お幸せに|末永く|リア充|爆発しろ|微笑ましい|ほっこり|うらやま|羨ましい|素敵|仲良し|笑|草|ｗｗ|ww/,
+  en: /cute|adorable|goals|wholesome|get a room|love this|so sweet|\baw+\b|lol|lmao|🥹|😭/i,
+};
+/* Short, unless one long story is allowed in the video. */
+const SHORT = { ja: 30, en: 90 };
+const LONG = { ja: 60, en: 180 };
+const UNSAFE_ROMANCE = /浮気|不倫|別れ|離婚|ブロック|死ね|殺|嫌い|最低|ストーカー|cheat|divorce|break ?up|hate you/i;
+function romanceText(st, lang) {
+  const text = postText(st);
+  if (!text || NEVER.test(text) || VIOLENT.test(text) || UNSAFE_ROMANCE.test(text) || heavy(text) || minorAccount(st)) return '';
+  /* Suggestive couple talk plays only with Hide sensitive posts off, and never next to children or school life. */
+  if (suggestive(text, st) && (sensitiveHidden() || CHILD.test(text) || YOUTH.test(text))) return '';
+  if (lang === 'en') {
+    if ((text.match(/[぀-ヿ一-鿿]/g) || []).length > 2 || !/[A-Za-z]{2,}/.test(text) || text.length < 4) return '';
+  } else if ((text.match(/[぀-ヿ]/g) || []).length < 1 || [...text].length < 2) return '';
+  if (/ご冥福|追悼|亡くな|お悔やみ|死去|\brip\b|passed away/i.test(text)) return '';
+  return text;
+}
+const charLen = t => [...String(t || '')].length;
+/* The post a reply answers. The fxtwitter API gives it as replying_to { screen_name, status } or replying_to_status. */
+function parentOf(st) {
+  const rt = st && st.replying_to;
+  const id = (rt && typeof rt === 'object' && (rt.status || rt.status_id || rt.id)) || (st && (st.replying_to_status || st.in_reply_to_status_id_str || st.in_reply_to_status_id)) || '';
+  const who = (rt && typeof rt === 'object' && (rt.screen_name || rt.username)) || (typeof rt === 'string' ? rt : '') || '';
+  return { id: /^\d+$/.test(String(id)) ? String(id) : '', who: String(who).replace(/^@+/, '') };
+}
+function statusId(st) {
+  const m = String((st && st.url) || '').match(/status(?:es)?\/(\d+)/);
+  return (st && st.id && /^\d+$/.test(String(st.id)) ? String(st.id) : '') || (m ? m[1] : '');
+}
+function handleOf(st) { return String((st && st.author && st.author.screen_name) || '').replace(/^@+/, ''); }
+async function fetchStatus(id) {
+  try {
+    const d = await fxJson('https://api.fxtwitter.com/2/status/' + id);
+    if (d && (d.status || d.tweet)) return d.status || d.tweet;
+  } catch (e) { console.warn(e); }
+  try {
+    const d = await fxJson('https://api.fxtwitter.com/status/' + id);
+    if (d && d.tweet) return d.tweet;
+  } catch (e) { console.warn(e); }
+  return null;
+}
+function searchX(q) {
+  return fxJson('https://api.fxtwitter.com/2/search?q=' + encodeURIComponent(q)).then(d => (d && d.results) || []).catch(() => []);
+}
+/* Each story: a loving post, the partner's loving reply, then up to two onlookers' comments.
+   Most posts are short; at most one story in a video has a longer post. */
+async function collectRomance(need, place) {
+  if (!need || !sourceOn('x')) return [];
+  const lang = jokeLang();
+  const past = seenSet(SEEN_JOKES);
+  const now = playingKeys();
+  say('Searching couples on X');
+  const queries = ROMANCE_Q[lang].concat(sensitiveHidden() ? [] : FLIRT_Q[lang]);
+  const lists = await Promise.all(queries.map(q => searchX(q + ' lang:' + lang + xRange())));
+  const used = new Set();
+  const cands = [];
+  lists.flat().forEach(st => {
+    const handle = handleOf(st);
+    const text = romanceText(st, lang);
+    const parent = parentOf(st);
+    if (!handle || !text || !parent.id || !LOVE[lang].test(text) || charLen(text) > LONG[lang]) return;
+    const id = statusId(st);
+    const tk = 't:' + squash(text).slice(0, 50);
+    if (!id || used.has(id) || used.has(tk) || past.has('id:' + id) || now.has('id:' + id) || past.has(tk) || now.has(tk) || past.has('id:' + parent.id) || now.has('id:' + parent.id)) return;
+    used.add(id);
+    used.add(tk);
+    const cute = CUTE[lang].test(text) ? 5 : 0;
+    const plain = PLAIN[lang].test(text) ? -5 : 0;
+    const icha = (ICHA[lang].test(text) ? 6 : 0) + (HINT[lang].test(text) ? 4 : 0);
+    cands.push({ b: { handle, text, url: st.url || '', id }, parent, score: (charLen(text) <= SHORT[lang] ? 4 : 0) + cute + icha + plain + Math.random() * 3 });
+  });
+  const ranked = cands.sort((x, y) => y.score - x.score).slice(0, need * 4);
+  const parents = await Promise.all(ranked.map(c => fetchStatus(c.parent.id).catch(() => null)));
+  const stories = [];
+  let longs = 0;
+  /* A post that is itself a reply to the partner means the two are talking: those stories come first. */
+  const order = ranked.map((c, i) => {
+    const pst = parents[i];
+    const back = pst ? parentOf(pst) : { who: '' };
+    const mutual = !!back.who && back.who.toLowerCase() === c.b.handle.toLowerCase();
+    const at = pst ? postText(pst) : '';
+    const both = (CUTE[lang].test(at) ? 4 : 0) + (ICHA[lang].test(at) ? 4 : 0) + (HINT[lang].test(at) && !sensitiveHidden() ? 6 : 0) + (PLAIN[lang].test(at) && PLAIN[lang].test(c.b.text) ? -6 : 0);
+    return { i, w: (mutual ? 6 : 0) + c.score + both };
+  }).sort((x, y) => y.w - x.w).map(x => x.i);
+  /* One story of each kind per video (one good-night, one good-morning...), unless there are not enough. */
+  const kinds = new Set();
+  const spare = [];
+  const mutualOf = i => { const back = parents[i] ? parentOf(parents[i]) : { who: '' }; return !!back.who && back.who.toLowerCase() === ranked[i].b.handle.toLowerCase(); };
+  /* A famous account's post with a fan's reply is not a couple. */
+  const famous = st => { const a = st && st.author; const n = a && (a.followers ?? a.followers_count); return typeof n === 'number' && n > 20000; };
+  order.forEach(i => {
+    const c = ranked[i];
+    if (stories.length >= need) return;
+    const pst = parents[i];
+    if (!pst || famous(pst)) return;
+    const aText = romanceText(pst, lang);
+    const aHandle = handleOf(pst) || c.parent.who;
+    const atk = 't:' + squash(aText).slice(0, 50);
+    if (!aText || !aHandle || aHandle.toLowerCase() === c.b.handle.toLowerCase() || charLen(aText) > LONG[lang] || past.has(atk) || now.has(atk) || used.has(atk)) return;
+    if (!LOVE[lang].test(aText) && !mutualOf(i) && charLen(aText) > (lang === 'en' ? 40 : 16)) return;
+    /* The pair read together: nothing suggestive next to children or school life, from either side. */
+    const pairText = aText + ' ' + c.b.text;
+    if (suggestive(pairText) && (CHILD.test(pairText) || YOUTH.test(pairText))) return;
+    const long = charLen(aText) > SHORT[lang] || charLen(c.b.text) > SHORT[lang];
+    if (long && longs >= 1) return;
+    const kind = talkKind(aText + ' ' + c.b.text);
+    if (kinds.has(kind)) { spare.push({ c, i, aText, aHandle, atk, long }); return; }
+    kinds.add(kind);
+    if (long) longs++;
+    used.add(atk);
+    stories.push({ a: { handle: aHandle, text: aText, url: pst.url || ('https://x.com/' + aHandle + '/status/' + c.parent.id), id: c.parent.id }, b: c.b, cheers: [] });
+  });
+  spare.forEach(x => {
+    if (stories.length >= need || (x.long && longs >= 1) || used.has(x.atk)) return;
+    if (x.long) longs++;
+    used.add(x.atk);
+    stories.push({ a: { handle: x.aHandle, text: x.aText, url: parents[x.i].url || ('https://x.com/' + x.aHandle + '/status/' + x.c.parent.id), id: x.c.parent.id }, b: x.c.b, cheers: [] });
+  });
+  /* What others said in the same conversation. */
+  const cheerLists = await Promise.all(stories.map(st => searchX('conversation_id:' + st.a.id + ' filter:replies')));
+  stories.forEach((st, i) => {
+    const pair = new Set([st.a.handle.toLowerCase(), st.b.handle.toLowerCase()]);
+    shuffle(cheerLists[i]).forEach(x => {
+      if (st.cheers.length >= 2) return;
+      const who = handleOf(x);
+      const text = romanceText(x, lang);
+      const id = statusId(x);
+      const tk = 't:' + squash(text).slice(0, 50);
+      if (!who || pair.has(who.toLowerCase()) || !text || !id || used.has(id) || used.has(tk) || past.has('id:' + id) || past.has(tk) || now.has(tk)) return;
+      if (!CHEER[lang].test(text) || charLen(text) > SHORT[lang]) return;
+      used.add(id);
+      used.add(tk);
+      st.cheers.push({ handle: who, text, url: x.url || '', id });
+    });
+  });
+  return stories.map(st => ({
+    romance: true, story: st, lang, place: place || 'middle',
+    keys: [st.a, st.b, ...st.cheers].flatMap(m => ['id:' + m.id, 't:' + squash(m.text).slice(0, 50)]),
+  }));
+}
+/* One story becomes several cards: the post, the reply, then what others said. */
+function romanceCards(r, langId) {
+  const st = r.story;
+  const ja = r.lang !== 'en';
+  /* The top-right corner says 恋愛 (ROMANCE in English); that is enough to set the scene. */
+  const corner = ja && langId !== 'en' ? '恋愛' : 'ROMANCE';
+  const one = (text, src, url) => {
+    let card;
+    if (ja && CJK.test(text) && langId !== 'en') {
+      const parts = largeJa(text);
+      const kw = jaWord(text);
+      card = { kw, cat: 'ROMANCE', topic: corner, head: parts.head, sub: [], jp: parts.rest ? [parts.rest] : [], tags: [], src };
+    } else {
+      const words = String(text).split(/\s+/).filter(Boolean);
+      const kw = storyWord(text, '');
+      card = { kw, cat: 'ROMANCE', topic: corner, head: [words.slice(0, 12).join(' ') || kw], sub: [], jp: words.length > 12 ? [words.slice(12).join(' ')] : [], tags: [], src };
+    }
+    card.url = url || '';
+    card.key = r.keys;
+    return card;
+  };
+  return [
+    one(st.a.text, 'X @' + st.a.handle, st.a.url),
+    one(st.b.text, 'X @' + st.b.handle + ' → @' + st.a.handle, st.b.url),
+    ...st.cheers.map(c => one(c.text, 'X @' + c.handle, c.url)),
+  ];
+}
+
+/* ---------- travel: what people say at famous places ---------- */
+const SPOTS = {
+  ja: [
+    ['兼六園', '石川・金沢'], ['ひがし茶屋街', '石川・金沢'], ['金沢21世紀美術館', '石川・金沢'], ['白川郷', '岐阜'],
+    ['金閣寺', '京都'], ['清水寺', '京都'], ['伏見稲荷', '京都'], ['嵐山', '京都'], ['奈良公園', '奈良'], ['東大寺', '奈良'],
+    ['富士山', '静岡・山梨'], ['河口湖', '山梨'], ['東京タワー', '東京'], ['スカイツリー', '東京'], ['浅草寺', '東京'], ['雷門', '東京・浅草'],
+    ['日光東照宮', '栃木'], ['鎌倉大仏', '神奈川'], ['箱根', '神奈川'], ['姫路城', '兵庫'], ['厳島神社', '広島・宮島'], ['道後温泉', '愛媛'],
+    ['熊本城', '熊本'], ['美ら海水族館', '沖縄'], ['首里城', '沖縄'], ['小樽運河', '北海道'], ['函館山', '北海道'], ['旭山動物園', '北海道'],
+    ['松本城', '長野'], ['上高地', '長野'], ['銀山温泉', '山形'], ['松島', '宮城'], ['出雲大社', '島根'], ['伊勢神宮', '三重'], ['高千穂峡', '宮崎'],
+  ],
+  en: [
+    ['Grand Canyon', 'Arizona'], ['Yosemite', 'California'], ['Golden Gate Bridge', 'San Francisco'], ['Yellowstone', 'Wyoming'],
+    ['Niagara Falls', 'New York'], ['Times Square', 'New York'], ['Central Park', 'New York'], ['Statue of Liberty', 'New York'],
+    ['Zion', 'Utah'], ['Hollywood Sign', 'Los Angeles'], ['Las Vegas Strip', 'Nevada'], ['Smoky Mountains', 'Tennessee'],
+  ],
+};
+const WOW_Q = { ja: '(すごい OR すごーい OR すげー OR きれい OR 綺麗 OR 絶景 OR 最高 OR 感動)', en: '(amazing OR stunning OR beautiful OR gorgeous OR wow OR breathtaking)' };
+const WOW = {
+  ja: /すご|すげ|スゴ|きれ[いー]|綺麗|キレイ|絶景|最高|感動|美し|やば|ヤバ|映え|エモ|圧巻|幻想的/,
+  en: /\b(amazing|stunning|beautiful|gorgeous|wow+|breathtaking|incredible|unreal|insane)\b/i,
+};
+/* Posts that sell something or report news are left out; people saying what they see stay. */
+const NOT_TRIP = /PR|広告|キャンペーン|プレゼント|予約|販売|募集|ツアー|セール|クーポン|ニュース|速報|公式|\bsale\b|\bbook now\b|\bgiveaway\b|\bnews\b|\btickets?\b/i;
+async function collectTravel(need, place) {
+  if (!need || !sourceOn('x')) return [];
+  const lang = jokeLang();
+  const past = seenSet(SEEN_JOKES);
+  const now = playingKeys();
+  say('Searching famous places on X');
+  const spots = shuffle(SPOTS[lang] || SPOTS.ja);
+  const groups = [];
+  for (let i = 0; i < spots.length && groups.length < 4; i += 4) groups.push(spots.slice(i, i + 4));
+  const build = g => `(${g.map(([n]) => lang === 'en' ? '"' + n + '"' : n).join(' OR ')}) ${WOW_Q[lang]} -filter:replies -filter:retweets lang:${lang}${xRange()}`;
+  const lists = await Promise.all(groups.map(g => fxJson('https://api.fxtwitter.com/2/search?q=' + encodeURIComponent(build(g))).then(d => (d && d.results) || []).catch(() => [])));
+  const rows = [];
+  const keys = new Set();
+  const seenSpot = new Set();
+  lists.flat().forEach(st => {
+    const handle = handleOf(st);
+    const raw = String((st && st.text) || '');
+    const text = postText(st);
+    if (!handle || !text || UNSAFE.test(text) || VIOLENT.test(text) || NOT_TRIP.test(raw) || sensitive(text, st)) return;
+    if ((raw.match(/[#＃]/g) || []).length > 3) return;
+    const spot = spots.find(([n]) => raw.toLowerCase().includes(n.toLowerCase()));
+    if (!spot || seenSpot.has(spot[0]) || !WOW[lang].test(text)) return;
+    const n = charLen(text);
+    if (lang === 'ja' ? (n < 4 || n > 80 || !/[぀-ヿ]/.test(text)) : (n < 8 || n > 180)) return;
+    const url = st.url || '';
+    const ks = jokeKeys({ text, link: url });
+    if (ks.some(k => past.has(k) || now.has(k) || keys.has(k))) return;
+    ks.forEach(k => keys.add(k));
+    seenSpot.add(spot[0]);
+    rows.push({ handle, text, url, spot: spot[0], where: spot[1], lang, score: (n <= 30 ? 4 : 0) + (/[\p{Extended_Pictographic}]/u.test(text) ? 1 : 0) });
+  });
+  return rows.sort((a, b) => b.score - a.score).slice(0, need)
+    .map(t => ({ headline: t.text, text: t.text, link: t.url, source: 'X @' + t.handle, x: true, cat: 'TRAVEL', joke: true, travel: true, spot: t.spot, where: t.where, place: place || 'middle' }));
+}
+
+/* ---------- two cards for each comment ---------- */
+/* The first card shows the short part (すごーい), the second the whole comment
+   (兼六園の雪吊りすごーい). Only the posted words are shown, with no added explanation. */
+const REACT = {
+  ja: /(?:すご[ーぉおいっ〜~]*い?|すげ[ーぇえっ]*|スゴ[ーイい]*|やば[いぁーっ]*|ヤバ[いイー]*|かわい[いー〜]*|可愛[いー]*|きれ[いー]+|綺麗|キレイ|美し[いー]*|最高|さいこう|絶景|感動|圧巻|エモ[いー]*|尊[いー]*|うま[いー]+|美味し[いー]*|おいし[いー]*|楽し[いー]*|たのし[いー]*|ワロタ|爆笑|笑笑|ウケる|面白[いー]*|おもしろ[いー]*|草)[^、。！？!?\n]{0,6}[！!？?〜~ーｗw笑✨♪…]*[\s\p{Extended_Pictographic}‍️]*$/u,
+  en: /\b(?:wow+|omg|amazing|stunning|beautiful|gorgeous|breathtaking|incredible|insane|lol+|lmao+|haha\w*)\b[^.!?\n]{0,20}[.!?]*[\s\p{Extended_Pictographic}‍️]*$/iu,
+};
+function teaserOf(text, lang) {
+  const t = String(text || '').trim();
+  const n = charLen(t);
+  const fits = x => x && charLen(x) >= 2 && charLen(x) <= (lang === 'en' ? 40 : 14) && charLen(x) <= n - 3;
+  const m = t.match(REACT[lang]);
+  if (m && fits(m[0].trim())) return m[0].trim();
+  const parts = (lang === 'en' ? t.replace(/([.!?])\s+/g, '$1\u0000').split('\u0000') : t.split(/[、。！？!?\s]+/)).map(x => x.trim()).filter(Boolean);
+  const last = parts[parts.length - 1];
+  if (parts.length > 1 && fits(last)) return last;
+  return '';
+}
+function beats(r, card, langId) {
+  const ja = langId !== 'en' && CJK.test(card.head.join('') + (card.jp[0] || ''));
+  const text = ja ? (r._shownJa || r.headline) : (r._shownEn || r.headline);
+  const lang = ja ? 'ja' : 'en';
+  const corner = r.travel ? (ja ? '観光' : 'TRAVEL') : card.topic;
+  const main = { ...card, topic: corner, cat: r.travel ? 'TRAVEL' : card.cat, jp: card.jp.slice(), _main: true };
+  const tease = teaserOf(text, lang);
+  if (tease) {
+    const bare = tease.replace(/[\p{Extended_Pictographic}\u200d\ufe0f!！?？〜~…✨♪\s\d]/gu, '');
+    const kw = bare && charLen(bare) <= 6 ? bare : (ja ? jaWord(tease) : storyWord(tease, ''));
+    return [{ ...card, topic: corner, cat: main.cat, kw, head: [tease], sub: [], jp: [] }, main];
+  }
+  return [main];
+}
+
+/* ---------- text for the picture ---------- */
+async function translateMany(texts, tl) {
+  const sep = '\n###\n';
+  const out = texts.slice();
+  for (let i = 0; i < texts.length; i += 5) {
+    const slice = texts.slice(i, i + 5);
+    try {
+      const url = 'https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=' + encodeURIComponent(tl) + '&dt=t&q=' + encodeURIComponent(slice.join(sep));
+      const data = JSON.parse(await getText(url, 10000));
+      const joined = (data[0] || []).map(row => (row && row[0]) || '').join('');
+      const parts = joined.split(/\s*###\s*/);
+      slice.forEach((src, k) => { out[i + k] = ((parts[k] || src).trim() || src); });
+    } catch (e) { console.warn(e); }
+  }
+  return out;
+}
+function contentWords(text) {
+  return String(text || '').toUpperCase().replace(/[^A-Z0-9]+/g, ' ').split(/\s+/).filter(w => w.length > 1 && !SMALL.has(w.toLowerCase()));
+}
+function storyWord(english, local) {
+  const genreNames = new Set(GENRES.map(g => g.name.toUpperCase().replace(/[^A-Z0-9]/g, '')));
+  const words = contentWords(english).filter(w => !STOP.has(w) && !genreNames.has(w) && w !== 'NEWS');
+  const strong = words.filter(w => w.length >= 5);
+  const raw = ((strong[0] || words[0]) || '').replace(/[^A-Z0-9]/g, '');
+  if (raw) return raw.length > 16 ? raw.slice(0, 16) : raw;
+  const cjk = String(local || english || '').match(/[぀-ヿ一-鿿]{2,}/);
+  return cjk ? cjk[0].slice(0, 6) : 'UPDATE';
+}
+function jaWord(text) {
+  const katas = String(text || '').match(/[゠-ヿ]{2,8}/g) || [];
+  if (katas.length) return katas.sort((a, b) => b.length - a.length)[0].slice(0, 8);
+  const kanji = String(text || '').match(/[一-鿿]{2,4}/);
+  if (kanji) return kanji[0];
+  const kana = String(text || '').match(/[぀-ゟ]{2,6}/);
+  return kana ? kana[0] : 'NEWS';
+}
+function largeJa(text) {
+  const chars = [...String(text || '').replace(/\s+/g, ' ').trim()];
+  if (!chars.length) return { head: ['NEWS'], rest: '' };
+  const cap = Math.min(chars.length, 36);
+  const take = chars.slice(0, cap);
+  const rest = chars.slice(cap).join('').trim();
+  if (take.length <= 16) return { head: [take.join('')], rest };
+  let mid = Math.ceil(take.length / 2);
+  const breaks = [];
+  for (let i = 8; i <= take.length - 6; i++) {
+    if (take[i] === ' ' || /[、。！？とでをはがに]/.test(take[i - 1])) breaks.push(i);
+  }
+  if (breaks.length) mid = breaks.sort((a, b) => Math.abs(a - mid) - Math.abs(b - mid))[0];
+  return { head: [take.slice(0, mid).join('').trim(), take.slice(mid).join('').trim()].filter(Boolean), rest };
+}
+function monthDay(stamp) {
+  if (!stamp) return '';
+  const s = String(stamp);
+  const d = new Date(/^\d{14}$/.test(s) ? s.replace(/^(\d{4})(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)$/, '$1-$2-$3T$4:$5:$6Z') : s);
+  return Number.isNaN(d.getTime()) ? '' : (d.getMonth() + 1) + '/' + d.getDate();
+}
+/* The same story card as the News page: Japanese large, or an English headline. */
+function storyFrom(raw, english, local, langId) {
+  const en = String(english || raw.headline || '').replace(/\s+/g, ' ').trim();
+  const loc = String(local || '').replace(/\s+/g, ' ').replace(/^[、。，．\s]+/, '').trim();
+  const jaText = loc || en;
+  const cat = raw.cat && raw.cat !== 'NEWS' ? raw.cat : '';
+  const src = (raw.x ? ('X @' + String(raw.source || 'X').replace(/^X\s*@/, '')) : (raw.source || 'News')).slice(0, 40);
+  if (langId !== 'en' && CJK.test(jaText)) {
+    const parts = largeJa(jaText);
+    const kw = jaWord(jaText);
+    const body = [];
+    if (parts.rest) body.push(parts.rest);
+    if (langId === 'both' && en && en !== jaText) body.push(en);
+    return { kw, cat: cat || kw, topic: kw, head: parts.head.length ? parts.head : [kw], sub: [], jp: body, tags: [], src, date: monthDay(raw.pubDate), url: raw.link || '' };
+  }
+  const kw = storyWord(en, loc);
+  const words = (en || loc || kw).split(/\s+/).filter(Boolean);
+  const head = [words.slice(0, 12).join(' ') || kw];
+  const sub = words.length > 12 ? [words.slice(12, 22).join(' ')] : [];
+  let jp;
+  if (langId === 'en') jp = en ? [en] : [];
+  else if (langId === 'ja') jp = [loc || en].filter(Boolean);
+  else { jp = [loc || en].filter(Boolean); if (en && en !== (loc || en)) jp.push(en); }
+  return { kw, cat: cat || kw, topic: kw, head, sub, jp: jp.length ? jp : [kw], tags: [], src, date: monthDay(raw.pubDate), url: raw.link || '' };
+}
+/* Translate each row into the chosen language, then make the cards. */
+/* The cards for each row, in the same order as the rows. Comments get two cards (see beats). */
+async function cardsFrom(rows, langId) {
+  const plain = rows.filter(r => !r.romance);
+  const toJa = langId !== 'en' ? plain.filter(r => !CJK.test(r.headline)) : [];
+  const toEn = langId !== 'ja' ? plain.filter(r => CJK.test(r.headline)) : [];
+  if (toJa.length) (await translateMany(toJa.map(r => r.headline), 'ja')).forEach((t, i) => { toJa[i]._ja = t; });
+  if (toEn.length) (await translateMany(toEn.map(r => r.headline), 'en')).forEach((t, i) => { toEn[i]._en = t; });
+  return rows.map(r => {
+    if (r.romance) return romanceCards(r, langId);
+    const cjk = CJK.test(r.headline);
+    const en = cjk ? (r._en || '') : r.headline;
+    const ja = cjk ? r.headline : (r._ja || '');
+    r._shownJa = ja; r._shownEn = en || r.headline;
+    const card = storyFrom(r, en || r.headline, ja, langId);
+    card.key = r.joke ? jokeKeys(r) : newsKeys(r);
+    return r.joke ? beats(r, card, langId) : [card];
+  });
+}
+
+/* ---------- making the video ---------- */
+async function collect() {
+  beginCollect();
+  const { country, lang } = market();
+  const mode = feedMode();
+  const N = total();
+  const slots = parseLineup(lineupText());
+  const SPECIAL = new Set(['jokes', 'romance', 'travel']);
+  const topicSlots = slots.filter(s => !SPECIAL.has(s.type));
+  const used = new Set();
+  let sequence = [];
+  let jokeAt = -1;
+  let topicWords = [];
+  const topicPlace = {};
+  /* Items (5, 10 or 20) is the number of cards. News, then comments gives about 40% to the reports.
+     Each comment is two cards: the short part, then the whole comment.
+     Romance adds couples (the post, the reply, what others said); Travel adds what people said
+     at famous places. A lineup line asks for more of them; the genres, when the lineup has no
+     topics, add a few. A lineup of only Romance and Travel plays only those. */
+  const romanceSlot = slots.find(s => s.type === 'romance');
+  const travelSlot = slots.find(s => s.type === 'travel');
+  const romanceGenre = genreChoices().find(g => g.id === 'romance' && g.on);
+  const travelGenre = genreChoices().find(g => g.id === 'travel' && g.on);
+  const onlySpecial = slots.length > 0 && slots.every(s => s.type === 'romance' || s.type === 'travel');
+  const newsNeed = mode === 'x' ? 0 : Math.max(1, Math.round(N * 0.4));
+  const kinds = (romanceSlot ? 1 : 0) + (travelSlot ? 1 : 0);
+  const share = onlySpecial ? Math.ceil((N - newsNeed) / kinds) : 0;
+  const byGenre = !topicSlots.length;
+  const romanceNeed = onlySpecial ? (romanceSlot ? Math.min(7, Math.ceil(share / 3)) : 0)
+    : romanceSlot ? Math.max(1, Math.round(N / 6)) : (byGenre && romanceGenre) ? Math.max(1, Math.round(N / 10)) : 0;
+  const travelNeed = onlySpecial ? (travelSlot ? Math.min(10, Math.ceil(share / 2)) : 0)
+    : travelSlot ? Math.max(1, Math.round(N / 5)) : (byGenre && travelGenre) ? Math.max(1, Math.round(N / 10)) : 0;
+  const romancePlace = romanceGenre ? romanceGenre.place : 'middle';
+  const travelPlace = travelGenre ? travelGenre.place : 'middle';
+  if (mode === 'x') {
+    /* X comments only: no reports. Funny replies about the lineup, the accounts,
+       and today's news in each chosen genre, in the genres' Top, Middle, Bottom order. */
+    say('Searching X');
+    progress(0.1);
+    topicSlots.forEach(s => topicWords.push(s.who ? 'to:' + s.who : (s.topic || s.q || s.gdelt || s.label)));
+    if (topicWords.length < 3 && !onlySpecial) {
+      const chosen = shuffle(genreChoices().filter(g => g.on && g.id !== 'romance' && g.id !== 'travel')).slice(0, 6);
+      const lists = await Promise.all(chosen.map(g => searchRows(g.q[country.id] || g.q.US, up(g.name)).then(rows => rows.filter(allowedRow)).catch(() => [])));
+      chosen.forEach((g, i) => {
+        lists[i].slice(0, 3).forEach(r => keywordsFor(r.headline, jokeLang()).forEach(w => { topicWords.push(w); topicPlace[w] = g.place; }));
+      });
+    }
+    if (topicWords.length < 3 && !onlySpecial) {
+      const news = await homeNews(new Set(), 8).catch(() => []);
+      news.forEach(r => keywordsFor(r.headline, jokeLang()).forEach(w => topicWords.push(w)));
+    }
+    jokeAt = 0;
+  } else if (topicSlots.length) {
+    const parts = shares(newsNeed, topicSlots.length);
+    topicSlots.forEach((s, i) => { s.count = parts[i]; });
+    for (const slot of slots) {
+      if (S.again || sequence.length >= MAX_ITEMS) break;
+      if (slot.type === 'jokes') { jokeAt = sequence.length; continue; }
+      if (slot.type === 'romance' || slot.type === 'travel') { if (jokeAt < 0) jokeAt = sequence.length; continue; }
+      if (!slot.count) continue;
+      say('Searching ' + (slot.label || slot.cat || 'news'));
+      progress(0.08 + 0.4 * slots.indexOf(slot) / slots.length);
+      let rows = freshRows(await rowsForSlot(slot), used);
+      if (rows.length < slot.count && slot.type !== 'x') rows = mergeRows(rows, freshRows((await searchRows(slot.label, slot.cat)).filter(allowedRow), used));
+      takeRows(shuffle(rows), used, slot.count, 0).forEach(r => sequence.push(r));
+    }
+  } else {
+    sequence = await homeNews(used, newsNeed);
+  }
+  if (S.again) return null;
+  sequence = sequence.slice(0, N);
+  if (jokeAt < 0) jokeAt = sequence.length;
+  const headlines = sequence.map(r => r.headline);
+  if (mode !== 'x') sequence.forEach(r => keywordsFor(r.headline, jokeLang()).forEach(w => topicWords.push(w)));
+  say('Searching jokes');
+  progress(0.55);
+  /* Jokes fill whatever the couples and places leave, so ask for enough to fill the rest on their own. */
+  const left0 = Math.max(0, N - sequence.length);
+  const [found, couples, trips] = await Promise.all([
+    collectJokes(topicWords, onlySpecial ? 0 : left0, { headlines }),
+    collectRomance(romanceNeed, romancePlace).catch(e => { console.warn(e); return []; }),
+    collectTravel(travelNeed, travelPlace).catch(e => { console.warn(e); return []; }),
+  ]);
+  /* A comment found both as a joke and under a couple plays once, as the joke. */
+  const jokeKeySet = new Set(found.flatMap(j => jokeKeys({ text: j.text, link: j.url })));
+  const coupleKeys = r => [r.story.a, r.story.b, ...r.story.cheers].flatMap(m => ['id:' + m.id, 't:' + squash(m.text).slice(0, 50)]);
+  couples.forEach(r => {
+    r.story.cheers = r.story.cheers.filter(c => !jokeKeySet.has('id:' + c.id) && !jokeKeySet.has('t:' + squash(c.text).slice(0, 50)));
+    r.keys = coupleKeys(r);
+  });
+  const jokeRows = found.map(j => ({ headline: j.text, text: j.text, link: j.url, source: 'X @' + j.handle, x: true, cat: 'REPLY', joke: true, topic: j.topic, place: topicPlace[j.topic] || 'middle' }));
+  const coupleRows = couples.map(r => ({ ...r, headline: r.story.a.text, joke: true }));
+  if (S.again) return null;
+  if (!sequence.length && !jokeRows.length && !coupleRows.length && !trips.length) return { empty: true };
+  say('Reading the text');
+  progress(0.75);
+  /* Fit the cards to Items: reports, couples and places first, then jokes fill the rest.
+     A comment without room for two cards keeps only the whole comment. */
+  const all = sequence.concat(coupleRows, trips, jokeRows);
+  const cards = await cardsFrom(all, lang.id);
+  if (S.again) return null;
+  let left = N;
+  all.forEach((r, i) => {
+    let c = cards[i];
+    r._cards = null;
+    if (!c.length || left <= 0) return;
+    if (c.length > left) {
+      if (r.romance) {
+        if (left < 2) return;
+        c = c.slice(0, left);
+        r.story.cheers = r.story.cheers.slice(0, left - 2);
+        r.keys = coupleKeys(r);
+        c.forEach(card => { card.key = r.keys; });
+      } else c = c.filter(card => card._main).slice(0, left);
+    }
+    if (!c.length) return;
+    r._cards = c;
+    left -= c.length;
+  });
+  /* Jokes, couples and places take turns within each band (Top, Middle, Bottom). */
+  const band = { top: 0, middle: 1, bottom: 2 };
+  const extra = [];
+  ['top', 'middle', 'bottom'].forEach(b => {
+    const lists = [jokeRows, coupleRows, trips].map(list => list.filter(r => r._cards && (band[r.place] === undefined ? 'middle' : r.place) === b));
+    for (let k = 0; lists.some(l => l.length); k++) {
+      const l = lists[k % lists.length];
+      if (l.length) extra.push(l.shift());
+    }
+  });
+  const news = sequence.filter(r => r._cards);
+  const at = Math.min(jokeAt, news.length);
+  const rows = news.slice(0, at).concat(extra, news.slice(at));
+  const items = rows.flatMap(r => r._cards);
+  return {
+    date: chosenDate(), items, market: country.name + ' · ' + lang.name,
+    played: { news: news.flatMap(newsKeys), jokes: extra.flatMap(j => j.keys || jokeKeys(j)) },
+  };
+}
+function normItem(it) {
+  const head = arr(it.head).map(up).slice(0, 3);
+  return {
+    kw: up(it.kw || (head[0] || '').split(' ')[0]).slice(0, 16) || 'NEWS',
+    cat: up(it.cat || 'NEWS'), topic: up(it.topic || ''),
+    head: head.length ? head : [up(it.kw) || 'NEWS'],
+    sub: arr(it.sub).slice(0, 3).map(l => String(l).trim().split(/\s+/).map(w => SMALL.has(w.toLowerCase()) ? w.toLowerCase() : w.toUpperCase()).join(' ')),
+    jp: arr(it.jp).slice(0, 8),
+    tags: arr(it.tags).map(up).slice(0, 4),
+    src: String(it.src || '').trim(), date: String(it.date || '').trim(), url: String(it.url || '').trim(),
+    key: arr(it.key),
+  };
+}
+function normalize(s) {
+  const items = (s.items || []).slice(0, MAX_ITEMS).filter(Boolean).map(normItem);
+  if (!items.length) throw new Error('The script has no stories');
+  return { date: /^\d{4}-\d{2}-\d{2}$/.test(s.date || '') ? s.date : chosenDate(), items, market: String(s.market || '').trim() };
+}
+function sourcesText(s) {
+  const lines = s.items.map((it, i) => `${pad2(i + 1)} ${it.head.join(' ')} — ${it.src}${it.date ? ' (' + it.date + ')' : ''}${it.url ? '\n   ' + it.url : ''}`);
+  return lines.join('\n') + '\n\n' + S.track.credit + ', public domain\nPhotos: U.S. National Park Service & NOAA, public domain';
+}
+async function loadFonts(script) {
+  const txt = E.allText(script);
+  if (!document.fonts || !document.fonts.load) return;
+  const link = document.getElementById('gf');
+  if (link && !link.sheet) await Promise.race([new Promise(r => { link.addEventListener('load', r, { once: true }); link.addEventListener('error', r, { once: true }); }), sleep(8000)]);
+  await Promise.race([
+    Promise.all(['900 64px "Noto Serif JP"', '700 40px "Noto Serif JP"', '700 34px "Noto Sans JP"', '700 40px "Tinos"'].map(f => document.fonts.load(f, txt).catch(() => {}))).then(() => document.fonts.ready),
+    sleep(12000),
+  ]);
+}
+
+/* ---------- playback ---------- */
+function preset() { return PRESET[S.format] || 'x'; }
+function sizeCanvas() {
+  const cv = $('cv');
+  if (S.show && (cv.width !== S.show.W || cv.height !== S.show.H)) { cv.width = S.show.W; cv.height = S.show.H; }
+}
+function safeUrl(u) {
+  try {
+    const x = new URL(String(u || ''), location.href);
+    return x.protocol === 'http:' || x.protocol === 'https:' ? x.href : '';
+  } catch (e) { return ''; }
+}
+function draw(T) {
+  if (!S.show) return;
+  S.lastDraw = performance.now();
+  const shown = Math.min(T, Math.max(0, S.show.duration - 1 / E.FPS));
+  E.drawFrame(ctx, S.show, shown, S.bgs);
+  $('time').textContent = `${T.toFixed(1)} / ${S.show.duration.toFixed(1)}`;
+  const a = $('storyLink');
+  const i = Math.min(S.show.items.length - 1, Math.max(0, Math.floor(shown / (E.DUR || 3.2))));
+  const url = safeUrl(S.show.items[i] && S.show.items[i].url);
+  if (!url) { if (!a.hidden) { a.hidden = true; a.removeAttribute('href'); a.textContent = ''; a.dataset.u = ''; } return; }
+  a.hidden = false;
+  /* Only when the story changes, so the link is not rebuilt on every frame while it is being tapped. */
+  if (a.dataset.u !== url) { a.dataset.u = url; a.href = url; a.textContent = url.replace(/^https?:\/\//, ''); }
+}
+function currentT() {
+  if (!S.show) return 0;
+  if (S.playing) return S.origin + (performance.now() - S.t0perf) / 1000;
+  return (+$('seek').value / 1000) * (S.show.duration || 0);
+}
+function musicEl() {
+  if (S.el) return S.el;
+  const el = document.createElement('audio');
+  el.preload = 'auto';
+  el.loop = true;
+  el.setAttribute('playsinline', '');
+  S.musicUrl = URL.createObjectURL(new Blob([S.music], { type: 'audio/mp4' }));
+  el.src = S.musicUrl;
+  document.body.appendChild(el);
+  S.el = el;
+  return el;
+}
+function soundAt(T) {
+  const el = S.el;
+  const len = el && isFinite(el.duration) ? el.duration : 41.6;
+  const dur = S.show ? S.show.duration : 0;
+  return Math.max(0, Math.min(Math.max(0, len - dur) + Math.max(0, T || 0), Math.max(0, len - 0.15)));
+}
+function playSound(T) {
+  if (!S.music || S.mute) return;
+  const el = musicEl();
+  try { el.currentTime = soundAt(T); } catch (e) {}
+  const play = el.play();
+  if (play && play.then) play.then(() => {
+    if (S.mute || !S.playing) { try { el.pause(); } catch (e) {} S.audioOn = false; paintSound(); return; }
+    S.audioOn = true;
+    paintSound();
+    if ($('caption').textContent.endsWith(TAP)) say(watchLine());
+  }).catch(() => { S.audioOn = false; paintSound(); });
+}
+function paintSound() {
+  const b = $('sound');
+  b.classList.toggle('on', !!S.audioOn);
+  b.classList.toggle('ask', !S.audioOn && !S.mute && !!S.playing);
+  b.setAttribute('aria-pressed', S.audioOn ? 'true' : 'false');
+}
+/* The Sound button turns the music on, and off again. Turning it on also starts the video. */
+function toggleSound() {
+  if (S.audioOn) {
+    S.mute = true;
+    if (S.el) { try { S.el.pause(); } catch (e) {} }
+    S.audioOn = false;
+    paintSound();
+    if (S.playing) say('Sound off. Press Sound to hear the music.');
+    return;
+  }
+  if (!S.show) return;
+  S.mute = false;
+  if (!S.playing) {
+    let T0 = (+$('seek').value / 1000) * S.show.duration;
+    if (T0 >= S.show.duration - 0.05) T0 = 0;
+    beginPlayback(T0);
+  }
+  playSound(currentT());
+  say(watchLine());
+}
+function watchLine() {
+  const items = (S.script && S.script.items) || [];
+  const jokes = items.filter(it => it.cat === 'REPLY' || it.cat === 'ROMANCE' || it.cat === 'TRAVEL').length;
+  const news = items.length - jokes;
+  const what = news && jokes ? `${news} ${news === 1 ? 'story' : 'stories'}, then ${jokes} ${jokes === 1 ? 'comment' : 'comments'}` : (jokes ? `${jokes} ${jokes === 1 ? 'comment' : 'comments'}` : `${news} ${news === 1 ? 'story' : 'stories'}`);
+  return 'Playing ' + what + '.' + (S.audioOn ? '' : TAP);
+}
+function stop() {
+  S.playing = false;
+  if (S.raf) { cancelAnimationFrame(S.raf); S.raf = 0; }
+  if (S.el) { try { S.el.pause(); } catch (e) {} }
+  S.audioOn = false;
+  $('play').textContent = 'Play';
+  paintSound();
+}
+function beginPlayback(T0) {
+  S.origin = T0;
+  S.t0perf = performance.now();
+  S.playing = true;
+  $('play').disabled = false;
+  $('play').textContent = 'Pause';
+  paintSound();
+  if (!S.raf) S.raf = requestAnimationFrame(tick);
+}
+function tick() {
+  S.raf = 0;
+  if (!S.playing || !S.show) return;
+  let T = currentT();
+  if (S.show.duration > 0 && T >= S.show.duration) {
+    if (S.busy) {
+      draw(Math.max(0, S.show.duration - 1 / E.FPS));
+      $('seek').value = '1000';
+      if (S.playing) S.raf = requestAnimationFrame(tick);
+      return;
+    }
+    const over = T % S.show.duration;
+    S.origin = over;
+    S.t0perf = performance.now();
+    if (S.audioOn && S.el) { try { S.el.currentTime = soundAt(over); } catch (e) {} }
+    T = over;
+  }
+  draw(Math.min(Math.max(0, T), Math.max(0, S.show.duration - 1 / E.FPS)));
+  $('seek').value = String(Math.round(Math.min(Math.max(0, T), S.show.duration) / S.show.duration * 1000));
+  if (S.playing) S.raf = requestAnimationFrame(tick);
+}
+async function setScript(raw, autoplay) {
+  stop();
+  const s = normalize(raw);
+  S.script = s;
+  S.show = E.prepare(s, preset(), LOOK);
+  sizeCanvas();
+  $('json').value = JSON.stringify(s, null, 2);
+  S.jsonClean = $('json').value;
+  $('sources').textContent = sourcesText(s);
+  $('play').disabled = false;
+  $('seek').disabled = false;
+  $('exportBtn').disabled = false;
+  resetDownload();
+  $('seek').value = '0';
+  draw(0);
+  if (autoplay && WATCH) {
+    /* Start the new video at once. The fonts finish loading while it plays. */
+    beginPlayback(0);
+    say(watchLine());
+    playSound(0);
+  } else say('Ready. Press Play.');
+  await loadFonts(s);
+  if (S.script !== s || !S.show) return;
+  const T = S.playing ? Math.max(0, Math.min(currentT(), S.show.duration)) : 0;
+  S.show = E.prepare(s, preset(), LOOK);
+  sizeCanvas();
+  draw(S.playing ? Math.min(T, Math.max(0, S.show.duration - 1 / E.FPS)) : 0);
+}
+function setBusy(b) {
+  S.busy = b;
+  $('update').disabled = !!b;
+  $('update').textContent = b ? 'Creating…' : 'Update';
+  ['go', 'apply', 'exportBtn', 'dl'].forEach(id => { $(id).disabled = !!b || ((id === 'exportBtn' || id === 'dl') && !S.show); });
+}
+async function runAll(opts) {
+  opts = opts || {};
+  if (S.busy) { S.again = opts; return; }
+  setBusy(true);
+  say('Searching ' + (feedMode() === 'x' ? 'X' : 'the news'));
+  progress(0.05);
+  let script = null;
+  try {
+    script = await collect();
+  } catch (e) {
+    console.error(e);
+    if (!S.again) { say(e.message || String(e), true); progress(0); }
+  }
+  const again = S.again;
+  S.again = null;
+  setBusy(false);
+  /* A newer request came in while collecting: collect again instead of showing the older result. */
+  if (again) return runAll(again);
+  if (!script) return;
+  if (script.empty) {
+    progress(0);
+    say(S.show ? 'No new stories or jokes yet. This video keeps playing. Press Update again later.' : 'No new stories or jokes yet. Press Update again later.', !S.show);
+    return;
+  }
+  try {
+    progress(1);
+    await setScript(script, true);
+    remember(SEEN_NEWS, script.played.news, 1200);
+    remember(SEEN_JOKES, script.played.jokes, 3000);
+    if (opts.export) await exportMP4(chosenFormats());
+  } catch (e) {
+    console.error(e);
+    say(e.message || String(e), true);
+    progress(0);
+  }
+}
+let refreshTimer = 0;
+function refreshMarket() { clearTimeout(refreshTimer); refreshTimer = 0; return runAll({ export: false }).catch(() => {}); }
+function scheduleRefresh(delay) {
+  clearTimeout(refreshTimer);
+  if (!delay) { refreshMarket(); return; }
+  refreshTimer = setTimeout(refreshMarket, delay);
+}
+function toggle() {
+  if (!S.show) return;
+  if (S.playing) { stop(); draw(currentT()); say('Paused. Tap the video or press Play to continue.'); return; }
+  let T0 = (+$('seek').value / 1000) * S.show.duration;
+  if (T0 >= S.show.duration - 0.05) T0 = 0;
+  beginPlayback(T0);
+  playSound(T0);
+  say('Playing.');
+}
+
+/* ---------- layout, story length, wallpaper, music ---------- */
+function detectView() {
+  const ua = navigator.userAgent || '';
+  const ref = document.referrer || '';
+  const forced = Q.get('format');
+  if (FORMATS[forced]) return { format: forced, label: FORMATS[forced] };
+  const phoneSized = /iPhone|iPod|Android.+Mobile|Windows Phone|IEMobile/i.test(ua)
+    || !!(navigator.userAgentData && navigator.userAgentData.mobile)
+    || window.innerWidth < 900;
+  if (/youtube|youtu\.be/i.test(ua) || (/youtube|youtu\.be/i.test(ref) && phoneSized)) return { format: 'youtube', label: 'YouTube' };
+  if (/\bTwitter\b/.test(ua) || (/twitter\.com|(?:^|\/\/)(?:www\.)?x\.com/i.test(ref) && phoneSized)) return { format: 'x', label: 'X' };
+  if (phoneSized) return { format: 'x', label: 'Phone' };
+  return { format: 'pc', label: 'PC' };
+}
+/* Rebuild the picture for a new layout or story length, keeping the place in the video. */
+function reshow() {
+  if (!S.script || !S.show) return;
+  const frac = S.show.duration ? Math.max(0, Math.min(0.999, currentT() / S.show.duration)) : 0;
+  S.show = E.prepare(S.script, preset(), LOOK);
+  sizeCanvas();
+  const T = frac * S.show.duration;
+  if (S.playing) {
+    S.origin = T;
+    S.t0perf = performance.now();
+    if (S.audioOn && S.el) { try { S.el.currentTime = soundAt(T); } catch (e) {} }
+  }
+  $('seek').value = String(Math.round(frac * 1000));
+  draw(Math.min(T, Math.max(0, S.show.duration - 1 / E.FPS)));
+}
+function applyLayout() {
+  const box = $('layout');
+  const detected = detectView();
+  const opt = box.querySelector('option[value="auto"]');
+  if (opt) opt.textContent = 'Auto (' + detected.label + ')';
+  const choice = box.value;
+  let format = detected.format;
+  if (choice === 'phone' || choice === 'x') format = 'x';
+  else if (choice === 'youtube' || choice === 'pc') format = choice;
+  S.format = format;
+  document.body.classList.toggle('land', format === 'pc');
+  reshow();
+}
+function redraw() { if (S.show && !S.playing) draw(currentT()); }
+function usePace(sec) {
+  const next = E.setDuration(sec);
+  store.set('pace', String(next));
+  document.querySelectorAll('#paces button').forEach(b => b.classList.toggle('on', Number(b.dataset.p) === next));
+  reshow();
+}
+function useWall(id) {
+  const w = WALLS.find(x => x.id === id) || WALLS[2];
+  E.setWallpaper(w.id);
+  store.set('wall', w.id);
+  document.querySelectorAll('#walls button').forEach(b => b.classList.toggle('on', b.dataset.w === w.id));
+  redraw();
+}
+async function trackBytes(t) {
+  if (S.tracks[t.id]) return S.tracks[t.id];
+  const res = await fetch('assets/' + t.file);
+  if (!res.ok) throw new Error('Could not load ' + t.name);
+  const bytes = new Uint8Array(await res.arrayBuffer());
+  S.tracks[t.id] = bytes;
+  return bytes;
+}
+async function useTrack(id) {
+  const t = TRACKS.find(x => x.id === id) || TRACKS[0];
+  store.set('music', t.id);
+  S.wantTrack = t.id;
+  document.querySelectorAll('#music button').forEach(b => b.classList.toggle('on', b.dataset.m === t.id));
+  let bytes;
+  try { bytes = await trackBytes(t); } catch (e) {
+    console.warn(e);
+    if (S.wantTrack !== t.id) return;
+    say('Could not load ' + t.name + '. Jupiter plays instead.', true);
+    if (t.id !== 'jupiter') useTrack('jupiter');
+    return;
+  }
+  if (S.wantTrack !== t.id) return;
+  S.track = t;
+  S.music = bytes;
+  E.setMusicCredit(t.credit);
+  if (S.script) $('sources').textContent = sourcesText(S.script);
+  redraw();
+  if (!S.el) return;
+  /* The same audio element keeps playing, so iPhone still allows it after the change. */
+  const was = S.audioOn;
+  try { S.el.pause(); } catch (e) {}
+  if (S.musicUrl) { try { URL.revokeObjectURL(S.musicUrl); } catch (e) {} }
+  S.musicUrl = URL.createObjectURL(new Blob([bytes], { type: 'audio/mp4' }));
+  S.el.src = S.musicUrl;
+  try { S.el.load(); } catch (e) {}
+  S.audioOn = false;
+  paintSound();
+  if (was && S.playing && !S.mute) {
+    await new Promise(r => { S.el.addEventListener('loadedmetadata', r, { once: true }); setTimeout(r, 3000); });
+    if (S.wantTrack === t.id && S.playing && !S.mute) playSound(currentT());
+  }
+}
+
+/* ---------- MP4 export (as on the News page) ---------- */
+function chosenFormats() { return [...document.querySelectorAll('.fx')].filter(x => x.checked).map(x => x.value); }
+function parseM4A(u8) {
+  const dv = new DataView(u8.buffer, u8.byteOffset, u8.byteLength);
+  const str = (p, n) => String.fromCharCode(...u8.subarray(p, p + n));
+  function boxes(a, b) {
+    const out = []; let p = a;
+    while (p + 8 <= b) {
+      let size = dv.getUint32(p), hdr = 8; const type = str(p + 4, 4);
+      if (size === 1) { size = Number(dv.getBigUint64(p + 8)); hdr = 16; } else if (size === 0) size = b - p;
+      if (size < 8) break;
+      out.push({ type, data: p + hdr, end: p + size }); p += size;
+    }
+    return out;
+  }
+  const find = (l, t) => l.find(x => x.type === t);
+  const moov = find(boxes(0, u8.length), 'moov');
+  for (const trak of boxes(moov.data, moov.end).filter(x => x.type === 'trak')) {
+    const mdia = find(boxes(trak.data, trak.end), 'mdia'); const mb = boxes(mdia.data, mdia.end);
+    if (str(find(mb, 'hdlr').data + 8, 4) !== 'soun') continue;
+    const mdhd = find(mb, 'mdhd'); const ts = u8[mdhd.data] === 1 ? dv.getUint32(mdhd.data + 20) : dv.getUint32(mdhd.data + 12);
+    const minf = find(mb, 'minf'); const stbl = find(boxes(minf.data, minf.end), 'stbl'); const sb = boxes(stbl.data, stbl.end);
+    const entry = find(sb, 'stsd').data + 8;
+    const channels = dv.getUint16(entry + 24), rate = dv.getUint32(entry + 32) >>> 16;
+    const esds = find(boxes(entry + 36, entry + dv.getUint32(entry)), 'esds');
+    let p = esds.data + 4, asc = null;
+    const len = () => { let n = 0, b; do { b = u8[p++]; n = (n << 7) | (b & 0x7f); } while (b & 0x80); return n; };
+    while (p < esds.end) {
+      const tag = u8[p++]; const n = len();
+      if (tag === 3) { const fl = u8[p + 2]; p += 3; if (fl & 0x80) p += 2; if (fl & 0x40) p += 1 + u8[p]; if (fl & 0x20) p += 2; }
+      else if (tag === 4) p += 13;
+      else if (tag === 5) { asc = u8.slice(p, p + n); break; }
+      else p += n;
+    }
+    const stts = find(sb, 'stts'), stsz = find(sb, 'stsz'), stsc = find(sb, 'stsc'), stco = find(sb, 'stco') || find(sb, 'co64');
+    const durs = [];
+    for (let i = 0, n = dv.getUint32(stts.data + 4); i < n; i++) { const c = dv.getUint32(stts.data + 8 + i * 8), d = dv.getUint32(stts.data + 12 + i * 8); for (let k = 0; k < c; k++) durs.push(d); }
+    const fixed = dv.getUint32(stsz.data + 4), count = dv.getUint32(stsz.data + 8);
+    const sizes = []; for (let i = 0; i < count; i++) sizes.push(fixed || dv.getUint32(stsz.data + 12 + i * 4));
+    const big = stco.type === 'co64', nch = dv.getUint32(stco.data + 4), offs = [];
+    for (let i = 0; i < nch; i++) offs.push(big ? Number(dv.getBigUint64(stco.data + 8 + i * 8)) : dv.getUint32(stco.data + 8 + i * 4));
+    const sc = []; for (let i = 0, n = dv.getUint32(stsc.data + 4); i < n; i++) sc.push([dv.getUint32(stsc.data + 8 + i * 12), dv.getUint32(stsc.data + 12 + i * 12)]);
+    const samples = []; let s = 0, t = 0;
+    for (let c = 0; c < nch && s < count; c++) {
+      let per = 0; for (const [first, spc] of sc) if (c + 1 >= first) per = spc;
+      let o = offs[c];
+      for (let k = 0; k < per && s < count; k++, s++) { samples.push({ o, n: sizes[s], t: t / ts, d: (durs[s] || 1024) / ts }); o += sizes[s]; t += durs[s] || 1024; }
+    }
+    return { rate, channels, asc, samples, duration: t / ts, bytes: u8 };
+  }
+  throw new Error('This file has no audio track');
+}
+function fileName(date, fmt) {
+  const d = new Date(), h = d.getHours();
+  const stamp = `${d.getFullYear()}${pad2(d.getMonth() + 1)}${pad2(d.getDate())}${h < 12 ? 'am' : 'pm'}${pad2(h)}${pad2(d.getMinutes())}`;
+  return `${stamp}_ReplyNews_${FORMATS[fmt] || fmt}_${date}.mp4`;
+}
+async function encodeShow(show, label, p0, p1, aac) {
+  const W = show.W, H = show.H, fps = E.FPS, dur = show.duration, N = Math.round(dur * fps);
+  const vcfg = { codec: 'avc1.640028', width: W, height: H, bitrate: 8_000_000, framerate: fps, avc: { format: 'avc' } };
+  let ok = typeof VideoEncoder !== 'undefined' && typeof VideoFrame !== 'undefined' && window.Mp4Muxer;
+  if (ok) { try { ok = (await VideoEncoder.isConfigSupported(vcfg)).supported; } catch (e) { ok = false; } }
+  if (!ok) return null;
+  const muxer = new Mp4Muxer.Muxer({
+    target: new Mp4Muxer.ArrayBufferTarget(),
+    video: { codec: 'avc', width: W, height: H, frameRate: fps },
+    audio: aac ? { codec: 'aac', numberOfChannels: aac.channels, sampleRate: aac.rate } : undefined,
+    fastStart: 'in-memory', firstTimestampBehavior: 'offset',
+  });
+  let fail = null;
+  const enc = new VideoEncoder({ output: (c, m) => muxer.addVideoChunk(c, m), error: e => { fail = e; } });
+  enc.configure(vcfg);
+  const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+  const c2 = cv.getContext('2d');
+  for (let f = 0; f < N; f++) {
+    if (fail) throw fail;
+    E.drawFrame(c2, show, f / fps, S.bgs);
+    const vf = new VideoFrame(cv, { timestamp: Math.round(f * 1e6 / fps), duration: Math.round(1e6 / fps) });
+    enc.encode(vf, { keyFrame: f % (fps * 2) === 0 });
+    vf.close();
+    while (enc.encodeQueueSize > 6) await sleep(4);
+    if (f % 15 === 0) { progress(p0 + (p1 - p0) * f / N); say(`Exporting ${label}… ${Math.round(f / N * 100)}%`); await sleep(0); }
+  }
+  await enc.flush(); enc.close();
+  if (fail) throw fail;
+  if (aac) {
+    /* The music loops on the page, so it loops in the file too. */
+    let first = true;
+    for (let loop = 0, base = Math.max(0, aac.duration - dur); ; loop++) {
+      const start = loop === 0 ? base : 0;
+      const at0 = loop === 0 ? 0 : (aac.duration - base) + (loop - 1) * aac.duration;
+      if (at0 >= dur) break;
+      for (const s of aac.samples) {
+        if (s.t < start - 1e-6) continue;
+        const at = at0 + (s.t - start);
+        if (at >= dur) break;
+        muxer.addAudioChunkRaw(aac.bytes.subarray(s.o, s.o + s.n), 'key', Math.round(at * 1e6), Math.round(s.d * 1e6),
+          first ? { decoderConfig: { codec: 'mp4a.40.2', numberOfChannels: aac.channels, sampleRate: aac.rate, description: aac.asc } } : undefined);
+        first = false;
+      }
+      if (aac.duration <= 0) break;
+    }
+  }
+  muxer.finalize();
+  return new Blob([muxer.target.buffer], { type: 'video/mp4' });
+}
+/* Browsers without WebCodecs record the picture while it plays. */
+async function recordRealtime(show) {
+  if (typeof MediaRecorder === 'undefined' || !$('cv').captureStream) throw new Error('This browser cannot export video.');
+  const AC = window.AudioContext || window.webkitAudioContext;
+  const ac = new AC();
+  let abuf = null;
+  try { abuf = await ac.decodeAudioData(S.music.slice().buffer); } catch (e) { console.warn(e); }
+  const dest = ac.createMediaStreamDestination();
+  const vs = $('cv').captureStream(E.FPS);
+  const stream = new MediaStream([...vs.getVideoTracks(), ...dest.stream.getAudioTracks()]);
+  const type = ['video/mp4;codecs=avc1,mp4a', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm'].find(t => MediaRecorder.isTypeSupported(t)) || '';
+  const rec = new MediaRecorder(stream, { mimeType: type, videoBitsPerSecond: 8_000_000 });
+  const parts = []; rec.ondataavailable = e => e.data.size && parts.push(e.data);
+  const done = new Promise(r => { rec.onstop = r; });
+  let src = null;
+  if (abuf) { src = ac.createBufferSource(); src.buffer = abuf; src.loop = true; src.connect(dest); }
+  S.show = show; sizeCanvas(); draw(0);
+  rec.start(250);
+  const t0 = ac.currentTime + 0.05;
+  if (src) src.start(t0, Math.max(0, abuf.duration - show.duration));
+  await new Promise(res => {
+    const step = () => {
+      const T = ac.currentTime - t0;
+      if (T >= show.duration) { res(); return; }
+      draw(Math.max(0, T)); progress(0.3 + 0.65 * T / show.duration); say(`Recording… ${Math.round(T / show.duration * 100)}%`);
+      requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  });
+  rec.stop(); if (src) { try { src.stop(); } catch (e) {} }
+  await done;
+  try { ac.close(); } catch (e) {}
+  return new Blob(parts, { type: type.split(';')[0] || 'video/webm' });
+}
+function addOut(fmt, blob) {
+  const name = fileName(S.script.date, fmt).replace(/\.mp4$/, blob.type.includes('webm') ? '.webm' : '.mp4');
+  const url = URL.createObjectURL(blob);
+  S.outs = S.outs.filter(o => o.fmt !== fmt); S.outs.push({ fmt, name, blob, url, script: S.script });
+  const box = $('out'); box.innerHTML = '';
+  const order = ['x', 'youtube', 'pc'];
+  S.outs.sort((a, b) => order.indexOf(a.fmt) - order.indexOf(b.fmt)).forEach(o => {
+    const a = document.createElement('a'); a.className = 'btn'; a.href = o.url; a.download = o.name; a.textContent = `Save ${FORMATS[o.fmt]}`;
+    box.appendChild(a);
+    const file = new File([o.blob], o.name, { type: o.blob.type });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      const b = document.createElement('button'); b.textContent = `Share ${FORMATS[o.fmt]}`;
+      b.onclick = () => navigator.share({ files: [file], title: 'Reply News' }).catch(() => {});
+      box.appendChild(b);
+    }
+  });
+  box.classList.add('show');
+  return name;
+}
+async function exportMP4(formats) {
+  if (!S.script || S.busy) return;
+  formats = (formats && formats.length ? formats : [S.format]).filter(f => FORMATS[f]);
+  stop();
+  setBusy(true);
+  let aac = null;
+  try { aac = parseM4A(S.music); } catch (e) { console.warn('m4a', e); }
+  try {
+    const names = [];
+    for (let i = 0; i < formats.length; i++) {
+      const fmt = formats[i], show = E.prepare(S.script, PRESET[fmt], LOOK);
+      const p0 = 0.3 + 0.68 * i / formats.length, p1 = 0.3 + 0.68 * (i + 1) / formats.length;
+      let blob = await encodeShow(show, FORMATS[fmt], p0, p1, aac);
+      if (!blob) blob = await recordRealtime(show);
+      names.push(addOut(fmt, blob));
+    }
+    progress(1);
+    say(`Exported: ${names.join(', ')}`);
+    return names;
+  } finally {
+    S.show = E.prepare(S.script, preset(), LOOK);
+    sizeCanvas();
+    draw(0);
+    $('seek').value = '0';
+    setBusy(false);
+  }
+}
+
+/* Download: the video on screen as an MP4 in the current layout.
+   Phones open the share sheet (Save Video); computers download the file. */
+const PHONE = !!(window.matchMedia && matchMedia('(pointer: coarse)').matches);
+function shareable(out) {
+  if (!PHONE || !navigator.canShare) return null;
+  const file = new File([out.blob], out.name, { type: out.blob.type });
+  try { return navigator.canShare({ files: [file] }) ? file : null; } catch (e) { return null; }
+}
+function resetDownload() {
+  const b = $('dl');
+  if (!b) return;
+  b.textContent = 'Download';
+  delete b.dataset.ready;
+  b.disabled = !S.show || !!S.busy;
+}
+/* In the Android app the MP4 goes to the phone's Movies folder through the app (window.AndroidApp). */
+async function saveToApp(out) {
+  const app = window.AndroidApp;
+  try {
+    say('Saving…');
+    const bytes = new Uint8Array(await out.blob.arrayBuffer());
+    if (!app.saveStart(out.name, out.blob.type || 'video/mp4')) throw new Error('Could not save the video.');
+    const CH = 384 * 1024;
+    for (let i = 0; i < bytes.length; i += CH) {
+      const part = bytes.subarray(i, i + CH);
+      let bin = '';
+      for (let j = 0; j < part.length; j += 0x8000) bin += String.fromCharCode.apply(null, part.subarray(j, j + 0x8000));
+      if (!app.saveChunk(btoa(bin))) throw new Error('Could not save the video.');
+      if (i % (CH * 8) === 0) await sleep(0);
+    }
+    const where = app.saveEnd();
+    if (!where) throw new Error('Could not save the video.');
+    say(`Saved to ${where}`);
+  } catch (e) {
+    console.error(e);
+    say(e.message || String(e), true);
+  }
+  resetDownload();
+}
+function saveOut(out) {
+  if (window.AndroidApp && window.AndroidApp.saveStart) { saveToApp(out); return; }
+  const file = shareable(out);
+  if (file) navigator.share({ files: [file], title: 'Reply News' }).catch(() => {});
+  else {
+    const a = document.createElement('a');
+    a.href = out.url; a.download = out.name; a.rel = 'noopener';
+    document.body.appendChild(a); a.click(); a.remove();
+    say(`Downloaded ${out.name}`);
+  }
+  resetDownload();
+}
+async function download() {
+  if (!S.script || S.busy) return;
+  const fmt = S.format;
+  const mine = () => S.outs.find(o => o.fmt === fmt && o.script === S.script);
+  if (mine()) { saveOut(mine()); return; }
+  const was = S.playing;
+  const b = $('dl');
+  b.textContent = 'Making MP4…';
+  try { await exportMP4([fmt]); }
+  catch (e) { console.error(e); resetDownload(); say(e.message || String(e), true); return; }
+  const out = mine();
+  resetDownload();
+  if (!out) return;
+  if (was && !S.playing) toggle();
+  if (shareable(out)) {
+    /* Making the MP4 took a while, so the share sheet needs one more tap. */
+    b.textContent = 'Save';
+    b.dataset.ready = '1';
+    say('The MP4 is ready. Press Save to keep it.');
+  } else saveOut(out);
+}
+
+/* ---------- full screen ---------- */
+function realFull() { return document.fullscreenElement || document.webkitFullscreenElement || null; }
+function fullOn() { return !!(realFull() || S.pseudo || S.vfull); }
+/* The browser's Fullscreen API, when it has one that works (PC, Android, iPad). */
+function fsApi() {
+  const node = $('watch');
+  const req = node.requestFullscreen || node.webkitRequestFullscreen;
+  const allowed = document.fullscreenEnabled || document.webkitFullscreenEnabled;
+  return req && allowed !== false ? req : null;
+}
+/* iPhone Safari and the X app have no Fullscreen API for a page, but a video can go full screen.
+   The canvas is copied into a muted video behind it, and Full screen opens that video in the
+   system player. The music keeps playing from the page. */
+function setupVideoFull() {
+  if (fsApi() || S.fv) return;
+  const cv = $('cv');
+  const v = document.createElement('video');
+  if (typeof v.webkitEnterFullscreen !== 'function' || typeof cv.captureStream !== 'function') return;
+  let stream = null;
+  try { stream = cv.captureStream(30); } catch (e) { console.warn(e); return; }
+  v.id = 'fsv';
+  v.muted = true;
+  v.defaultMuted = true;
+  v.playsInline = true;
+  v.setAttribute('muted', '');
+  v.setAttribute('playsinline', '');
+  v.setAttribute('webkit-playsinline', '');
+  v.setAttribute('aria-hidden', 'true');
+  v.srcObject = stream;
+  cv.parentNode.insertBefore(v, cv);
+  S.fv = v;
+  const kick = () => { if (v.paused && !S.vfull) { const r = v.play(); if (r && r.catch) r.catch(() => {}); } };
+  kick();
+  /* Low Power Mode blocks the first start; any tap on the page tries again. */
+  window.addEventListener('pointerdown', kick, true);
+  v.addEventListener('webkitbeginfullscreen', () => { S.vfull = true; paintFull(); });
+  v.addEventListener('webkitendfullscreen', () => { S.vfull = false; paintFull(); setTimeout(kick, 50); });
+  /* Pause and play in the system player pause and play the video and the music. */
+  v.addEventListener('pause', () => { setTimeout(() => { if (S.vfull && v.paused && S.playing) toggle(); }, 300); });
+  v.addEventListener('play', () => { if (S.vfull && !S.playing) toggle(); });
+}
+function videoFull() {
+  const v = S.fv;
+  if (!v || v.readyState < 1 || typeof v.webkitEnterFullscreen !== 'function') return false;
+  try {
+    const r = v.play();
+    if (r && r.catch) r.catch(() => {});
+    v.webkitEnterFullscreen();
+    return true;
+  } catch (e) { console.warn(e); return false; }
+}
+/* S.pseudo is the page's own full screen, the last resort when neither works. */
+function paintFull() {
+  const on = fullOn();
+  $('watch').classList.toggle('is-full', !!(realFull() || S.pseudo));
+  $('watch').classList.toggle('pseudo', !!S.pseudo);
+  document.body.classList.toggle('lock', !!S.pseudo);
+  $('full').textContent = on ? 'Exit' : 'Full screen';
+}
+function waitFullChange(ms) {
+  return new Promise(resolve => {
+    const done = () => { document.removeEventListener('fullscreenchange', done); document.removeEventListener('webkitfullscreenchange', done); resolve(); };
+    document.addEventListener('fullscreenchange', done);
+    document.addEventListener('webkitfullscreenchange', done);
+    setTimeout(done, ms);
+  });
+}
+async function enterFull() {
+  closeStudio();
+  const node = $('watch');
+  const req = fsApi();
+  /* iPhone: the system player. This must run inside the tap, before any await. */
+  if (!req && videoFull()) return;
+  if (req) {
+    try {
+      const r = req.call(node);
+      if (r && r.then) await r; else await waitFullChange(700);
+    } catch (e) { console.warn(e); }
+    if (realFull()) {
+      paintFull();
+      try { if (screen.orientation && screen.orientation.lock) await screen.orientation.lock(S.format === 'pc' ? 'landscape' : 'portrait'); } catch (e) {}
+      return;
+    }
+  }
+  S.pseudo = true;
+  paintFull();
+}
+async function exitFull() {
+  if (S.pseudo) { S.pseudo = false; paintFull(); return; }
+  if (S.vfull && S.fv) {
+    try { S.fv.webkitExitFullscreen(); } catch (e) { console.warn(e); }
+    return;
+  }
+  try { if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); } catch (e) {}
+  const exit = document.exitFullscreen || document.webkitExitFullscreen;
+  if (exit && realFull()) {
+    try { const r = exit.call(document); if (r && r.then) await r; } catch (e) { console.warn(e); }
+  }
+  paintFull();
+}
+function toggleFull() { return fullOn() ? exitFull() : enterFull(); }
+
+/* ---------- settings panel ---------- */
+function studioOpen() { return !$('studio').hidden; }
+function closeStudio() {
+  const wasOpen = studioOpen();
+  $('studio').hidden = true;
+  $('backDock').hidden = true;
+  $('gear').classList.remove('on');
+  $('gear').setAttribute('aria-expanded', 'false');
+  if (wasOpen) window.scrollTo(0, 0);
+}
+function openStudio() {
+  window.scrollTo(0, 0);
+  document.documentElement.style.setProperty('--header-h', document.querySelector('header').offsetHeight + 'px');
+  $('studio').hidden = false;
+  $('studio').scrollTop = 0;
+  $('backDock').hidden = false;
+  $('gear').classList.add('on');
+  $('gear').setAttribute('aria-expanded', 'true');
+}
+function initUI() {
+  $('date').value = Q.get('date') || todayJST();
+  $('autoExport').checked = store.get('autoExport', '0') === '1';
+  $('autoExport').onchange = () => store.set('autoExport', $('autoExport').checked ? '1' : '0');
+  $('gear').onclick = () => { if (studioOpen()) closeStudio(); else openStudio(); };
+  $('backVideo').onclick = closeStudio;
+  $('backDock').onclick = closeStudio;
+  $('home').onclick = () => { closeStudio(); window.scrollTo(0, 0); refreshMarket(); };
+  if (Q.get('edit') === '1') openStudio();
+  /* Reply News opens upright (portrait) until another layout is chosen. */
+  const forced = Q.get('format');
+  let savedLayout = store.get('layout', 'phone');
+  if (savedLayout === 'wide') savedLayout = 'pc';
+  $('layout').value = forced === 'pc' || forced === 'youtube' ? forced : (forced === 'x' ? 'phone' : (['auto', 'phone', 'x', 'youtube', 'pc'].includes(savedLayout) ? savedLayout : 'phone'));
+  $('layout').onchange = () => { if (!Q.get('format')) store.set('layout', $('layout').value); applyLayout(); };
+  applyLayout();
+  const arm = id => ['applyLine', 'apply', 'go'].forEach(x => $(x).classList.toggle('on', x === id));
+  $('go').onclick = () => { arm('go'); runAll({ export: $('autoExport').checked }); };
+  $('apply').onclick = () => {
+    arm('apply');
+    if ($('json').value !== (S.jsonClean || '')) {
+      try { setScript(JSON.parse($('json').value), true).catch(e => say(e.message, true)); } catch (e) { say('Could not read the JSON: ' + e.message, true); }
+      return;
+    }
+    refreshMarket();
+  };
+  $('exportBtn').onclick = () => exportMP4(chosenFormats()).catch(e => { console.error(e); say('Export failed: ' + e.message, true); });
+  $('copySrc').onclick = () => {
+    const text = $('sources').textContent;
+    const done = () => say('Copied the sources.');
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done).catch(() => say('Could not copy. Select the text instead.', true));
+  };
+  let resizeTimer = 0;
+  window.addEventListener('resize', () => {
+    if (Q.get('format') || $('layout').value !== 'auto' || S.busy) return;
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(applyLayout, 150);
+  });
+  TRACKS.forEach(t => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.dataset.m = t.id;
+    b.textContent = t.name;
+    b.onclick = () => useTrack(t.id);
+    $('music').appendChild(b);
+  });
+  WALLS.forEach(w => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.dataset.w = w.id;
+    b.textContent = w.name;
+    b.onclick = () => useWall(w.id);
+    $('walls').appendChild(b);
+  });
+  const requestedWall = Q.get('wall') || store.get('wall', 'day');
+  useWall(WALLS.some(w => w.id === requestedWall) ? requestedWall : 'day');
+  PACES.forEach(p => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.dataset.p = String(p.sec);
+    b.textContent = p.name;
+    b.onclick = () => usePace(p.sec);
+    $('paces').appendChild(b);
+  });
+  const countBox = $('counts');
+  const paintCounts = () => countBox.querySelectorAll('button').forEach(b => b.classList.toggle('on', Number(b.dataset.n) === total()));
+  COUNTS.forEach(n => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.dataset.n = String(n);
+    b.textContent = String(n);
+    b.onclick = () => {
+      if (total() === n) return;
+      store.set('count', String(n));
+      paintCounts();
+      scheduleRefresh(0);
+    };
+    countBox.appendChild(b);
+  });
+  paintCounts();
+  const themeBox = $('theme');
+  const paintTheme = () => {
+    document.documentElement.dataset.theme = themeBox.value;
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', getComputedStyle(document.documentElement).getPropertyValue('--bg').trim() || '#ffffff');
+  };
+  const savedTheme = store.get('theme', 'dark');
+  themeBox.value = [...themeBox.options].some(o => o.value === savedTheme) ? savedTheme : 'dark';
+  paintTheme();
+  themeBox.addEventListener('change', () => { store.set('theme', themeBox.value); paintTheme(); });
+  const savedPace = Number(Q.get('pace') || store.get('pace', '3.2'));
+  usePace(PACES.some(p => p.sec === savedPace) ? savedPace : 3.2);
+  const countryBox = $('country');
+  const langBox = $('lang');
+  COUNTRIES.forEach(c => { const o = document.createElement('option'); o.value = c.id; o.textContent = c.name; countryBox.appendChild(o); });
+  LANGS.forEach(l => { const o = document.createElement('option'); o.value = l.id; o.textContent = l.name; langBox.appendChild(o); });
+  const nav = (navigator.language || 'ja').toLowerCase();
+  const navCountry = nav.startsWith('en') ? 'US' : 'JP';
+  const pickedCountry = COUNTRIES.some(c => c.id === (Q.get('country') || '')) ? Q.get('country')
+    : (COUNTRIES.some(c => c.id === store.get('country', '')) ? store.get('country', '') : navCountry);
+  countryBox.value = pickedCountry;
+  const countryDefault = (COUNTRIES.find(c => c.id === pickedCountry) || COUNTRIES[0]).lang;
+  langBox.value = LANGS.some(l => l.id === (Q.get('lang') || '')) ? Q.get('lang')
+    : (LANGS.some(l => l.id === store.get('lang', '')) ? store.get('lang', '') : countryDefault);
+  /* X comments only is the default. */
+  $('feed').value = store.get('feedMode', 'x') === 'news' ? 'news' : 'x';
+  $('feed').onchange = () => { store.set('feedMode', $('feed').value); refreshMarket(); };
+  saveAccounts(xAccounts());
+  $('addX').onclick = addAccount;
+  $('xUser').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addAccount(); } });
+  const saveMarket = () => { store.set('country', countryBox.value); store.set('lang', langBox.value); };
+  buildFilters();
+  countryBox.onchange = () => {
+    const next = COUNTRIES.find(c => c.id === countryBox.value);
+    if (next) langBox.value = next.lang;
+    saveMarket();
+    refreshMarket();
+  };
+  langBox.onchange = () => { saveMarket(); refreshMarket(); };
+  $('date').onchange = () => scheduleRefresh(0);
+  const saved = (store.get('formats', '') || '').split(',').filter(f => FORMATS[f]);
+  const on = saved.length ? saved : Object.keys(FORMATS);
+  document.querySelectorAll('.fx').forEach(x => { x.checked = on.includes(x.value); x.onchange = () => store.set('formats', chosenFormats().join(',')); });
+  $('forget').checked = false;
+  $('forget').onchange = () => {
+    if (!$('forget').checked) return;
+    store.set(SEEN_NEWS, '[]');
+    store.set(SEEN_JOKES, '[]');
+    store.set('seen', '[]');
+    say('Forgot what has played. Stories and jokes can play again.');
+    setTimeout(() => { $('forget').checked = false; }, 1200);
+  };
+  const lineup = $('lineup');
+  lineup.value = store.get('lineup', '').split(/\n/).map(noCount).filter(Boolean).join('\n');
+  store.set('lineup', lineup.value);
+  const paintChips = () => {
+    const keys = new Set(lineup.value.split(/\n/).map(chipKey).filter(Boolean));
+    document.querySelectorAll('#genreChips button').forEach(b => b.classList.toggle('on', keys.has(b.dataset.line)));
+    lineup.classList.toggle('live', !!lineup.value.trim());
+  };
+  CHIPS.forEach(chip => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = chip.label;
+    b.dataset.line = chip.label.toLowerCase();
+    b.onclick = () => {
+      const lines = lineup.value.split(/\n/).map(s => s.trim()).filter(Boolean);
+      const key = chip.label.toLowerCase();
+      const idx = lines.findIndex(line => chipKey(line) === key);
+      if (idx >= 0) lines.splice(idx, 1);
+      else lines.push(chipLine(chip));
+      lineup.value = lines.join('\n');
+      store.set('lineup', lineup.value);
+      paintChips();
+      arm('applyLine');
+      scheduleRefresh(800);
+    };
+    $('genreChips').appendChild(b);
+  });
+  paintChips();
+  lineup.addEventListener('input', () => {
+    store.set('lineup', lineup.value);
+    paintChips();
+    $('applyLine').classList.remove('on');
+    scheduleRefresh(1500);
+  });
+  const applyLineup = () => {
+    clearTimeout(refreshTimer);
+    store.set('lineup', lineup.value);
+    paintChips();
+    arm('applyLine');
+    closeStudio();
+    window.scrollTo(0, 0);
+    refreshMarket();
+  };
+  $('applyLine').onclick = applyLineup;
+  $('lineupGo').onclick = applyLineup;
+  $('play').onclick = toggle;
+  /* A tap or click on the picture pauses and plays. A pull to refresh is not a tap. */
+  $('cv').addEventListener('click', () => { if (Date.now() - (S.pulledAt || 0) < 500) return; toggle(); });
+  $('dl').onclick = () => download();
+  $('full').onclick = () => toggleFull().catch(e => say(e.message || String(e), true));
+  $('update').onclick = () => { closeStudio(); refreshMarket(); };
+  $('sound').onclick = () => toggleSound();
+  $('seek').addEventListener('input', () => {
+    if (!S.show) return;
+    const T = (+$('seek').value / 1000) * S.show.duration;
+    if (S.playing) { S.origin = T; S.t0perf = performance.now(); if (S.audioOn && S.el) { try { S.el.currentTime = soundAt(T); } catch (e) {} } }
+    draw(Math.min(T, Math.max(0, S.show.duration - 1 / E.FPS)));
+  });
+  document.addEventListener('fullscreenchange', paintFull);
+  document.addEventListener('webkitfullscreenchange', paintFull);
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Escape') return;
+    if (studioOpen()) closeStudio();
+    else if (S.pseudo) exitFull();
+  });
+  /* While the system player covers the page, the browser may stop animation frames. Keep drawing. */
+  setInterval(() => {
+    if (!S.vfull || !S.playing || performance.now() - S.lastDraw < 80) return;
+    if (S.raf) { cancelAnimationFrame(S.raf); S.raf = 0; }
+    tick();
+  }, 40);
+  setupVideoFull();
+  initPull();
+}
+
+/* ---------- pull down to refresh ---------- */
+function initPull() {
+  /* Touch uses touch events, which keep coming while the browser scrolls; a mouse uses pointer events.
+     A pull that is cancelled or lifted ends without a refresh, so it never stays half-open over the buttons. */
+  const PULL_AT = 70;
+  const frame = document.querySelector('.frame');
+  let pull = null;
+  const show = dy => {
+    const label = document.querySelector('header .pull');
+    if (label) label.textContent = dy > PULL_AT ? 'Release to refresh' : 'Pull down to refresh';
+    if (dy > 0) { frame.classList.add('pulling'); frame.style.transform = 'translateY(' + Math.min(dy * 0.35, 72) + 'px)'; }
+    else { frame.classList.remove('pulling'); frame.style.transform = ''; }
+  };
+  const end = go => {
+    const p = pull;
+    pull = null;
+    if (p && p.dy > 8) S.pulledAt = Date.now();
+    show(0);
+    if (go && p && !p.dead && p.dy > PULL_AT) refreshMarket();
+  };
+  const begin = (target, y, kind) => {
+    if (pull) end(false);
+    if (S.vfull || studioOpen() || (!fullOn() && window.scrollY > 8)) return;
+    if (target && target.closest && target.closest('button, a, input, select, textarea, .ctl, .music')) return;
+    pull = { y, kind, dy: 0, dead: false };
+  };
+  const move = y => {
+    if (!pull || pull.dead) return false;
+    pull.dy = y - pull.y;
+    if (pull.dy < -12) { pull.dead = true; show(0); return false; }
+    show(pull.dy);
+    return pull.dy > 8;
+  };
+  window.addEventListener('touchstart', e => {
+    if (e.touches.length !== 1) { if (pull) end(false); return; }
+    begin(e.target, e.touches[0].clientY, 'touch');
+  }, { passive: true });
+  window.addEventListener('touchmove', e => {
+    if (!pull || pull.kind !== 'touch' || e.touches.length !== 1) return;
+    if (move(e.touches[0].clientY) && e.cancelable) e.preventDefault();
+  }, { passive: false });
+  window.addEventListener('touchend', () => { if (pull && pull.kind === 'touch') end(true); });
+  window.addEventListener('touchcancel', () => { if (pull && pull.kind === 'touch') end(false); });
+  window.addEventListener('pointerdown', e => { if (e.pointerType === 'mouse' && e.button === 0) begin(e.target, e.clientY, 'mouse'); });
+  window.addEventListener('pointermove', e => {
+    if (!pull || pull.kind !== 'mouse' || e.pointerType !== 'mouse') return;
+    if (!(e.buttons & 1)) { end(false); return; }
+    move(e.clientY);
+  });
+  window.addEventListener('pointerup', e => { if (pull && pull.kind === 'mouse' && e.pointerType === 'mouse') end(true); });
+  window.addEventListener('pointercancel', e => { if (pull && pull.kind === 'mouse' && e.pointerType === 'mouse') end(false); });
+  window.addEventListener('blur', () => { if (pull) end(false); });
+}
+
+/* ---------- start ---------- */
+window.NS = { state: () => ({ script: S.script, show: S.show, playing: S.playing, format: S.format }) };
+E.setMusicCredit(TRACKS[0].credit);
+/* A newer copy on the site: load it, so a copy the browser kept from before is not shown.
+   version.json names the latest build of each page; it is read past the browser's cache. */
+function watchVersion(key, url) {
+  const BUILD = '__BUILD_ID__';
+  if (location.protocol === 'file:' || BUILD.indexOf('BUILD_ID') >= 0) return;
+  /* At the start it may reload at once; later it waits while a video is being made or saved. */
+  const check = first => {
+    if (!first && S.busy) { setTimeout(() => check(false), 5000); return; }
+    fetch(url + '?t=' + Date.now(), { cache: 'no-store' }).then(r => (r.ok ? r.json() : null)).then(v => {
+      const now = v && v[key];
+      if (!now || now === BUILD) return;
+      if (!first && S.busy) { setTimeout(() => check(false), 5000); return; }
+      try {
+        if (sessionStorage.getItem('reloaded.' + key) === now) return;
+        sessionStorage.setItem('reloaded.' + key, now);
+      } catch (e) {}
+      const u = new URL(location.href);
+      u.searchParams.set('v', now);
+      location.replace(u.href);
+    }).catch(() => {});
+  };
+  check(true);
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') check(false); });
+}
+initUI();
+watchVersion('reply', 'version.json');
+/* Japanese for the page's own words when Language is Japanese. */
+if (window.UIJA) {
+  UIJA.start(() => $('lang').value);
+  ['lang', 'country'].forEach(id => $(id).addEventListener('change', () => UIJA.apply()));
+}
+loadAssets().then(() => {
+  window.NS.ready = true;
+  const requested = Q.get('music') || store.get('music', 'jupiter');
+  if (requested !== 'jupiter') useTrack(requested);
+  else document.querySelectorAll('#music button').forEach(b => b.classList.toggle('on', b.dataset.m === 'jupiter'));
+  runAll({ export: false });
+}).catch(e => { window.NS.ready = true; say(e.message || String(e), true); });
+})();
+</script>
+</body>
+</html>
