@@ -46,6 +46,7 @@ main { padding: 0 16px calc(24px + env(safe-area-inset-bottom)); max-width: 1100
 .paste-row textarea { flex: 1 1 auto; min-width: 0; min-height: 0; font: 16px/1.5 "Noto Sans JP",sans-serif; resize: vertical; }
 .paste-row button { flex: none; padding: 10px 12px; font-size: 14px; white-space: nowrap; }
 #addTalk { margin-top: 12px; }
+#sendApi { width: 100%; margin-top: 8px; }
 #talkList { justify-content: center; }
 #genreChips button.mine { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
 #talkList button { flex: 0 1 auto; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -188,6 +189,7 @@ pre#sources { white-space: pre-wrap; font: 12px/1.5 ui-monospace,Menlo,monospace
       <button type="button" id="pasteReply">Paste</button>
     </div>
     <button type="button" id="addTalk" class="primary">Add to the video</button>
+    <button type="button" id="sendApi" hidden>Send to xapi</button>
   </div>
   <p class="music-label" id="talkLabel" hidden>In the video</p>
   <div id="talkList" class="music"></div>
@@ -2154,6 +2156,8 @@ const JA = {
   "No talks of this genre in today's data yet.": 'このジャンルの会話は、今日のデータにまだありません。',
   "No talks say that in today's data.": 'その言葉が入った会話は、今日のデータにありません。',
   // Pasting posts
+  'Send to xapi': 'xapiに送る', 'Paste the link of the post and the link of a reply first.': '先に、投稿のリンクとリプライのリンクを貼り付けてください。',
+  'Press Submit on the page that opened. The talk joins the API in a minute or two.': '開いた画面で「Submit」を押してください。1〜2分でAPIに入ります。',
   'Find on X': 'Xで探す', 'Words or @account': '言葉・@アカウント', 'Add a talk': '会話を追加', 'In the video': '動画に入っている会話（押すと消えます）',
   'Post': '投稿', 'Reply': 'リプライ', 'Paste': '貼り付け', 'Add to the video': '動画に追加',
   'Paste the post or its link': '投稿のリンクか、投稿の文を貼り付け', 'Paste the reply or its link': 'リプライのリンクか、リプライの文を貼り付け',
@@ -4369,6 +4373,19 @@ function initUI() {
     chooseAuto(false);
     rebuild(true);
   };
+  /* The owner's own button: the pasted links go to githito.xapi as an issue, and the talk joins the API,
+     so it plays for everyone. It shows once the page was opened with ?owner=1 (?owner=0 hides it again). */
+  if (Q.get('owner') === '1') store.set('owner', '1');
+  else if (Q.get('owner') === '0') store.set('owner', '');
+  $('sendApi').hidden = store.get('owner', '') !== '1';
+  $('sendApi').onclick = () => {
+    const post = onlyLink($('postIn').value);
+    const replies = $('replyIn').value.split('\n').map(l => onlyLink(l)).filter(Boolean);
+    if (!post || !replies.length) { say('Paste the link of the post and the link of a reply first.', true); return; }
+    const body = [post.url].concat(replies.map(r => r.url)).join('\n');
+    window.open('https://github.com/Githitosh/githito.xapi/issues/new?title=talk&body=' + encodeURIComponent(body), '_blank', 'noopener');
+    say('Press Submit on the page that opened. The talk joins the API in a minute or two.');
+  };
   loadTalks();
   paintTalks();
 
@@ -4406,7 +4423,7 @@ E.setMusicCredit(TRACKS[0].credit);
 /* A newer copy on the site: load it, so a copy the browser kept from before is not shown.
    version.json names the latest build of each page; it is read past the browser's cache. */
 function watchVersion(key, url) {
-  const BUILD = '58e92ab23e82';
+  const BUILD = '9b62d2f5e29a';
   if (location.protocol === 'file:' || BUILD.indexOf('BUILD_ID') >= 0) return;
   /* At the start it may reload at once; later it waits while a video is being made or saved. */
   const check = first => {

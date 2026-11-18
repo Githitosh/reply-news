@@ -46,6 +46,7 @@ main { padding: 0 16px calc(24px + env(safe-area-inset-bottom)); max-width: 1100
 .paste-row textarea { flex: 1 1 auto; min-width: 0; min-height: 0; font: 16px/1.5 "Noto Sans JP",sans-serif; resize: vertical; }
 .paste-row button { flex: none; padding: 10px 12px; font-size: 14px; white-space: nowrap; }
 #addTalk { margin-top: 12px; }
+#sendApi { width: 100%; margin-top: 8px; }
 #talkList { justify-content: center; }
 #genreChips button.mine { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
 #talkList button { flex: 0 1 auto; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -188,6 +189,7 @@ pre#sources { white-space: pre-wrap; font: 12px/1.5 ui-monospace,Menlo,monospace
       <button type="button" id="pasteReply">Paste</button>
     </div>
     <button type="button" id="addTalk" class="primary">Add to the video</button>
+    <button type="button" id="sendApi" hidden>Send to xapi</button>
   </div>
   <p class="music-label" id="talkLabel" hidden>In the video</p>
   <div id="talkList" class="music"></div>
@@ -1582,6 +1584,19 @@ function initUI() {
     window.scrollTo(0, 0);
     chooseAuto(false);
     rebuild(true);
+  };
+  /* The owner's own button: the pasted links go to githito.xapi as an issue, and the talk joins the API,
+     so it plays for everyone. It shows once the page was opened with ?owner=1 (?owner=0 hides it again). */
+  if (Q.get('owner') === '1') store.set('owner', '1');
+  else if (Q.get('owner') === '0') store.set('owner', '');
+  $('sendApi').hidden = store.get('owner', '') !== '1';
+  $('sendApi').onclick = () => {
+    const post = onlyLink($('postIn').value);
+    const replies = $('replyIn').value.split('\n').map(l => onlyLink(l)).filter(Boolean);
+    if (!post || !replies.length) { say('Paste the link of the post and the link of a reply first.', true); return; }
+    const body = [post.url].concat(replies.map(r => r.url)).join('\n');
+    window.open('https://github.com/Githitosh/githito.xapi/issues/new?title=talk&body=' + encodeURIComponent(body), '_blank', 'noopener');
+    say('Press Submit on the page that opened. The talk joins the API in a minute or two.');
   };
   loadTalks();
   paintTalks();

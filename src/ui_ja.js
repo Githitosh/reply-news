@@ -13,6 +13,8 @@ const JA = {
   "No talks of this genre in today's data yet.": 'このジャンルの会話は、今日のデータにまだありません。',
   "No talks say that in today's data.": 'その言葉が入った会話は、今日のデータにありません。',
   // Pasting posts
+  'Send to xapi': 'xapiに送る', 'Paste the link of the post and the link of a reply first.': '先に、投稿のリンクとリプライのリンクを貼り付けてください。',
+  'Press Submit on the page that opened. The talk joins the API in a minute or two.': '開いた画面で「Submit」を押してください。1〜2分でAPIに入ります。',
   'Find on X': 'Xで探す', 'Words or @account': '言葉・@アカウント', 'Add a talk': '会話を追加', 'In the video': '動画に入っている会話（押すと消えます）',
   'Post': '投稿', 'Reply': 'リプライ', 'Paste': '貼り付け', 'Add to the video': '動画に追加',
   'Paste the post or its link': '投稿のリンクか、投稿の文を貼り付け', 'Paste the reply or its link': 'リプライのリンクか、リプライの文を貼り付け',
