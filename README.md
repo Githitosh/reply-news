@@ -31,9 +31,9 @@ A pair is either a confession the other side accepts (好きだよ / わたし�
 plays along with (彼氏が迎えに来てくれた / それもう付き合ってるじゃん).
 
 - Genre buttons show in Replies only.
-- The data is `v1/match-<lang>.json` in githito.xapi. One run gathers short sayings with words of love
-  (fxtwitter only to find them; the words saved come from X's official embed API), filters them, and
-  writes `pairs` of kind `land` or `hint`. The page draws those pairs and skips the rest.
+- The data is `v1/match-<lang>.json` in githito.xapi. A run finds posts with FxTwitter, then reads up to
+  2000 posts and 2000 replies from each of vxTwitter and FixupX, filters them, and writes `pairs` of
+  kind `land` or `hint`. The page draws those pairs and skips the rest.
 - The two were not written to each other, and are never the same person. The same run also collects
   ordinary talks for Replies.
 - Every card that shows a post or a reply says ランダムマッチング (Random match), the last card of a match names both people
