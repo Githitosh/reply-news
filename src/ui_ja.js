@@ -80,7 +80,7 @@ const JA = {
   'Sample (Nov 14)': 'サンプル（11月14日）', 'Copy sources': '情報源をコピー',
   // Messages
   'Searching the news': 'ニュースを探しています', 'Searching comments': 'コメントを探しています', 'Searching X': 'Xを探しています',
-  'Searching jokes': 'ジョークを探しています',
+
   'Reading the text': '文章を読み込んでいます', 'Reading genres, sources, and X accounts': 'ジャンル、情報源、Xアカウントを読み込んでいます',
   'Eight accounts is the limit': 'アカウントは8つまでです', 'Use an X account name, like @name': 'Xのアカウント名を入れてください（例：@name）',
   'Copied the sources.': '情報源をコピーしました。', 'Could not copy.': 'コピーできませんでした。', 'Select the text instead.': '文字を選んでコピーしてください。',
