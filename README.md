@@ -26,17 +26,18 @@ service. The fonts (Noto Serif JP, Noto Sans JP, Tinos; SIL Open Font License) a
 
 ## Matching News
 
-The page opens in **Matching**: a person's post about love is shown with a reply that somebody else
-wrote to some other post, drawn at random, the way a matching app puts two people together.
+The page opens in **Matching**: two posts about love are shown together, the way a matching app puts
+two people together.
 
 - One genre only: love. The genre buttons show in Replies only.
-- The data is `v1/match-<lang>.json` in githito.xapi: people's own posts about love (found by words of
-  love, with partner seeking, selling, fiction, married life and anything pointing at school left out),
-  and replies that bring no subject of their own (a laugh, a "really?"). Each reply lists the words it
-  needs the post to say (`needs`), so a reply like "いっぱい買った？" is only matched to a post that says 買.
-- A match never pairs a reply with the post it was really written to, nor with its writer.
-- Every card that shows a post or a reply says ランダムマッチング (Random match), the last card of a match names both people
-  (`X @a × @b`), and under the video there are two links, one to each person's own post.
+- The data is `v1/match-<lang>.json` in githito.xapi: people's own posts about love, each with its side
+  (the partner it names: a boyfriend or a girlfriend), whether it wishes for one, and whether its writer
+  is free. Nobody's gender is judged or shown.
+- A match is a boyfriend-side post with a girlfriend-side post that goes with it: they speak of the same
+  thing, or both wish for a partner. Only people who are free are matched (a post that tells of a
+  partner the writer has is left out), never two of the same side, never the same person.
+- Every card that shows a post says 自動マッチング (Auto match), the last card of a set names both
+  people (`X @a × @b`), and under the video there are two links, one to each person's own post.
 - The **Replies** button goes back to Reply News: the replies really written to each post.
 - **Send to the two** (under a match): a first press makes a video of that one set; a second press opens
   the viewer's own X with the video and with words that name both people and link their two posts

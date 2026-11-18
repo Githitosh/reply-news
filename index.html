@@ -186,7 +186,7 @@ pre#sources { white-space: pre-wrap; font: 12px/1.5 ui-monospace,Menlo,monospace
   </div>
   <p id="caption" class="caption">Opening Reply News…</p>
   <div id="modeChips" class="music mode"><button type="button" data-mode="match">Matching</button><button type="button" data-mode="reply">Replies</button></div>
-  <p id="matchNote" class="note match-note" hidden>A post about love and a reply are put together at random. The reply was written to another post.</p>
+  <p id="matchNote" class="note match-note" hidden>A post that wishes for a boyfriend and a post that wishes for a girlfriend are put together by this page. The two did not write to each other.</p>
   <p class="music-label" id="genreLabel">Genres</p>
   <div id="genreChips" class="music"></div>
   <form id="ask" class="ask" autocomplete="off">
@@ -2195,7 +2195,7 @@ const JA = {
   'Choose X, read the post and send it. The words were copied: paste them if they are missing.': '共有メニューでXを選び、内容を確認して送信してください。文面はコピー済みです。入っていなければ貼り付けてください。',
   'Not sent yet. Press Send on X again.': 'まだ送っていません。もう一度「Xで送る」を押してください。',
   'The video was downloaded. Attach it to the post that opened, read it and send it.': '動画をダウンロードしました。開いた投稿画面に添付し、内容を確認して送信してください。',
-  'A post about love and a reply are put together at random. The reply was written to another post.': '恋愛の投稿と、別の投稿に書かれたリプライを、ランダムに組み合わせています。二人が実際にやりとりしたものではありません。',
+  'A post that wishes for a boyfriend and a post that wishes for a girlfriend are put together by this page. The two did not write to each other.': '「彼氏がほしい」側の投稿と「彼女がほしい」側の投稿を、話題や気持ちが合いそうな組み合わせで自動で並べています（恋人がいる人の投稿は使いません）。二人が実際にやりとりしたものではありません。',
   'Reply News': 'リプライニュース', 'Reply News settings': 'リプライニュースの設定', 'Opening Reply News…': 'リプライニュースを開いています…',
   'Humor': 'ユーモア', 'News': 'ニュース', 'Pull down to refresh': '引っ張って更新', 'Release to refresh': '離すと更新',
   'Back to video': '動画に戻る', 'Play': '再生', 'Pause': '一時停止', 'Update': '更新', 'Creating…': '作成中…',
@@ -3314,10 +3314,10 @@ async function readLink(link) {
 /* A box: a link alone is read from X; anything else is the words themselves. */
 function readBox(raw) { const link = onlyLink(raw); return link ? readLink(link) : Promise.resolve(readPaste(raw)); }
 function talkCards(t, langId) {
-  /* A match says so on every card: the post and the reply were not written to each other. */
-  const corner = t.match ? (langId === 'en' ? 'RANDOM MATCH' : 'ランダムマッチング') : (t.word || '');
+  /* A match says so on every card that shows a post: the page put the two together, they did not write to each other. */
+  const corner = t.match ? (langId === 'en' ? 'AUTO MATCH' : '自動マッチング') : (t.word || '');
   /* A talk from the day's data plays with one reply; a pasted talk with every reply that was pasted. */
-  return threadCards({ thread: true, match: !!t.match, story: { post: t.post, replies: t.id ? t.replies.slice(0, 1) : t.replies }, hook: t.match ? '' : (t.word || ''), corner }, langId);
+  return threadCards({ thread: true, match: !!t.match, story: { post: t.post, replies: t.id ? t.replies.slice(0, 1) : t.replies }, hook: t.word || '', corner }, langId);
 }
 /* A new talk goes first, so the video starts with it. When the video is full, the oldest talk leaves. */
 async function addTalk(postRaw, replyRaw) {
@@ -3344,16 +3344,19 @@ const XAPI = 'https://raw.githubusercontent.com/Githitosh/githito.xapi/api/v1/';
 let FEED = [];
 /* Matching News' data from the same API: posts, and lines that can answer a post they were not written to. */
 let MATCH = { posts: [], lines: [] };
-const USED = new Set();
 let AUTO = [];
 let NEXT = null;
 let QUERY = '';
 let feedAt = 0;
 const SHOWN = new Set();
 const goodTalks = list => (Array.isArray(list) ? list : []).filter(t => t && t.id && t.post && t.post.text && Array.isArray(t.replies) && t.replies.some(r => r && r.text));
+const GONE = /元カレ|元カノ|元彼|別れ(?:た(?!く)|て(?!ほし|欲し)|まし)|失恋|振られ|フラれ|ふられ|片思い|片想い|クリぼっち|独り身|フリー/;
 const goodMatch = d => ({
   /* Matching is for posts about love only. */
-  posts: (d && Array.isArray(d.posts) ? d.posts : []).filter(p => p && p.id && p.handle && p.text && p.url && p.genre === 'romance'),
+  posts: (d && Array.isArray(d.posts) ? d.posts : []).filter(p => p && p.id && p.handle && p.text && p.url && p.genre === 'romance')
+    .map(p => ({ ...p, side: p.side === 'boyfriend' || p.side === 'girlfriend' ? p.side : '', wish: !!p.wish }))
+    /* A match is for people who are free: a post that tells of a partner the writer has is left out. */
+    .filter(p => (p.free != null ? !!p.free : !p.side || p.wish || GONE.test(p.text))),
   lines: (d && Array.isArray(d.lines) ? d.lines : []).filter(l => l && l.id && l.handle && l.text && l.url && l.to),
 });
 function cachedFeed() {
@@ -3376,45 +3379,55 @@ async function loadFeed() {
   const talks = a ? goodTalks(a.talks) : [];
   if (a && (talks.length || !FEED.length)) { FEED = talks; store.set('feed.' + lang, JSON.stringify(talks)); got = true; }
   const m = goodMatch(b);
-  if (m.posts.length && m.lines.length) { MATCH = m; store.set('match.' + lang, JSON.stringify(m)); got = true; }
+  if (canMatch(m.posts)) { MATCH = { posts: m.posts, lines: [] }; store.set('match.' + lang, JSON.stringify({ posts: m.posts })); got = true; }
   return got;
 }
 /* ---------- Matching News ---------- */
-/* A person's post about love is shown with a reply that somebody else wrote to some other post, drawn at
-   random, as a matching app would put two people together. githito.xapi keeps only replies that bring no subject of
-   their own (a laugh, a "really?"), and says which words a reply needs the post to say ("needs"), so the
-   two read as a talk. Every card says that the match is random, and both people's posts are linked. */
+/* Two posts about love are shown as a match, as a matching app would put two people together: one that
+   speaks of a boyfriend and one that speaks of a girlfriend. githito.xapi reads the side from the partner
+   each post names; nobody's gender is stated here or there. The two are chosen to go together: they
+   speak of the same thing, or both wish for a partner. Only people who are free are matched: a post
+   that tells of a partner the writer has is left out. A post that names neither side can stand in
+   when one side runs short. Every card that shows a post says the page made the match, and both
+   people's posts are linked. */
 const mode = () => (store.get('mode', 'match') === 'reply' ? 'reply' : 'match');
-const matchOn = () => mode() === 'match' && MATCH.posts.length > 0 && MATCH.lines.length > 0;
-/* What a post says, as words: runs of kanji, of katakana, of Latin letters, of digits. */
-const wordRuns = text => (String(text || '').match(/[一-龯々〆ヶ]+|[ァ-ヴー]{2,}|[A-Za-zＡ-Ｚａ-ｚ]{2,}|[0-9０-９]+/g) || []).map(w => w.toLowerCase());
-/* A line fits a post when the two are different people, the line was not written to this post or to its
-   writer, and the post says every word the line needs (one kanji must be a word of the post, not a part
-   of one). Agreeing with a question is not an answer. */
-function lineFits(l, p, runs) {
-  const a = l.handle.toLowerCase();
-  const b = p.handle.toLowerCase();
-  if (a === b || l.to === p.id || String(l.toHandle || '').toLowerCase() === b) return false;
-  if (p.asks && l.kind === 'agree') return false;
-  const text = p.text.toLowerCase();
-  return (l.needs || []).every(w => { const k = String(w).toLowerCase(); return charLen(k) > 1 ? text.includes(k) : runs.includes(k); });
+/* A match needs two posts, one of which names its side. */
+const canMatch = posts => posts.length > 1 && posts.some(p => p.side);
+const matchOn = () => mode() === 'match' && canMatch(MATCH.posts);
+/* What a post speaks of: words in kanji, katakana or Latin letters, without the words of love
+   themselves and the words every post has. */
+const PLAIN_WORDS = new Set(('彼氏 彼女 恋人 恋愛 元カレ 元カノ 今日 昨日 明日 今年 去年 来年 今月 来月 最近 自分 一緒 本当 時間 普通 人生 最高 大事 予定 毎日 一番 今回 今度 '
+  + '大好 好き 気持 結局 全部 絶対 最初 最後 一人 二人 人間 意味 感じ 相手 場所 生活 理由 自体 以上 以外 以前 全然 多分 何故 無理 必要 大丈夫 可愛 実感').split(' '));
+const topics = text => [...new Set((String(text || '').match(/[一-龯々〆ヶ]{2,}|[ァ-ヴー]{3,}|[A-Za-z]{3,}/g) || []).map(w => w.toLowerCase()).filter(w => !PLAIN_WORDS.has(w)))];
+/* How well two posts go together; null when they are not a match at all (the same person, two of
+   the same side, or neither naming a side). One of each side counts most, then a subject they share,
+   then both wishing for a partner. */
+function goesWith(p, q) {
+  if (p.id === q.id || p.handle.toLowerCase() === q.handle.toLowerCase()) return null;
+  if (p.side === q.side) return null;
+  const mine = new Set(topics(q.text));
+  const shared = topics(p.text).filter(w => mine.has(w));
+  const gone = x => GONE.test(x.text);
+  return { score: (p.side && q.side ? 5 : 0) + 4 * Math.min(2, shared.length) + (p.wish && q.wish ? 3 : 0) + (gone(p) && gone(q) ? 2 : 0), shared };
 }
-/* The match for a post: a line that speaks of the post's own words when there is one, or else any open
-   line; one not yet played in this visit first. taken: the lines already in this video. */
-function matchFor(p, taken) {
-  const runs = wordRuns(p.text);
-  const fit = MATCH.lines.filter(l => !(taken && taken.has(l.id)) && lineFits(l, p, runs));
-  if (!fit.length) return null;
-  const tied = fit.filter(l => (l.needs || []).length);
-  const open = fit.filter(l => !(l.needs || []).length);
-  const unused = list => { const f = list.filter(l => !USED.has(l.id)); return f.length ? f : list; };
-  const from = tied.length && (!open.length || Math.random() < 0.7) ? unused(tied) : unused(open);
-  const l = from[Math.floor(Math.random() * from.length)];
-  return {
-    id: 'm' + p.id, match: true, genre: p.genre, word: p.word || '',
-    post: { id: p.id, handle: p.handle, text: p.text, url: p.url },
-    replies: [{ id: l.id, handle: l.handle, text: l.text, url: l.url }],
-  };
+/* The match for a post: the post that goes with it best, one not yet played first; a little chance
+   keeps the same two from always meeting. used: the posts already in this video. */
+function matchFor(p, used) {
+  let best = null;
+  MATCH.posts.forEach(q => {
+    if (used && used.has(q.id)) return;
+    const g = goesWith(p, q);
+    if (!g) return;
+    const score = g.score + Math.random() * 2 - (SHOWN.has('m' + q.id) ? 1.5 : 0);
+    if (!best || score > best.score) best = { q, score, shared: g.shared };
+  });
+  if (!best) return null;
+  /* The one who wishes opens, and the other answers; when both or neither do, either may open. */
+  const q = best.q;
+  const [a, b] = (p.wish && !q.wish) || (p.wish === q.wish && Math.random() < 0.5) ? [p, q] : [q, p];
+  const word = best.shared.find(w => charLen(w) <= 8) || '';
+  const bare = x => ({ id: x.id, handle: x.handle, text: x.text, url: x.url });
+  return { id: 'm' + a.id + '_' + b.id, match: true, genre: 'romance', word: word && a.text.toLowerCase().includes(word) ? a.text.substr(a.text.toLowerCase().indexOf(word), word.length) : '', post: bare(a), replies: [bare(b)] };
 }
 /* The name on the page and in the video, the lit button, the note and the room for two links. */
 function paintMode() {
@@ -3424,7 +3437,7 @@ function paintMode() {
   if ($('home').dataset.name !== name) { $('home').dataset.name = name; $('home').textContent = name; }
   document.title = LOOK.brand[uiLang()] || name;
   document.querySelectorAll('#modeChips button').forEach(b => b.classList.toggle('on', b.dataset.mode === mode()));
-  $('modeChips').hidden = !(MATCH.posts.length && MATCH.lines.length);
+  $('modeChips').hidden = !canMatch(MATCH.posts);
   $('matchNote').hidden = !on;
   $('sendRow').hidden = !on;
   document.querySelector('.linkbox').classList.toggle('two', on);
@@ -3440,7 +3453,7 @@ function says(t, q) {
 /* The talks a video may draw from: those that say the words typed, or else those of the chosen genres
    (every genre when none is chosen). */
 function talkPool() {
-  /* Matching News draws posts; the reply is matched when the video is made. */
+  /* Matching News draws posts; each one's match is found when the video is made. */
   const all = matchOn() ? MATCH.posts.map(p => ({ id: 'm' + p.id, genre: p.genre, word: p.word || '', post: p })) : FEED;
   if (QUERY) return all.filter(t => says(t, QUERY));
   /* Matching has one genre, love. */
@@ -3459,22 +3472,30 @@ function pickAuto(skip) {
      video always has its sets. Once all were played, the round starts again. */
   let fresh = free.filter(t => !SHOWN.has(t.id));
   if (!fresh.length) { pool.forEach(t => SHOWN.delete(t.id)); fresh = free; }
-  const order = mix(fresh).concat(mix(free.filter(t => !fresh.includes(t))), mix(pool.filter(t => !free.includes(t))));
+  let order = mix(fresh).concat(mix(free.filter(t => !fresh.includes(t))), mix(pool.filter(t => !free.includes(t))));
+  const on = matchOn();
+  if (on) {
+    /* The rarer side opens first, so that as many matches as can be have one of each side. */
+    const count = k => MATCH.posts.filter(p => p.side === k).length;
+    const rare = count('girlfriend') <= count('boyfriend') ? 'girlfriend' : 'boyfriend';
+    const rank = t => (SHOWN.has(t.id) ? 3 : 0) + (t.post.side === rare ? 0 : t.post.side ? 1 : 2);
+    order = order.map((t, k) => [rank(t), k, t]).sort((x, y) => x[0] - y[0] || x[1] - y[1]).map(x => x[2]);
+  }
   const langId = uiLang();
   /* As many sets as chosen, the pasted talks among them; never more cards than a video holds. */
   const room = total() - TALKS.length;
   const out = [];
-  const on = matchOn();
-  const taken = new Set();
+  const used = new Set();
   let n = TALKS.reduce((k, t) => k + talkCards(t, langId).length, 0);
   for (const x of order) {
     if (out.length >= room) break;
-    const t = on ? matchFor(x.post, taken) : x;
+    if (on && used.has(x.post.id)) continue;
+    const t = on ? matchFor(x.post, used) : x;
     if (!t) continue;
     const c = talkCards(t, langId).length;
     if (n + c > MAX_ITEMS) continue;
     out.push(t);
-    if (on) taken.add(t.replies[0].id);
+    if (on) { used.add(t.post.id); used.add(t.replies[0].id); }
     n += c;
   }
   return out;
@@ -3483,13 +3504,14 @@ function pickAuto(skip) {
 function chooseAuto(prepared) {
   AUTO = prepared && NEXT && NEXT.length ? NEXT : pickAuto();
   NEXT = null;
-  AUTO.forEach(t => { SHOWN.add(t.id); if (t.match) USED.add(t.replies[0].id); });
+  /* Both posts of a match count as played. */
+  AUTO.forEach(t => { if (t.match) { SHOWN.add('m' + t.post.id); SHOWN.add('m' + t.replies[0].id); } else SHOWN.add(t.id); });
 }
 /* While a video plays, the next one is chosen and its letters' fonts are fetched, so it starts without a wait. */
 function prepareNext() {
   NEXT = null;
   if (!FEED.length && !matchOn()) return;
-  const next = pickAuto(new Set(AUTO.map(t => t.id)));
+  const next = pickAuto(new Set(AUTO.flatMap(t => (t.match ? ['m' + t.post.id, 'm' + t.replies[0].id] : [t.id]))));
   if (!next.length) return;
   NEXT = next;
   const langId = uiLang();
@@ -3535,6 +3557,9 @@ function hookOf(text, lang, word) {
     const runs = clause.match(/[ァ-ヴー]+|[ぁ-ゖ]+|[一-龯々〆ヶ]+|[A-Za-z0-9０-９]+|./gu) || [];
     for (let i = 0; i < runs.length; i++) {
       let r = runs[i];
+      /* 彼氏作って gives 彼氏, not 彼氏作; a long run of kanji is a phrase, not a word. */
+      r = r.replace(/^(彼氏|彼女|恋人|元彼)[一-龯]+$/, '$1');
+      if (/^[一-龯々〆ヶ]{6,}$/.test(r)) continue;
       /* この前彼女から: 前 belongs to この前, the word is 彼女. */
       if (i > 0 && /(?:この|その|あの)$/.test(runs[i - 1]) && /^[前間時頃後日辺][一-龯]/.test(r)) r = r.slice(1);
       for (let m = r.match(HOOK_SKIP); m && m[0]; m = r.match(HOOK_SKIP)) r = r.slice(m[0].length);
@@ -4323,7 +4348,7 @@ function resetSend() {
 }
 function sendText(a, b, url, url2) {
   const ja = uiLang() !== 'en';
-  return [`@${a} @${b}`, ja ? 'お二人の投稿をランダムに組み合わせた動画です（マッチングニュース）' : 'Your two posts, put together at random (Matching News)', url, url2].join('\n');
+  return [`@${a} @${b}`, ja ? 'お二人の投稿を組み合わせた動画です（マッチングニュース）' : 'Your two posts, put together (Matching News)', url, url2].join('\n');
 }
 /* The second press: the viewer's X, with the video and the words. */
 function sendOut(m) {
@@ -4731,7 +4756,7 @@ E.setMusicCredit(TRACKS[0].credit);
 /* A newer copy on the site: load it, so a copy the browser kept from before is not shown.
    version.json names the latest build of each page; it is read past the browser's cache. */
 function watchVersion(key, url) {
-  const BUILD = '85beefed8994';
+  const BUILD = '92a421ad9b7d';
   if (location.protocol === 'file:' || BUILD.indexOf('BUILD_ID') >= 0) return;
   /* At the start it may reload at once; later it waits while a video is being made or saved. */
   const check = first => {
