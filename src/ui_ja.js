@@ -30,7 +30,7 @@ const JA = {
   'Web': 'ウェブ', 'Media': 'メディア', 'Public page:': '公開ページ：', 'Replies': 'リプライ', 'Clear': '消す', 'Reading the post': '投稿を読み込んでいます',
   'Words, @account or post URL': '言葉・@アカウント・URL', 'Program repository:': 'プログラムの保存先：', 'Terms of use': '利用規約', 'Searching the web': 'ウェブを探しています',
   'Matching News': 'マッチングニュース', 'Matching': 'マッチング',
-  'A post and a reply are put together at random. The reply was written to another post.': '投稿とリプライをランダムに組み合わせています。リプライは別の投稿に書かれたものです。',
+  'A post about love and a reply are put together at random. The reply was written to another post.': '恋愛の投稿と、別の投稿に書かれたリプライを、ランダムに組み合わせています。二人が実際にやりとりしたものではありません。',
   'Reply News': 'リプライニュース', 'Reply News settings': 'リプライニュースの設定', 'Opening Reply News…': 'リプライニュースを開いています…',
   'Humor': 'ユーモア', 'News': 'ニュース', 'Pull down to refresh': '引っ張って更新', 'Release to refresh': '離すと更新',
   'Back to video': '動画に戻る', 'Play': '再生', 'Pause': '一時停止', 'Update': '更新', 'Creating…': '作成中…',

@@ -177,8 +177,8 @@ pre#sources { white-space: pre-wrap; font: 12px/1.5 ui-monospace,Menlo,monospace
   </div>
   <p id="caption" class="caption">Opening Reply News…</p>
   <div id="modeChips" class="music mode"><button type="button" data-mode="match">Matching</button><button type="button" data-mode="reply">Replies</button></div>
-  <p id="matchNote" class="note match-note" hidden>A post and a reply are put together at random. The reply was written to another post.</p>
-  <p class="music-label">Genres</p>
+  <p id="matchNote" class="note match-note" hidden>A post about love and a reply are put together at random. The reply was written to another post.</p>
+  <p class="music-label" id="genreLabel">Genres</p>
   <div id="genreChips" class="music"></div>
   <form id="ask" class="ask" autocomplete="off">
     <input type="text" id="askText" enterkeyhint="search" placeholder="Search today's talks">
@@ -2180,7 +2180,7 @@ const JA = {
   'Web': 'ウェブ', 'Media': 'メディア', 'Public page:': '公開ページ：', 'Replies': 'リプライ', 'Clear': '消す', 'Reading the post': '投稿を読み込んでいます',
   'Words, @account or post URL': '言葉・@アカウント・URL', 'Program repository:': 'プログラムの保存先：', 'Terms of use': '利用規約', 'Searching the web': 'ウェブを探しています',
   'Matching News': 'マッチングニュース', 'Matching': 'マッチング',
-  'A post and a reply are put together at random. The reply was written to another post.': '投稿とリプライをランダムに組み合わせています。リプライは別の投稿に書かれたものです。',
+  'A post about love and a reply are put together at random. The reply was written to another post.': '恋愛の投稿と、別の投稿に書かれたリプライを、ランダムに組み合わせています。二人が実際にやりとりしたものではありません。',
   'Reply News': 'リプライニュース', 'Reply News settings': 'リプライニュースの設定', 'Opening Reply News…': 'リプライニュースを開いています…',
   'Humor': 'ユーモア', 'News': 'ニュース', 'Pull down to refresh': '引っ張って更新', 'Release to refresh': '離すと更新',
   'Back to video': '動画に戻る', 'Play': '再生', 'Pause': '一時停止', 'Update': '更新', 'Creating…': '作成中…',
@@ -3265,7 +3265,8 @@ let feedAt = 0;
 const SHOWN = new Set();
 const goodTalks = list => (Array.isArray(list) ? list : []).filter(t => t && t.id && t.post && t.post.text && Array.isArray(t.replies) && t.replies.some(r => r && r.text));
 const goodMatch = d => ({
-  posts: (d && Array.isArray(d.posts) ? d.posts : []).filter(p => p && p.id && p.handle && p.text && p.url),
+  /* Matching is for posts about love only. */
+  posts: (d && Array.isArray(d.posts) ? d.posts : []).filter(p => p && p.id && p.handle && p.text && p.url && p.genre === 'romance'),
   lines: (d && Array.isArray(d.lines) ? d.lines : []).filter(l => l && l.id && l.handle && l.text && l.url && l.to),
 });
 function cachedFeed() {
@@ -3292,8 +3293,8 @@ async function loadFeed() {
   return got;
 }
 /* ---------- Matching News ---------- */
-/* A person's post is shown with a reply that somebody else wrote to some other post, drawn at random, as
-   a matching app would put two people together. githito.xapi keeps only replies that bring no subject of
+/* A person's post about love is shown with a reply that somebody else wrote to some other post, drawn at
+   random, as a matching app would put two people together. githito.xapi keeps only replies that bring no subject of
    their own (a laugh, a "really?"), and says which words a reply needs the post to say ("needs"), so the
    two read as a talk. Every card says that the match is random, and both people's posts are linked. */
 const mode = () => (store.get('mode', 'match') === 'reply' ? 'reply' : 'match');
@@ -3354,6 +3355,8 @@ function talkPool() {
   /* Matching News draws posts; the reply is matched when the video is made. */
   const all = matchOn() ? MATCH.posts.map(p => ({ id: 'm' + p.id, genre: p.genre, word: p.word || '', post: p })) : FEED;
   if (QUERY) return all.filter(t => says(t, QUERY));
+  /* Matching has one genre, love. */
+  if (matchOn()) return all;
   const picked = pickedGenres().filter(id => all.some(t => t.genre === id));
   return all.filter(t => !picked.length || picked.includes(t.genre));
 }
@@ -3757,6 +3760,9 @@ function paintFeed() {
   const picked = pickedGenres();
   document.querySelectorAll('#genreChips button:not(.mine)').forEach(b => b.classList.toggle('on', on && !QUERY && picked.includes(b.dataset.genre) && hasGenre(b.dataset.genre)));
   document.querySelectorAll('#genreChips button.mine').forEach(b => b.remove());
+  /* Matching has one genre (love), so the genre buttons show for Replies only. */
+  document.querySelectorAll('#genreChips button').forEach(b => { b.hidden = matchOn(); });
+  $('genreLabel').hidden = matchOn();
   if (QUERY) {
     /* The words typed show as a lit button; a press takes them away. */
     const b = document.createElement('button');
@@ -4520,7 +4526,7 @@ E.setMusicCredit(TRACKS[0].credit);
 /* A newer copy on the site: load it, so a copy the browser kept from before is not shown.
    version.json names the latest build of each page; it is read past the browser's cache. */
 function watchVersion(key, url) {
-  const BUILD = 'ab2ff2cc94d5';
+  const BUILD = '6f2cd487a18e';
   if (location.protocol === 'file:' || BUILD.indexOf('BUILD_ID') >= 0) return;
   /* At the start it may reload at once; later it waits while a video is being made or saved. */
   const check = first => {
