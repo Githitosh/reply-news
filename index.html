@@ -214,11 +214,11 @@ pre#sources { white-space: pre-wrap; font: 12px/1.5 ui-monospace,Menlo,monospace
       <div id="sourceFilters" class="filters"></div>
       <label for="mediaIn">Media</label>
       <div class="x-add">
-        <input id="mediaIn" type="text" spellcheck="false" placeholder="asahi.com">
+        <input id="mediaIn" type="text" inputmode="url" spellcheck="false" placeholder="asahi.com / https://www.example.co.jp/">
         <button type="button" id="addMedia">Add</button>
       </div>
       <div id="mediaList" class="music"></div>
-      <p class="note">Type a site's address (asahi.com) or name to add its reports. Press a name to remove it.</p>
+      <p class="note">Type a site's address or a homepage (asahi.com, https://www.example.co.jp/) to add its newest posts. Press a name to remove it.</p>
       <p class="note">Reports are chosen by this page's own rules, not by a search engine or ads: newest first from open sources (GDELT and Wikipedia's current events), the same share for every genre, at most two from one site, and drawn at random.</p>
       <label for="xUser">X accounts</label>
       <div class="x-add">
@@ -2177,7 +2177,7 @@ const JA = {
   'At the end': '最後まで再生したら', 'Repeat': '繰り返す',
   'Add an account to load its posts and the replies to them.': 'アカウントを追加すると、そのアカウントの投稿と、返信を読み込みます。',
   'Web': 'ウェブ', 'Media': 'メディア', 'Public page:': '公開ページ：', 'Searching the web': 'ウェブを探しています',
-  "Type a site's address (asahi.com) or name to add its reports. Press a name to remove it.": 'サイトのアドレス（asahi.com）か名前を入れて「追加」を押すと、そのメディアの記事を読み込みます。名前を押すと外せます。',
+  "Type a site's address or a homepage (asahi.com, https://www.example.co.jp/) to add its newest posts. Press a name to remove it.": 'サイトのアドレスや企業などのホームページ（asahi.com、https://www.example.co.jp/）を入れて「追加」を押すと、そのサイトの新着を読み込みます。名前を押すと外せます。',
   "Reports are chosen by this page's own rules, not by a search engine or ads: newest first from open sources (GDELT and Wikipedia's current events), the same share for every genre, at most two from one site, and drawn at random.":
     '記事は、検索エンジンや広告の順位ではなく、このページ独自のルールで選びます。公開されている情報源（GDELT とウィキペディアの「最近の出来事」）から新しい順に集め、どのジャンルも同じ数ずつ、1つのサイトから2件まで、その中からランダムに選びます。',
   "Type the site's address, like asahi.com": 'asahi.com のようにサイトのアドレスを入れてください',
@@ -3301,7 +3301,7 @@ function sourceOn(id) {
 const MEDIA_SITES = {
   'nhk': 'nhk.or.jp', '朝日': 'asahi.com', '朝日新聞': 'asahi.com', '読売': 'yomiuri.co.jp', '読売新聞': 'yomiuri.co.jp',
   '毎日': 'mainichi.jp', '毎日新聞': 'mainichi.jp', '日経': 'nikkei.com', '日本経済新聞': 'nikkei.com', '産経': 'sankei.com',
-  '産経新聞': 'sankei.com', '東京新聞': 'tokyo-np.co.jp', '共同': 'kyodo', '共同通信': 'kyodo', '時事': 'jiji.com', '時事通信': 'jiji.com',
+  '産経新聞': 'sankei.com', '東京新聞': 'tokyo-np.co.jp', '共同': 'kyodonews.jp', '共同通信': 'kyodonews.jp', '時事': 'jiji.com', '時事通信': 'jiji.com',
   '北國新聞': 'hokkoku.co.jp', '中日新聞': 'chunichi.co.jp',
   'bbc': 'bbc.com', 'cnn': 'cnn.com', 'reuters': 'reuters.com', 'ap': 'apnews.com', 'abc': 'abcnews.go.com', 'nyt': 'nytimes.com',
   'new york times': 'nytimes.com', 'guardian': 'theguardian.com', 'npr': 'npr.org', 'al jazeera': 'aljazeera.com',
@@ -3448,7 +3448,8 @@ function playingKeys() {
    GDELT (an open database of news from sites around the world) and Wikipedia's current events,
    written by volunteers. Then every genre gets the same share, one site gives at most two reports,
    and the reports are drawn at random from what is left. */
-function beginCollect() {}
+/* Each new video reads the media again, so new posts show. */
+function beginCollect() { if (typeof siteMemo !== 'undefined') siteMemo.clear(); }
 function mergeRows(first, second) {
   const out = [];
   const seen = new Set();
@@ -3520,25 +3521,15 @@ async function wikiNews() {
 /* Reports for some genres (or the words of a free request), from Web and the media typed in. */
 async function webRows(opts) {
   const lang = jokeLang();
-  const domains = mediaList().map(domainOf).filter(Boolean);
   const jobs = [];
   const words = opts.words || (opts.genres || []).flatMap(g => shuffle(genreWords(g)).slice(0, 2));
   const q = words.filter(w => w && [...w].length >= 2).map(w => (/\s/.test(w) ? `"${w}"` : w));
-  if (domains.length) {
-    say('Searching ' + mediaList().join(', '));
-    jobs.push(gdeltList(`(${domains.map(d => 'domain:' + d).join(' OR ')})`, 75).then(rows => rows.map(r => ({ ...r, media: true }))));
-  }
   if (sourceOn('web') && q.length) {
     say('Searching the web');
     jobs.push(gdeltList(`(${q.join(' OR ')}) sourcelang:${lang === 'ja' ? 'japanese' : 'english'}`, 75));
     if (!opts.words) jobs.push(wikiNews());
   }
-  let rows = (await Promise.all(jobs)).flat();
-  /* For a free request, media reports are kept only when they are about it. */
-  if (opts.words) {
-    const low = opts.words.map(w => w.toLowerCase());
-    rows = rows.filter(r => !r.media || low.some(w => r.headline.toLowerCase().includes(w)));
-  }
+  const rows = (await Promise.all(jobs)).flat();
   return rows.filter(allowedRow);
 }
 /* Fair choice: the same share for each genre, at most two per site, drawn at random. */
@@ -3581,7 +3572,163 @@ function fairPick(rows, need, genres, used) {
 async function webNews(used, need) {
   if (!need || (!sourceOn('web') && !mediaList().length)) return [];
   const genres = genreChoices().filter(g => g.on && GENRE_WORDS[g.id]);
-  return fairPick(await webRows({ genres }), need, genres, used);
+  /* Media typed in come first (newest from each); Web fills the rest by the fair rules. */
+  const fromMedia = newestBySite(await mediaRows(), sourceOn('web') ? Math.ceil(need / 2) : need, used);
+  const rest = need - fromMedia.length;
+  const fromWeb = rest > 0 && sourceOn('web') ? fairPick(await webRows({ genres }), rest, genres, used) : [];
+  return fromMedia.concat(fromWeb);
+}
+/* ---------- media typed in: news sites, company and school homepages ---------- */
+/* A browser may not read another site directly. The page then asks a plain relay to pass it through;
+   the relays only carry the page and choose nothing. The newest posts are read from the site's own
+   feed (RSS or Atom), found on its homepage, or else from dated links on the page itself. */
+const RELAYS = [
+  u => u,
+  u => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u),
+  u => 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(u),
+  u => 'https://corsproxy.io/?url=' + encodeURIComponent(u),
+];
+const siteMemo = new Map();
+async function fetchSite(url, first) {
+  const order = first ? [first].concat(RELAYS.filter(r => r !== first)) : RELAYS;
+  for (const via of order) {
+    try {
+      const res = await withTimeout(fetch(via(url)), 9000);
+      if (!res.ok) continue;
+      const text = await res.text();
+      if (text && text.length > 120) return { text, via };
+    } catch (e) { /* the next relay */ }
+  }
+  return { text: '', via: null };
+}
+function mediaUrl(m) {
+  const raw = String(m || '').trim();
+  if (/^https?:\/\//i.test(raw)) return raw;
+  const d = domainOf(raw);
+  return d && /\./.test(d) ? 'https://' + d + '/' : '';
+}
+function siteName(m) {
+  const raw = String(m || '').trim();
+  return /^https?:\/\//i.test(raw) || /\.[a-z]{2,}/i.test(raw) ? (domainOf(raw) || raw) : raw;
+}
+function absUrl(href, base) { try { return new URL(String(href || '').trim(), base).href; } catch (e) { return ''; } }
+function kidText(n, names) {
+  for (const c of n.children) if (names.includes(c.localName)) return (c.textContent || '').replace(/\s+/g, ' ').trim();
+  return '';
+}
+/* Items of an RSS, RDF or Atom feed. */
+function feedItems(xml, base) {
+  if (!/<(rss|feed|rdf:RDF)\b/i.test(xml.slice(0, 2000))) return [];
+  const doc = new DOMParser().parseFromString(xml, 'text/xml');
+  if (doc.getElementsByTagName('parsererror').length) return [];
+  return [...doc.getElementsByTagName('*')].filter(n => n.localName === 'item' || n.localName === 'entry').map(n => {
+    let link = '';
+    for (const c of n.children) {
+      if (c.localName !== 'link') continue;
+      const rel = c.getAttribute('rel');
+      if (c.getAttribute('href') && (!rel || rel === 'alternate')) { link = c.getAttribute('href'); break; }
+      if (!link && c.textContent.trim()) link = c.textContent.trim();
+    }
+    link = link || n.getAttribute('rdf:about') || kidText(n, ['guid', 'id']);
+    return { title: kidText(n, ['title']), link: absUrl(link, base), date: kidText(n, ['pubDate', 'published', 'updated', 'date', 'issued']) };
+  }).filter(it => it.title && it.link);
+}
+/* Feeds a homepage names in its head, or links to. */
+function feedLinks(html, base) {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const head = [...doc.querySelectorAll('link[rel~="alternate"]')].filter(l => /rss|atom|rdf|xml/i.test(l.getAttribute('type') || '')).map(l => l.getAttribute('href'));
+  const body = [...doc.querySelectorAll('a[href]')].map(a => a.getAttribute('href')).filter(h => /(?:^|[/._-])(rss|atom|feed)(?:[/._-]|$)|\.rdf$/i.test(h || ''));
+  return [...new Set(head.concat(body).map(h => absUrl(h, base)).filter(u => /^https?:/.test(u)))].slice(0, 3);
+}
+/* Dated links on the page itself (お知らせ, News, プレスリリース lists): a link with a date beside it. */
+const DATE_RE = /(20\d{2})\s*[.\/年-]\s*(\d{1,2})\s*[.\/月-]\s*(\d{1,2})\s*日?/;
+function pageItems(html, base) {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  doc.querySelectorAll('script, style, nav, header, footer, noscript').forEach(n => n.remove());
+  const out = [];
+  const seen = new Set();
+  doc.querySelectorAll('a[href]').forEach(a => {
+    const link = absUrl(a.getAttribute('href'), base);
+    const raw = (a.textContent || '').replace(/\s+/g, ' ').trim();
+    if (!/^https?:/.test(link) || seen.has(link)) return;
+    let date = '';
+    let box = a;
+    for (let up = 0; up < 4 && box && !date; up++) {
+      const near = (box.textContent || '').replace(/\s+/g, ' ');
+      const prev = box.previousElementSibling ? box.previousElementSibling.textContent || '' : '';
+      if (near.length <= 400) { const m = (near.match(DATE_RE) || prev.match(DATE_RE)); if (m) date = `${m[1]}-${String(m[2]).padStart(2, '0')}-${String(m[3]).padStart(2, '0')}`; }
+      box = box.parentElement;
+    }
+    const title = raw.replace(DATE_RE, '').replace(/^(NEW|新着|お知らせ|ニュース|NEWS|プレスリリース|IR|PR|イベント|重要)\s*/i, '').trim();
+    if (!date || charLen(title) < 8 || charLen(title) > 120) return;
+    seen.add(link);
+    out.push({ title, link, date });
+  });
+  return out;
+}
+/* The newest posts of one medium. */
+async function siteRows(m) {
+  const url = mediaUrl(m);
+  const host = domainOf(m);
+  const name = siteName(m);
+  if (siteMemo.has(m)) return siteMemo.get(m);
+  const job = (async () => {
+    let items = [];
+    if (url) {
+      const home = await fetchSite(url);
+      if (home.text) {
+        items = feedItems(home.text, url);
+        if (!items.length) {
+          for (const f of feedLinks(home.text, url)) {
+            const feed = await fetchSite(f, home.via);
+            items = feedItems(feed.text, f);
+            if (items.length) break;
+          }
+        }
+        if (!items.length) items = pageItems(home.text, url);
+      }
+    }
+    let rows = items.map(it => ({ headline: cleanTitle(it.title), link: it.link, pubDate: it.date, source: name, domain: host, cat: 'NEWS', web: true, media: true, corner: name }));
+    /* A news site that gives nothing directly: its reports in GDELT. */
+    if (rows.length < 3 && host && /\./.test(host)) rows = rows.concat((await gdeltList('domain:' + host, 30)).map(r => ({ ...r, source: name, media: true, corner: name })));
+    const t = r => { const v = Date.parse(r.pubDate || ''); return isNaN(v) ? 0 : v; };
+    return mergeRows(rows, []).filter(r => r.headline && charLen(r.headline) >= 6).sort((a, b) => t(b) - t(a)).slice(0, 20);
+  })();
+  siteMemo.set(m, job);
+  return job;
+}
+async function mediaRows(opts) {
+  const list = mediaList();
+  if (!list.length) return [];
+  say('Reading ' + list.join(', '));
+  let rows = (await Promise.all(list.map(m => siteRows(m).catch(e => { console.warn(e); return []; })))).flat();
+  if (opts && opts.words) {
+    const low = opts.words.map(w => w.toLowerCase());
+    rows = rows.filter(r => low.some(w => r.headline.toLowerCase().includes(w)));
+  }
+  return rows.filter(allowedRow);
+}
+/* Newest first from each medium, taking turns, so every medium shows. */
+function newestBySite(rows, need, used) {
+  const past = seenSet(SEEN_NEWS);
+  const now = playingKeys();
+  const by = new Map();
+  rows.forEach(r => {
+    if (newsKeys(r).some(k => past.has(k) || now.has(k) || used.has(k))) return;
+    const site = r.domain || r.source;
+    if (!by.has(site)) by.set(site, []);
+    by.get(site).push(r);
+  });
+  const lists = [...by.values()];
+  const out = [];
+  for (let k = 0; out.length < need && lists.some(l => l.length); k++) {
+    const l = lists[k % lists.length];
+    if (!l.length) continue;
+    const r = l.shift();
+    newsKeys(r).forEach(x => used.add(x));
+    out.push({ ...r, place: 'top' });
+  }
+  return out;
 }
 async function fxJson(url) {
   const res = await withTimeout(fetch(url), 9000);
@@ -3668,7 +3815,8 @@ async function rowsForSlot(slot) {
       const g = GENRES.find(x => x.id === slot.genre);
       rows = g ? await webRows({ genres: [g] }) : [];
     } else if (slot.free) {
-      rows = await webRows({ words: termsOf(slot.label, jokeLang()) });
+      const words = termsOf(slot.label, jokeLang());
+      rows = (await mediaRows({ words })).concat(await webRows({ words }));
     }
   } catch (e) { console.warn(e); }
   return rows.filter(allowedRow);
@@ -4409,6 +4557,7 @@ async function cardsFrom(rows, langId) {
     r._shownJa = ja; r._shownEn = en || r.headline;
     const card = storyFrom(r, en || r.headline, ja, langId);
     card.key = r.joke ? jokeKeys(r) : newsKeys(r);
+    if (!r.joke && r.corner) card.topic = r.corner;
     return r.joke ? beats(r, card, langId) : [card];
   });
 }
@@ -4470,7 +4619,9 @@ async function collect() {
         topicPlace[w] = g.place;
       });
     }
-    jokeAt = 0;
+    /* Media typed in: their newest posts come first, then the comments. */
+    if (mediaList().length) sequence = newestBySite(await mediaRows(), Math.max(1, Math.round(N * 0.4)), used);
+    jokeAt = sequence.length;
   } else if (topicSlots.length) {
     const parts = shares(newsNeed, topicSlots.length);
     topicSlots.forEach((s, i) => { s.count = parts[i]; });
@@ -4575,7 +4726,7 @@ function normItem(it) {
   const head = arr(it.head).map(up).slice(0, 3);
   return {
     kw: up(it.kw || (head[0] || '').split(' ')[0]).slice(0, 16) || 'NEWS',
-    cat: up(it.cat || 'NEWS'), topic: /^@/.test(String(it.topic || '')) ? String(it.topic).trim().slice(0, 16) : up(it.topic || ''),
+    cat: up(it.cat || 'NEWS'), topic: /^@|\.[a-z]{2,}/i.test(String(it.topic || '')) ? String(it.topic).trim().slice(0, 24) : up(it.topic || ''),
     head: head.length ? head : [up(it.kw) || 'NEWS'],
     sub: arr(it.sub).slice(0, 3).map(l => String(l).trim().split(/\s+/).map(w => SMALL.has(w.toLowerCase()) ? w.toLowerCase() : w.toUpperCase()).join(' ')),
     jp: arr(it.jp).slice(0, 8),
@@ -5571,7 +5722,7 @@ E.setMusicCredit(TRACKS[0].credit);
 /* A newer copy on the site: load it, so a copy the browser kept from before is not shown.
    version.json names the latest build of each page; it is read past the browser's cache. */
 function watchVersion(key, url) {
-  const BUILD = 'a72315b56440';
+  const BUILD = 'ae13a0edb4e3';
   if (location.protocol === 'file:' || BUILD.indexOf('BUILD_ID') >= 0) return;
   /* At the start it may reload at once; later it waits while a video is being made or saved. */
   const check = first => {
