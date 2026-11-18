@@ -9,9 +9,9 @@ Download saves the video as an MP4.
 
 ## The box under the video and the genres
 
-The genres sit under the video. Type something in the box and press 更新 (Update):
-it joins the genres (lit) and the lineup in Settings, and the video is made again.
-Press a lit genre to take it out. With the box empty, 更新 makes a new video.
+The genres sit under the video; pressing one makes the video again at once.
+Type something in the box and press Enter: it joins the genres (lit) and the lineup
+in Settings, and the video is made again. Press a lit genre to take it out.
 
 - words (渋谷, 新しいiPhone): posts on X about them that people replied to, each followed by the replies under it
 - @account: that account's newest posts, each followed by its replies

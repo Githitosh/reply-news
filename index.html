@@ -169,7 +169,6 @@ pre#sources { white-space: pre-wrap; font: 12px/1.5 ui-monospace,Menlo,monospace
   </div>
   <form id="ask" class="ask" autocomplete="off">
     <input type="text" id="askText" enterkeyhint="go" placeholder="Words, @account or post URL">
-    <button type="submit" id="askGo">Update</button>
   </form>
   <p id="caption" class="caption">Opening Reply News…</p>
   <p class="music-label">Genres</p>
@@ -4819,10 +4818,20 @@ async function collect() {
     }),
     collectRomance(romanceNeed, romancePlace).catch(e => { console.warn(e); return []; }),
     collectTravel(travelNeed, travelPlace).catch(e => { console.warn(e); return []; }),
-    Promise.all(freeSlots.map(s => sourceOn('x') ? collectAsk(s.label, perFree).catch(e => { console.warn(e); return []; }) : [])),
+    Promise.all(freeSlots.map(s => sourceOn('x') ? collectAsk(s.label, Math.max(perFree, Math.ceil(left0 / freeSlots.length))).catch(e => { console.warn(e); return []; }) : [])),
     collectAccounts(threadNeed).catch(e => { console.warn(e); return []; }),
   ]);
   const topicRows = topics.flat();
+  /* Each typed line first gets its share; what it found beyond that fills the video after the genres. */
+  const topicFirst = [];
+  const topicRest = [];
+  topics.forEach(list => {
+    let n = 0;
+    list.forEach(r => {
+      const size = r.thread ? 1 + r.story.replies.length : 2;
+      if (n < perFree) { topicFirst.push(r); n += size; } else topicRest.push(r);
+    });
+  });
   /* A comment found both as a joke and under a couple plays once, as the joke. */
   const jokeKeySet = new Set(found.flatMap(j => jokeKeys({ text: j.text, link: j.url })));
   const coupleKeys = r => [r.story.a, r.story.b, ...r.story.cheers].flatMap(m => ['id:' + m.id, 't:' + squash(m.text).slice(0, 50)]);
@@ -4838,7 +4847,7 @@ async function collect() {
   progress(0.75);
   /* Fit the cards to Items: reports, couples and places first, then jokes fill the rest.
      A comment without room for two cards keeps only the whole comment. */
-  const all = sequence.concat(threadRows, coupleRows, trips, topicRows, jokeRows);
+  const all = sequence.concat(threadRows, coupleRows, trips, topicFirst, jokeRows, topicRest);
   const cards = await cardsFrom(all, lang.id);
   if (S.again) return null;
   let left = N;
@@ -5003,12 +5012,9 @@ function toggleSound() {
   playSound(currentT());
   say(watchLine());
 }
+/* While a video plays, the line under the video stays empty (no "Playing 10 comments" line). */
 function watchLine() {
-  const items = (S.script && S.script.items) || [];
-  const jokes = items.filter(it => it.cat === 'REPLY' || it.cat === 'ROMANCE' || it.cat === 'TRAVEL').length;
-  const news = items.length - jokes;
-  const what = news && jokes ? `${news} ${news === 1 ? 'story' : 'stories'}, then ${jokes} ${jokes === 1 ? 'comment' : 'comments'}` : (jokes ? `${jokes} ${jokes === 1 ? 'comment' : 'comments'}` : `${news} ${news === 1 ? 'story' : 'stories'}`);
-  return 'Playing ' + what + '.' + (S.audioOn ? '' : TAP);
+  return '';
 }
 function stop() {
   S.playing = false;
@@ -5136,7 +5142,7 @@ function toggle() {
   if (T0 >= S.show.duration - 0.05) T0 = 0;
   beginPlayback(T0);
   playSound(T0);
-  say('Playing.');
+  say('');
 }
 
 /* ---------- layout, story length, wallpaper, music ---------- */
@@ -5776,7 +5782,7 @@ function initUI() {
       b.dataset.noi18n = '';
       b.textContent = chipName(line);
       b.title = line;
-      b.onclick = () => { setLines(lineList().filter(x => x !== line)); scheduleRefresh(800); };
+      b.onclick = () => { setLines(lineList().filter(x => x !== line)); scheduleRefresh(300); };
       $('genreChips').appendChild(b);
     });
     lineup.classList.toggle('live', !!lineup.value.trim());
@@ -5796,7 +5802,7 @@ function initUI() {
       store.set('lineup', lineup.value);
       paintChips();
       arm('applyLine');
-      scheduleRefresh(800);
+      scheduleRefresh(300);
     };
     $('genreChips').appendChild(b);
   });
@@ -5922,7 +5928,7 @@ E.setMusicCredit(TRACKS[0].credit);
 /* A newer copy on the site: load it, so a copy the browser kept from before is not shown.
    version.json names the latest build of each page; it is read past the browser's cache. */
 function watchVersion(key, url) {
-  const BUILD = 'fc207cbc46ec';
+  const BUILD = '77785bee59d6';
   if (location.protocol === 'file:' || BUILD.indexOf('BUILD_ID') >= 0) return;
   /* At the start it may reload at once; later it waits while a video is being made or saved. */
   const check = first => {
