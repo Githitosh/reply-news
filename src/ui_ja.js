@@ -36,7 +36,7 @@ const JA = {
   'Choose X, read the post and send it. The words were copied: paste them if they are missing.': '共有メニューでXを選び、内容を確認して送信してください。文面はコピー済みです。入っていなければ貼り付けてください。',
   'Not sent yet. Press Send on X again.': 'まだ送っていません。もう一度「Xで送る」を押してください。',
   'The video was downloaded. Attach it to the post that opened, read it and send it.': '動画をダウンロードしました。開いた投稿画面に添付し、内容を確認して送信してください。',
-  'Two people\'s posts about love are put together: a confession that lands, or a reply that plays along with a hint. Sleepy lines and other everyday remarks are left out. The two did not write to each other.': '恋愛の投稿を組み合わせています。告白が通るか、匂わせに乗るリプライです。ねむいなどの日常の一言は出しません。互いに向けて書いたものではありません。',
+  'Two short posts are put together by swapping one word for another of the same kind: lost at DisneySea, and the other person is at USJ now. They did not write to each other.': '同じ仲間の言葉をずらして並べます。たとえば「ディズニーシーで迷子」に「今USJ」。互いに向けて書いたものではありません。',
   'Reply News': 'リプライニュース', 'Reply News settings': 'リプライニュースの設定', 'Opening Reply News…': 'リプライニュースを開いています…',
   'Humor': 'ユーモア', 'News': 'ニュース', 'Pull down to refresh': '引っ張って更新', 'Release to refresh': '離すと更新',
   'Back to video': '動画に戻る', 'Play': '再生', 'Pause': '一時停止', 'Update': '更新', 'Creating…': '作成中…',

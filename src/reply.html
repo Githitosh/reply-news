@@ -186,7 +186,7 @@ pre#sources { white-space: pre-wrap; font: 12px/1.5 ui-monospace,Menlo,monospace
   </div>
   <p id="caption" class="caption">Opening Reply News…</p>
   <div id="modeChips" class="music mode"><button type="button" data-mode="match">Matching</button><button type="button" data-mode="reply">Replies</button></div>
-  <p id="matchNote" class="note match-note" hidden>Two people's posts about love are put together: a confession that lands, or a reply that plays along with a hint. Sleepy lines and other everyday remarks are left out. The two did not write to each other.</p>
+  <p id="matchNote" class="note match-note" hidden>Two short posts are put together by swapping one word for another of the same kind: lost at DisneySea, and the other person is at USJ now. They did not write to each other.</p>
   <p class="music-label" id="genreLabel">Genres</p>
   <div id="genreChips" class="music"></div>
   <form id="ask" class="ask" autocomplete="off">
@@ -484,16 +484,25 @@ let QUERY = '';
 let feedAt = 0;
 const SHOWN = new Set();
 const goodTalks = list => (Array.isArray(list) ? list : []).filter(t => t && t.id && t.post && t.post.text && Array.isArray(t.replies) && t.replies.some(r => r && r.text));
-/* Matching News' data: short sayings, and the pairs githito.xapi made of them. Only a romantic
-   exchange is shown: a confession that is accepted, a hint the reply plays along with, or a short
-   couple exchange (好き / 会いたい). Sleepy lines (ねむい, おやすみ) and everyday remarks are left out. */
+/* Matching News' data: short sayings, and the pairs githito.xapi made of them. A pair is shown when
+   the joke is one word swapped for another of its kind (ディズニーシーで迷子 ー 今USJ), or a confession
+   that lands, or a hint the reply plays along with. Sleepy lines are left out. A long line that only
+   mentions a related word is not the joke. */
 const LOVE_WORD = /好き|会い|付き合|デート|告白|寂|幸せ|ただいま|おかえり|彼氏|彼女|匂わせ/;
 const DROWSY = /ねむ|眠い|眠た|おやす|寝よ|寝な|寝て/;
 const NOT_LOVE = /ラーメン|寿司|焼肉|カレー|うどん|パスタ|美味|うまい|ご飯|食べ|サイゼ|歌が|曲/;
+const chars = s => [...String(s || '')].length;
+const kinJoke = p => {
+  const a = p.a.text, b = p.b.text;
+  if (chars(a) > 16 || chars(b) > 16) return false;
+  const short = chars(a) <= chars(b) ? a : b;
+  return chars(short) <= 8 && /迷子|間違|なう|今/.test(a + b);
+};
 const romancePair = p => {
   if (!p || !p.a || !p.b) return false;
   const blob = p.a.text + '\n' + p.b.text + '\n' + (p.word || '');
   if (DROWSY.test(blob)) return false;
+  if (p.kind === 'kin') return kinJoke(p);
   if (NOT_LOVE.test(blob) && !/付き合|デート|彼氏|彼女|告白|匂わせ/.test(blob)) return false;
   if (p.kind === 'land' || p.kind === 'hint') return true;
   return p.kind === 'echo' && LOVE_WORD.test(p.word || '') && LOVE_WORD.test(p.a.text + p.b.text);
@@ -528,10 +537,10 @@ async function loadFeed() {
   return got;
 }
 /* ---------- Matching News ---------- */
-/* Two people's posts about love are shown together: 好きだよ ー わたしも, or a hint the reply plays
-   along with (彼氏が迎えに来てくれた ー それもう付き合ってるじゃん). Sleepy lines and other everyday
-   remarks are not matches. githito.xapi makes the pairs; this page draws the romantic ones. The two
-   did not write to each other: every card says it is a match, and both people's posts are linked. */
+/* Two short posts are shown as a joke: the same shape, with one word swapped for another of its kind
+   (ディズニーシーで迷子 ー 今USJ). A confession that lands, or a hint the reply plays along with, is
+   shown too. Sleepy lines are not. githito.xapi makes the pairs; this page draws those. The two did
+   not write to each other: every card says it is a match, and both people's posts are linked. */
 const mode = () => (store.get('mode', 'match') === 'reply' ? 'reply' : 'match');
 const matchOn = () => mode() === 'match' && MATCH.pairs.length > 0;
 const pairKey = p => 'm' + p.a.id + '_' + p.b.id;
@@ -588,7 +597,7 @@ function pickAuto(skip) {
   /* Among matches not played yet, the ones that answer most plainly come first: a word and its answer,
      a question and its answer, then two words of one family, a shared word, and agreement last. */
   if (on) {
-    const rank = t => (SHOWN.has(t.id) ? 10 : 0) + ({ land: 0, hint: 1, echo: 2, ask: 3, kin: 4, same: 5, agree: 6 }[t.kind] ?? 3);
+    const rank = t => (SHOWN.has(t.id) ? 10 : 0) + ({ kin: 0, hint: 1, land: 2, echo: 3, ask: 4, same: 5, agree: 6 }[t.kind] ?? 3);
     order.sort((x, y) => rank(x) - rank(y));
   }
   const langId = uiLang();
