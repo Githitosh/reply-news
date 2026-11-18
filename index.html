@@ -4222,19 +4222,34 @@ function romanceCards(r, langId) {
 }
 
 /* ---------- travel: what people say at famous places ---------- */
+/* Famous places by prefecture (Japan) and by state (United States). Each region has the same chance. */
 const SPOTS = {
   ja: [
-    ['兼六園', '石川・金沢'], ['ひがし茶屋街', '石川・金沢'], ['金沢21世紀美術館', '石川・金沢'], ['白川郷', '岐阜'],
-    ['金閣寺', '京都'], ['清水寺', '京都'], ['伏見稲荷', '京都'], ['嵐山', '京都'], ['奈良公園', '奈良'], ['東大寺', '奈良'],
-    ['富士山', '静岡・山梨'], ['河口湖', '山梨'], ['東京タワー', '東京'], ['スカイツリー', '東京'], ['浅草寺', '東京'], ['雷門', '東京・浅草'],
-    ['日光東照宮', '栃木'], ['鎌倉大仏', '神奈川'], ['箱根', '神奈川'], ['姫路城', '兵庫'], ['厳島神社', '広島・宮島'], ['道後温泉', '愛媛'],
-    ['熊本城', '熊本'], ['美ら海水族館', '沖縄'], ['首里城', '沖縄'], ['小樽運河', '北海道'], ['函館山', '北海道'], ['旭山動物園', '北海道'],
-    ['松本城', '長野'], ['上高地', '長野'], ['銀山温泉', '山形'], ['松島', '宮城'], ['出雲大社', '島根'], ['伊勢神宮', '三重'], ['高千穂峡', '宮崎'],
+    ['北海道', ['小樽運河', '旭山動物園', '函館山', '青い池']], ['青森', ['奥入瀬渓流', '弘前城', '十和田湖']], ['岩手', ['中尊寺', '浄土ヶ浜', '龍泉洞']],
+    ['宮城', ['松島', '鳴子峡', '蔵王の御釜']], ['秋田', ['角館', '田沢湖', '乳頭温泉']], ['山形', ['銀山温泉', '山寺', '樹氷']],
+    ['福島', ['鶴ヶ城', '大内宿', '五色沼']], ['茨城', ['偕楽園', '袋田の滝', 'ひたち海浜公園']], ['栃木', ['日光東照宮', '華厳の滝', '足利フラワーパーク']],
+    ['群馬', ['草津温泉', '伊香保温泉', '尾瀬']], ['埼玉', ['川越', '長瀞', '秩父']], ['千葉', ['鴨川シーワールド', '成田山', '鋸山']],
+    ['東京', ['浅草寺', '東京タワー', 'スカイツリー']], ['神奈川', ['鎌倉大仏', '箱根', '江の島']], ['新潟', ['佐渡', '越後湯沢', '清津峡']],
+    ['富山', ['立山黒部', '五箇山', '雨晴海岸']], ['石川', ['兼六園', 'ひがし茶屋街', '白米千枚田']], ['福井', ['東尋坊', '恐竜博物館', '永平寺']],
+    ['山梨', ['富士山', '河口湖', '忍野八海']], ['長野', ['上高地', '松本城', '善光寺']], ['岐阜', ['白川郷', '飛騨高山', '下呂温泉']],
+    ['静岡', ['三保の松原', '熱海', '浜名湖']], ['愛知', ['名古屋城', '熱田神宮', 'ジブリパーク']], ['三重', ['伊勢神宮', '鳥羽水族館', 'ナガシマスパーランド']],
+    ['滋賀', ['琵琶湖', '彦根城', '白鬚神社']], ['京都', ['清水寺', '金閣寺', '伏見稲荷', '嵐山']], ['大阪', ['大阪城', '道頓堀', '通天閣']],
+    ['兵庫', ['姫路城', '有馬温泉', '城崎温泉']], ['奈良', ['東大寺', '奈良公園', '法隆寺']], ['和歌山', ['熊野古道', '那智の滝', '白浜']],
+    ['鳥取', ['鳥取砂丘', '水木しげるロード', '白兎海岸']], ['島根', ['出雲大社', '松江城', '石見銀山']], ['岡山', ['倉敷美観地区', '岡山後楽園', '岡山城']],
+    ['広島', ['厳島神社', '尾道', 'しまなみ海道']], ['山口', ['角島大橋', '秋芳洞', '錦帯橋']], ['徳島', ['鳴門の渦潮', 'かずら橋', '大歩危']],
+    ['香川', ['金刀比羅宮', '栗林公園', '父母ヶ浜']], ['愛媛', ['道後温泉', '松山城', '下灘駅']], ['高知', ['桂浜', '四万十川', '仁淀川']],
+    ['福岡', ['太宰府天満宮', '柳川', '門司港レトロ']], ['佐賀', ['唐津城', '吉野ヶ里', '武雄温泉']], ['長崎', ['ハウステンボス', 'グラバー園', '軍艦島']],
+    ['熊本', ['熊本城', '阿蘇', '黒川温泉']], ['大分', ['別府温泉', '由布院', '高崎山']], ['宮崎', ['高千穂峡', '青島神社', '日南海岸']],
+    ['鹿児島', ['屋久島', '桜島', '指宿']], ['沖縄', ['美ら海水族館', '首里城', '古宇利島']],
   ],
   en: [
-    ['Grand Canyon', 'Arizona'], ['Yosemite', 'California'], ['Golden Gate Bridge', 'San Francisco'], ['Yellowstone', 'Wyoming'],
-    ['Niagara Falls', 'New York'], ['Times Square', 'New York'], ['Central Park', 'New York'], ['Statue of Liberty', 'New York'],
-    ['Zion', 'Utah'], ['Hollywood Sign', 'Los Angeles'], ['Las Vegas Strip', 'Nevada'], ['Smoky Mountains', 'Tennessee'],
+    ['Arizona', ['Grand Canyon', 'Sedona']], ['California', ['Yosemite', 'Golden Gate Bridge', 'Big Sur']], ['New York', ['Times Square', 'Central Park', 'Niagara Falls']],
+    ['Wyoming', ['Yellowstone', 'Grand Teton']], ['Utah', ['Zion', 'Arches National Park']], ['Florida', ['Everglades', 'Key West']],
+    ['Hawaii', ['Waikiki', 'Haleakala']], ['Washington', ['Mount Rainier', 'Pike Place Market']], ['Colorado', ['Rocky Mountain National Park', 'Garden of the Gods']],
+    ['Nevada', ['Las Vegas Strip', 'Lake Tahoe']], ['Tennessee', ['Smoky Mountains', 'Graceland']], ['Louisiana', ['French Quarter']],
+    ['Illinois', ['Millennium Park', 'Chicago Riverwalk']], ['Massachusetts', ['Freedom Trail', 'Cape Cod']], ['Alaska', ['Denali']],
+    ['Montana', ['Glacier National Park']], ['South Dakota', ['Mount Rushmore']], ['Texas', ['San Antonio River Walk', 'Big Bend']],
+    ['Oregon', ['Crater Lake']], ['Maine', ['Acadia National Park']], ['Washington, D.C.', ['Lincoln Memorial', 'National Mall']],
   ],
 };
 const WOW_Q = { ja: '(すごい OR すごーい OR すげー OR きれい OR 綺麗 OR 絶景 OR 最高 OR 感動)', en: '(amazing OR stunning OR beautiful OR gorgeous OR wow OR breathtaking)' };
@@ -4250,33 +4265,46 @@ async function collectTravel(need, place) {
   const past = seenSet(SEEN_JOKES);
   const now = playingKeys();
   say('Searching famous places on X');
-  const spots = shuffle(SPOTS[lang] || SPOTS.ja);
-  const groups = [];
-  for (let i = 0; i < spots.length && groups.length < 4; i += 4) groups.push(spots.slice(i, i + 4));
-  const build = g => `(${g.map(([n]) => lang === 'en' ? '"' + n + '"' : n).join(' OR ')}) ${WOW_Q[lang]} -filter:replies -filter:retweets lang:${lang}${xRange()}`;
-  const lists = await Promise.all(groups.map(g => fxJson('https://api.fxtwitter.com/2/search?q=' + encodeURIComponent(build(g))).then(d => (d && d.results) || []).catch(() => [])));
-  const rows = [];
+  /* Every prefecture (state) has the same chance, however often a place is posted about: the regions are
+     shuffled, the ones shown in this visit wait their turn, one place is drawn from each region, and at most
+     one post comes from a region. Posts are taken in the shuffled order, not by how many there are. */
+  const regions = SPOTS[lang] || SPOTS.ja;
+  const shown = new Set(RECENT.regions || []);
+  let order = shuffle(regions.filter(([r]) => !shown.has(r)));
+  if (order.length < need * 2) { RECENT.regions = []; order = order.concat(shuffle(regions.filter(([r]) => shown.has(r)))); }
+  const picks = order.slice(0, Math.min(16, Math.max(6, need * 3))).map(([region, spots]) => ({ region, spot: pick(spots) }));
+  const pairs = [];
+  for (let i = 0; i < picks.length; i += 2) pairs.push(picks.slice(i, i + 2));
+  const build = g => `(${g.map(x => (lang === 'en' ? '"' + x.spot + '"' : x.spot)).join(' OR ')}) ${WOW_Q[lang]} -filter:replies -filter:retweets lang:${lang}${xRange()}`;
+  const lists = await Promise.all(pairs.map(g => searchX(build(g))));
+  const best = new Map();
   const keys = new Set();
-  const seenSpot = new Set();
   lists.flat().forEach(st => {
     const handle = handleOf(st);
     const raw = String((st && st.text) || '');
     const text = postText(st);
     if (!handle || !text || UNSAFE.test(text) || VIOLENT.test(text) || NOT_TRIP.test(raw) || sensitive(text, st)) return;
-    if ((raw.match(/[#＃]/g) || []).length > 3) return;
-    const spot = spots.find(([n]) => raw.toLowerCase().includes(n.toLowerCase()));
-    if (!spot || seenSpot.has(spot[0]) || !WOW[lang].test(text)) return;
+    if ((raw.match(/[#＃]/g) || []).length > 3 || !WOW[lang].test(text)) return;
+    const hit = picks.find(x => raw.toLowerCase().includes(x.spot.toLowerCase()));
+    if (!hit) return;
     const n = charLen(text);
     if (lang === 'ja' ? (n < 4 || n > 80 || !/[぀-ヿ]/.test(text)) : (n < 8 || n > 180)) return;
     const url = st.url || '';
     const ks = jokeKeys({ text, link: url });
     if (ks.some(k => past.has(k) || now.has(k) || keys.has(k))) return;
     ks.forEach(k => keys.add(k));
-    seenSpot.add(spot[0]);
-    rows.push({ handle, text, url, spot: spot[0], where: spot[1], lang, score: (n <= 30 ? 4 : 0) + (/[\p{Extended_Pictographic}]/u.test(text) ? 1 : 0) });
+    const score = (n <= 30 ? 4 : 0) + (/[\p{Extended_Pictographic}]/u.test(text) ? 1 : 0) + Math.random();
+    const prev = best.get(hit.region);
+    if (!prev || score > prev.score) best.set(hit.region, { handle, text, url, spot: hit.spot, region: hit.region, score });
   });
-  return rows.sort((a, b) => b.score - a.score).slice(0, need)
-    .map(t => ({ headline: t.text, text: t.text, link: t.url, source: 'X @' + t.handle, x: true, cat: 'TRAVEL', joke: true, travel: true, spot: t.spot, where: t.where, place: place || 'middle' }));
+  const out = [];
+  for (const x of picks) {
+    if (out.length >= need) break;
+    const r = best.get(x.region);
+    if (r) out.push(r);
+  }
+  RECENT.regions = (RECENT.regions || []).concat(out.map(r => r.region)).slice(-60);
+  return out.map(t => ({ headline: t.text, text: t.text, link: t.url, source: 'X @' + t.handle, x: true, cat: 'TRAVEL', joke: true, travel: true, spot: t.spot, where: t.region, place: place || 'middle' }));
 }
 
 /* ---------- free requests: anything typed in the lineup ---------- */
@@ -5722,7 +5750,7 @@ E.setMusicCredit(TRACKS[0].credit);
 /* A newer copy on the site: load it, so a copy the browser kept from before is not shown.
    version.json names the latest build of each page; it is read past the browser's cache. */
 function watchVersion(key, url) {
-  const BUILD = 'ae13a0edb4e3';
+  const BUILD = 'a857b233d09e';
   if (location.protocol === 'file:' || BUILD.indexOf('BUILD_ID') >= 0) return;
   /* At the start it may reload at once; later it waits while a video is being made or saved. */
   const check = first => {
