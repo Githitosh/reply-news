@@ -8,9 +8,21 @@ then the post and the reply together. Download saves the video as an MP4.
 
 ## No outside services
 
-The page fetches nothing from outside: no search API, no news API, no translation, no font
-service. It only loads its own files (this repository, served by GitHub Pages). The fonts
+The page connects to no other company's service: no search API, no news API, no translation, no
+font service. It only loads its own files (this repository, served by GitHub Pages). The fonts
 (Noto Serif JP, Noto Sans JP, Tinos; SIL Open Font License) are in `assets/fonts/`.
+
+## Its own data service (`api/`)
+
+`api/collect.mjs` asks X's official API for people's posts about the genres' words and the replies
+under them, keeps the pairs that make a good talk, and saves them in `api/v1/talks-ja.json` (and
+`-en`). Those files are the service: the page reads them from its own site and plays them by itself.
+It needs one thing, an X API key (`X_BEARER_TOKEN`); without it nothing is collected and only pasted
+talks play. `api/collect-talks.workflow.yml` is a GitHub Action that runs it twice a day; it is kept
+there switched off. `api/README.md` (Japanese) has the steps, the usage it costs on X, and the file format.
+
+With talks saved, a genre button chooses that genre (lit) and Update makes another video;
+Items in Settings sets how many cards they fill.
 
 ## How it is used
 

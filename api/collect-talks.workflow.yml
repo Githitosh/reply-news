@@ -1,0 +1,35 @@
+# Reply News' own data service: collects talks from X's official API into api/v1/ twice a day.
+# This file is kept here switched off. To switch the schedule on, copy it to
+# .github/workflows/collect-talks.yml and set the repository secret X_BEARER_TOKEN (see api/README.md).
+# Without the secret, a run changes nothing.
+name: Collect talks
+on:
+  schedule:
+    - cron: '17 0,9 * * *'   # 9:17 and 18:17 in Japan
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: collect-talks
+  cancel-in-progress: false
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Collect talks
+        env:
+          X_BEARER_TOKEN: ${{ secrets.X_BEARER_TOKEN }}
+          TALKS_LANGS: ${{ vars.TALKS_LANGS || 'ja' }}
+        run: node api/collect.mjs
+      - name: Save them in api/v1
+        run: |
+          if git diff --quiet -- api/v1; then echo "Nothing new."; exit 0; fi
+          git config user.name "reply-news collector"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add api/v1
+          git commit -m "Talks collected"
+          git push

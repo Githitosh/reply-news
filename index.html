@@ -38,7 +38,7 @@ main { padding: 0 16px calc(24px + env(safe-area-inset-bottom)); max-width: 1100
 .ask input[type=text] { flex: 1 1 auto; width: auto; min-width: 0; font-size: 16px; padding: 10px 12px; }
 .ask button { flex: none; padding: 10px 12px; font-size: 14px; white-space: nowrap; }
 .ask #askGo { background: var(--acc); border-color: var(--acc); color: var(--on); }
-/* Genres on the main screen: a press opens the search on X. */
+/* Genres on the main screen: a press opens the search on X, or chooses the genre (lit) when the site's own data has talks of it. */
 #genreChips { justify-content: center; margin-top: 8px; }
 /* The post and the reply are pasted here; the talks in the video follow as buttons (a press removes one). */
 .compose, #talkList { max-width: 560px; margin-left: auto; margin-right: auto; }
@@ -87,7 +87,7 @@ button#sound.on { background: var(--acc); border-color: var(--acc); color: var(-
 .seekrow input[type=range] { flex: 1 1 auto; min-width: 0; margin: 0; accent-color: var(--acc); }
 .seekrow span { flex: none; color: var(--mute); font-variant-numeric: tabular-nums; min-width: 84px; text-align: right; font-size: 13px; }
 /* Play/Pause and Update/Creating keep one width, so the buttons stay on one row and in place. */
-#play { min-width: 5.4em; }
+#play, #update { min-width: 5.4em; }
 #dl { width: 7.4em; overflow: hidden; text-overflow: ellipsis; }
 @media (max-width: 480px) { .ctl { gap: 6px; } .ctl button { padding: 9px 8px; font-size: 13px; } }
 /* The link keeps the same height for every story, so nothing below it moves. */
@@ -160,6 +160,7 @@ pre#sources { white-space: pre-wrap; font: 12px/1.5 ui-monospace,Menlo,monospace
       <button id="play" disabled>Play</button>
       <button id="sound" type="button" aria-pressed="false">Sound</button>
       <button id="full" type="button">Full screen</button>
+      <button id="update" type="button" hidden>Update</button>
       <button id="dl" type="button" disabled>Download</button>
     </div>
     <div class="seekrow">
@@ -212,6 +213,10 @@ pre#sources { white-space: pre-wrap; font: 12px/1.5 ui-monospace,Menlo,monospace
         <option value="sky">Sky blue</option>
         <option value="mint">Mint</option>
       </select>
+      <div id="countRow" hidden>
+      <label>Items</label>
+      <div class="music" id="counts"></div>
+      </div>
       <label>Story length</label>
       <div class="music" id="paces"></div>
       <label>Wallpaper</label>
@@ -3028,6 +3033,12 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 const pad2 = n => String(n).padStart(2, '0');
 /* A video holds at most this many cards (a talk is four: the first word, the post, the reply, both). */
 const MAX_ITEMS = 40;
+/* Items: how many cards the talks from the site's own data service fill. Chosen in Settings. */
+const COUNTS = [5, 10, 20];
+function total() {
+  const n = Number(store.get('count', '10'));
+  return COUNTS.includes(n) ? n : 10;
+}
 /* Every card in a video gets the same headline size, and the Japanese lines below it are twice the usual size. */
 /* lang: the date line at the top is in the chosen language only. */
 const LOOK = { uniform: true, jp: 2, brand: { ja: 'リプライニュース', en: 'Reply News' }, get lang() { const el = document.getElementById('lang'); return el && el.value === 'en' ? 'en' : 'ja'; } };
@@ -3207,7 +3218,8 @@ function readPaste(raw) {
   text = lines.join('\n').replace(/^(?:@[A-Za-z0-9_]{1,15}\s+)+/, '').replace(/[ \t　]+/g, ' ').replace(/\n{2,}/g, '\n').trim();
   return { text, handle, url };
 }
-function talkCards(t, langId) { return threadCards({ thread: true, story: { post: t.post, replies: t.replies } }, langId); }
+/* A talk from the data service knows the word it was found by: that word is its first card and its corner. */
+function talkCards(t, langId) { return threadCards({ thread: true, story: { post: t.post, replies: t.replies }, hook: t.word || '', corner: t.word || '' }, langId); }
 /* A new talk goes first, so the video starts with it. When the video is full, the oldest talk leaves. */
 function addTalk(postRaw, replyRaw) {
   const post = readPaste(postRaw);
@@ -3219,9 +3231,47 @@ function addTalk(postRaw, replyRaw) {
   saveTalks();
   return true;
 }
+/* ---------- the site's own data service ---------- */
+/* api/v1/talks-<language>.json, on this same site: talks collected by api/collect.mjs through X's official
+   API. The page reads that file and nothing else; with the file empty, only pasted talks play. */
+let FEED = [];
+let AUTO = [];
+let feedAt = 0;
+const SHOWN = new Set();
+async function loadFeed() {
+  feedAt = Date.now();
+  try {
+    const res = await fetch('api/v1/talks-' + uiLang() + '.json?t=' + Math.floor(Date.now() / 300000), { cache: 'no-store' });
+    const data = res.ok ? await res.json() : null;
+    FEED = ((data && data.talks) || []).filter(t => t && t.id && t.post && t.post.text && Array.isArray(t.replies) && t.replies.some(r => r && r.text));
+  } catch (e) { FEED = []; }
+}
+function pickedGenres() { try { const v = JSON.parse(store.get('genres', '[]')); return Array.isArray(v) ? v : []; } catch (e) { return []; } }
+function genreOfChip(chip) { const g = GENRES.find(x => x.name.toLowerCase() === chip.label.toLowerCase()); return g ? g.id : ''; }
+/* Talks for a new video: from the chosen genres (all of them when none is chosen), the ones not played in
+   this visit first, drawn at random, as many as Items has room for beside the pasted talks. */
+function chooseAuto() {
+  AUTO = [];
+  if (!FEED.length) return;
+  const picked = pickedGenres().filter(id => FEED.some(t => t.genre === id));
+  const pool = FEED.filter(t => !picked.length || picked.includes(t.genre));
+  let fresh = pool.filter(t => !SHOWN.has(t.id));
+  if (!fresh.length) { pool.forEach(t => SHOWN.delete(t.id)); fresh = pool; }
+  const langId = uiLang();
+  const room = total() - TALKS.reduce((k, t) => k + talkCards(t, langId).length, 0);
+  let n = 0;
+  for (const t of fresh.map(x => [Math.random(), x]).sort((a, b) => a[0] - b[0]).map(x => x[1])) {
+    const c = talkCards(t, langId).length;
+    if (n + c > room && (AUTO.length || TALKS.length)) continue;
+    AUTO.push(t);
+    n += c;
+    if (n >= room) break;
+  }
+  AUTO.forEach(t => SHOWN.add(t.id));
+}
 function makeScript() {
   const langId = uiLang();
-  const items = TALKS.flatMap(t => talkCards(t, langId)).slice(0, MAX_ITEMS);
+  const items = TALKS.concat(AUTO).flatMap(t => talkCards(t, langId)).slice(0, MAX_ITEMS);
   return items.length ? { date: todayJST(), items } : null;
 }
 /* ---------- finding posts: X's own search, opened in a new tab ---------- */
@@ -3612,7 +3662,24 @@ async function setScript(raw, autoplay) {
 function setBusy(b) {
   S.busy = b;
   $('addTalk').disabled = !!b;
+  $('update').disabled = !!b;
   $('dl').disabled = !S.ready && (!!b || !S.show);
+}
+/* Update: other talks from the data service (read again when it was read more than five minutes ago). */
+async function nextVideo() {
+  if (S.busy) return;
+  if (Date.now() - feedAt > 300000) await loadFeed();
+  chooseAuto();
+  paintFeed();
+  await rebuild(true);
+}
+/* The parts that belong to the data service show only while it has talks. */
+function paintFeed() {
+  const on = FEED.length > 0;
+  $('update').hidden = !on;
+  $('countRow').hidden = !on;
+  const picked = pickedGenres();
+  document.querySelectorAll('#genreChips button').forEach(b => b.classList.toggle('on', on && !!b.dataset.genre && picked.includes(b.dataset.genre) && FEED.some(t => t.genre === b.dataset.genre)));
 }
 /* The video is made again from the talks. With none, the picture is empty and the page says what to do. */
 async function rebuild(autoplay) {
@@ -4213,16 +4280,39 @@ function initUI() {
   /* The terms open in the chosen language. */
   const paintTerms = () => document.querySelectorAll('a.terms').forEach(a => { a.href = 'terms.html' + (langBox.value === 'en' ? '#en' : ''); });
   paintTerms();
-  langBox.onchange = () => { store.set('lang', langBox.value); paintTerms(); reshow(); };
+  langBox.onchange = () => { store.set('lang', langBox.value); paintTerms(); loadFeed().then(() => { chooseAuto(); paintFeed(); return rebuild(true); }); };
 
   /* Genres: a press opens X's own search for one of the genre's words. Nothing is fetched by this page. */
   CHIPS.forEach(chip => {
     const b = document.createElement('button');
     b.type = 'button';
     b.textContent = chip.label;
-    b.onclick = () => openOnX(chipUrl(chip));
+    b.dataset.genre = genreOfChip(chip);
+    /* With talks of this genre in the data service, a press chooses the genre (lit) and makes a new video.
+       Otherwise it opens the search on X. */
+    b.onclick = () => {
+      const id = b.dataset.genre;
+      if (!id || !FEED.some(t => t.genre === id)) { openOnX(chipUrl(chip)); return; }
+      const picked = pickedGenres();
+      store.set('genres', JSON.stringify(picked.includes(id) ? picked.filter(x => x !== id) : picked.concat(id)));
+      nextVideo();
+    };
     $('genreChips').appendChild(b);
   });
+  $('update').onclick = () => { closeStudio(); nextVideo(); };
+  COUNTS.forEach(n => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.dataset.n = String(n);
+    b.textContent = String(n);
+    b.onclick = () => {
+      store.set('count', String(n));
+      document.querySelectorAll('#counts button').forEach(x => x.classList.toggle('on', Number(x.dataset.n) === total()));
+      nextVideo();
+    };
+    $('counts').appendChild(b);
+  });
+  document.querySelectorAll('#counts button').forEach(x => x.classList.toggle('on', Number(x.dataset.n) === total()));
   /* The box: words are searched on X, an @name opens that account, a post's address opens the post. */
   $('ask').onsubmit = e => {
     e.preventDefault();
@@ -4246,6 +4336,7 @@ function initUI() {
         TALKS = TALKS.filter(x => x !== t);
         saveTalks();
         paintTalks();
+        chooseAuto();
         rebuild(true).then(() => { if (TALKS.length) say('Removed.'); });
       };
       box.appendChild(b);
@@ -4271,6 +4362,7 @@ function initUI() {
     $('replyIn').value = '';
     paintTalks();
     window.scrollTo(0, 0);
+    chooseAuto();
     rebuild(true);
   };
   loadTalks();
@@ -4310,7 +4402,7 @@ E.setMusicCredit(TRACKS[0].credit);
 /* A newer copy on the site: load it, so a copy the browser kept from before is not shown.
    version.json names the latest build of each page; it is read past the browser's cache. */
 function watchVersion(key, url) {
-  const BUILD = '04a0a9bbd8b1';
+  const BUILD = '750dedff1ff0';
   if (location.protocol === 'file:' || BUILD.indexOf('BUILD_ID') >= 0) return;
   /* At the start it may reload at once; later it waits while a video is being made or saved. */
   const check = first => {
@@ -4343,7 +4435,7 @@ loadAssets().then(() => {
   const requested = Q.get('music') || store.get('music', 'jupiter');
   if (requested !== 'jupiter') useTrack(requested);
   else document.querySelectorAll('#music button').forEach(b => b.classList.toggle('on', b.dataset.m === 'jupiter'));
-  rebuild(true);
+  return loadFeed().then(() => { chooseAuto(); paintFeed(); return rebuild(true); });
 }).catch(e => { window.NS.ready = true; say(e.message || String(e), true); });
 })();
 </script>
