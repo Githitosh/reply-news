@@ -96,6 +96,11 @@ button#sound.on { background: var(--acc); border-color: var(--acc); color: var(-
 .linkbox { height: calc(2 * 1.3 * 26px + 22px); display: flex; align-items: center; justify-content: center; overflow: hidden; }
 .linkbox .source-url { margin: 0 auto; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
 @media (min-width: 820px) { .linkbox { height: calc(1.3 * 26px + 22px); } .linkbox .source-url { -webkit-line-clamp: 1; } }
+/* Matching News: two links, one for each person, one line each. */
+.linkbox.two { flex-direction: column; height: calc(2 * 1.3 * 26px + 22px); }
+.linkbox.two .source-url { -webkit-line-clamp: 1; padding: 4px 10px; flex: none; }
+.match-note { text-align: center; margin: 0 0 10px; }
+.mode { justify-content: center; margin-bottom: 4px; }
 button, .btn { appearance: none; border: 1px solid var(--line); background: var(--card); color: var(--ink); font: 700 15px "Noto Sans JP",sans-serif; padding: 11px 14px; border-radius: 10px; cursor: pointer; text-decoration: none; display: inline-block; text-align: center; }
 button:disabled { opacity: .45; cursor: default; }
 .music button.on, .row button.on { background: var(--acc); border-color: var(--acc); color: var(--on); }
@@ -157,7 +162,7 @@ pre#sources { white-space: pre-wrap; font: 12px/1.5 ui-monospace,Menlo,monospace
     <div class="frame">
       <canvas id="cv" width="1080" height="1920"></canvas>
     </div>
-    <div class="linkbox"><a id="storyLink" class="source-url" href="" target="_blank" rel="noopener" hidden></a></div>
+    <div class="linkbox"><a id="storyLink" class="source-url" href="" target="_blank" rel="noopener" hidden></a><a id="storyLink2" class="source-url" href="" target="_blank" rel="noopener" hidden></a></div>
     <div class="ctl">
       <button id="play" disabled>Play</button>
       <button id="sound" type="button" aria-pressed="false">Sound</button>
@@ -171,6 +176,8 @@ pre#sources { white-space: pre-wrap; font: 12px/1.5 ui-monospace,Menlo,monospace
     </div>
   </div>
   <p id="caption" class="caption">Opening Reply News…</p>
+  <div id="modeChips" class="music mode"><button type="button" data-mode="match">Matching</button><button type="button" data-mode="reply">Replies</button></div>
+  <p id="matchNote" class="note match-note" hidden>A post and a reply are put together at random. The reply was written to another post.</p>
   <p class="music-label">Genres</p>
   <div id="genreChips" class="music"></div>
   <form id="ask" class="ask" autocomplete="off">
@@ -2172,6 +2179,8 @@ const JA = {
   'Add an account to load its posts and the replies to them.': 'アカウントを追加すると、そのアカウントの投稿と、返信を読み込みます。',
   'Web': 'ウェブ', 'Media': 'メディア', 'Public page:': '公開ページ：', 'Replies': 'リプライ', 'Clear': '消す', 'Reading the post': '投稿を読み込んでいます',
   'Words, @account or post URL': '言葉・@アカウント・URL', 'Program repository:': 'プログラムの保存先：', 'Terms of use': '利用規約', 'Searching the web': 'ウェブを探しています',
+  'Matching News': 'マッチングニュース', 'Matching': 'マッチング',
+  'A post and a reply are put together at random. The reply was written to another post.': '投稿とリプライをランダムに組み合わせています。リプライは別の投稿に書かれたものです。',
   'Reply News': 'リプライニュース', 'Reply News settings': 'リプライニュースの設定', 'Opening Reply News…': 'リプライニュースを開いています…',
   'Humor': 'ユーモア', 'News': 'ニュース', 'Pull down to refresh': '引っ張って更新', 'Release to refresh': '離すと更新',
   'Back to video': '動画に戻る', 'Play': '再生', 'Pause': '一時停止', 'Update': '更新', 'Creating…': '作成中…',
@@ -3218,7 +3227,11 @@ async function readLink(link) {
 }
 /* A box: a link alone is read from X; anything else is the words themselves. */
 function readBox(raw) { const link = onlyLink(raw); return link ? readLink(link) : Promise.resolve(readPaste(raw)); }
-function talkCards(t, langId) { return threadCards({ thread: true, story: { post: t.post, replies: t.replies }, hook: t.word || '', corner: t.word || '' }, langId); }
+function talkCards(t, langId) {
+  /* A match says so on every card: the post and the reply were not written to each other. */
+  const corner = t.match ? (langId === 'en' ? 'RANDOM MATCH' : 'ランダムマッチング') : (t.word || '');
+  return threadCards({ thread: true, match: !!t.match, story: { post: t.post, replies: t.replies }, hook: t.word || '', corner }, langId);
+}
 /* A new talk goes first, so the video starts with it. When the video is full, the oldest talk leaves. */
 async function addTalk(postRaw, replyRaw) {
   const post = await readBox(postRaw);
@@ -3242,41 +3255,107 @@ async function addTalk(postRaw, replyRaw) {
    The last file read is kept in this browser, so the next visit starts at once and reads the new file meanwhile. */
 const XAPI = 'https://raw.githubusercontent.com/Githitosh/githito.xapi/api/v1/';
 let FEED = [];
+/* Matching News' data from the same API: posts, and lines that can answer a post they were not written to. */
+let MATCH = { posts: [], lines: [] };
+const USED = new Set();
 let AUTO = [];
 let NEXT = null;
 let QUERY = '';
 let feedAt = 0;
 const SHOWN = new Set();
 const goodTalks = list => (Array.isArray(list) ? list : []).filter(t => t && t.id && t.post && t.post.text && Array.isArray(t.replies) && t.replies.some(r => r && r.text));
+const goodMatch = d => ({
+  posts: (d && Array.isArray(d.posts) ? d.posts : []).filter(p => p && p.id && p.handle && p.text && p.url),
+  lines: (d && Array.isArray(d.lines) ? d.lines : []).filter(l => l && l.id && l.handle && l.text && l.url && l.to),
+});
 function cachedFeed() {
   try { FEED = goodTalks(JSON.parse(store.get('feed.' + uiLang(), '[]'))); } catch (e) { FEED = []; }
+  try { MATCH = goodMatch(JSON.parse(store.get('match.' + uiLang(), '{}'))); } catch (e) { MATCH = { posts: [], lines: [] }; }
 }
 async function loadFeed() {
   feedAt = Date.now();
-  try {
-    const res = await fetch(XAPI + 'talks-' + uiLang() + '.json?t=' + Math.floor(Date.now() / 300000), { cache: 'no-store' });
-    if (!res.ok) return false;
-    const talks = goodTalks((await res.json()).talks);
-    /* An empty answer does not wipe the talks already here. */
-    if (!talks.length && FEED.length) return false;
-    FEED = talks;
-    store.set('feed.' + uiLang(), JSON.stringify(talks));
-    return true;
-  } catch (e) { return false; }
+  const lang = uiLang();
+  const read = async name => {
+    try {
+      const res = await fetch(XAPI + name + '-' + lang + '.json?t=' + Math.floor(Date.now() / 300000), { cache: 'no-store' });
+      return res.ok ? await res.json() : null;
+    } catch (e) { return null; }
+  };
+  const [a, b] = await Promise.all([read('talks'), read('match')]);
+  if (lang !== uiLang()) return false;
+  let got = false;
+  /* An empty answer does not wipe what is already here. */
+  const talks = a ? goodTalks(a.talks) : [];
+  if (a && (talks.length || !FEED.length)) { FEED = talks; store.set('feed.' + lang, JSON.stringify(talks)); got = true; }
+  const m = goodMatch(b);
+  if (m.posts.length && m.lines.length) { MATCH = m; store.set('match.' + lang, JSON.stringify(m)); got = true; }
+  return got;
 }
+/* ---------- Matching News ---------- */
+/* A person's post is shown with a reply that somebody else wrote to some other post, drawn at random, as
+   a matching app would put two people together. githito.xapi keeps only replies that bring no subject of
+   their own (a laugh, a "really?"), and says which words a reply needs the post to say ("needs"), so the
+   two read as a talk. Every card says that the match is random, and both people's posts are linked. */
+const mode = () => (store.get('mode', 'match') === 'reply' ? 'reply' : 'match');
+const matchOn = () => mode() === 'match' && MATCH.posts.length > 0 && MATCH.lines.length > 0;
+/* What a post says, as words: runs of kanji, of katakana, of Latin letters, of digits. */
+const wordRuns = text => (String(text || '').match(/[一-龯々〆ヶ]+|[ァ-ヴー]{2,}|[A-Za-zＡ-Ｚａ-ｚ]{2,}|[0-9０-９]+/g) || []).map(w => w.toLowerCase());
+/* A line fits a post when the two are different people, the line was not written to this post or to its
+   writer, and the post says every word the line needs (one kanji must be a word of the post, not a part
+   of one). Agreeing with a question is not an answer. */
+function lineFits(l, p, runs) {
+  const a = l.handle.toLowerCase();
+  const b = p.handle.toLowerCase();
+  if (a === b || l.to === p.id || String(l.toHandle || '').toLowerCase() === b) return false;
+  if (p.asks && l.kind === 'agree') return false;
+  const text = p.text.toLowerCase();
+  return (l.needs || []).every(w => { const k = String(w).toLowerCase(); return charLen(k) > 1 ? text.includes(k) : runs.includes(k); });
+}
+/* The match for a post: a line that speaks of the post's own words when there is one, or else any open
+   line; one not yet played in this visit first. taken: the lines already in this video. */
+function matchFor(p, taken) {
+  const runs = wordRuns(p.text);
+  const fit = MATCH.lines.filter(l => !(taken && taken.has(l.id)) && lineFits(l, p, runs));
+  if (!fit.length) return null;
+  const tied = fit.filter(l => (l.needs || []).length);
+  const open = fit.filter(l => !(l.needs || []).length);
+  const unused = list => { const f = list.filter(l => !USED.has(l.id)); return f.length ? f : list; };
+  const from = tied.length && (!open.length || Math.random() < 0.7) ? unused(tied) : unused(open);
+  const l = from[Math.floor(Math.random() * from.length)];
+  return {
+    id: 'm' + p.id, match: true, genre: p.genre, word: p.word || '',
+    post: { id: p.id, handle: p.handle, text: p.text, url: p.url },
+    replies: [{ id: l.id, handle: l.handle, text: l.text, url: l.url }],
+  };
+}
+/* The name on the page and in the video, the lit button, the note and the room for two links. */
+function paintMode() {
+  const on = matchOn();
+  LOOK.brand = on ? { ja: 'マッチングニュース', en: 'Matching News' } : { ja: 'リプライニュース', en: 'Reply News' };
+  const name = on ? 'Matching News' : 'Reply News';
+  if ($('home').dataset.name !== name) { $('home').dataset.name = name; $('home').textContent = name; }
+  document.title = LOOK.brand[uiLang()] || name;
+  document.querySelectorAll('#modeChips button').forEach(b => b.classList.toggle('on', b.dataset.mode === mode()));
+  $('modeChips').hidden = !(MATCH.posts.length && MATCH.lines.length);
+  $('matchNote').hidden = !on;
+  document.querySelector('.linkbox').classList.toggle('two', on);
+}
+const hasGenre = id => (matchOn() ? MATCH.posts.some(p => p.genre === id) : FEED.some(t => t.genre === id));
 function pickedGenres() { try { const v = JSON.parse(store.get('genres', '[]')); return Array.isArray(v) ? v : []; } catch (e) { return []; } }
 function genreOfChip(chip) { const g = GENRES.find(x => x.name.toLowerCase() === chip.label.toLowerCase()); return g ? g.id : ''; }
 /* Searching the day's talks: every word typed must be in the post, a reply, or the word it was found by. */
 function says(t, q) {
-  const hay = (t.post.text + ' ' + t.replies.map(r => r.text).join(' ') + ' ' + (t.word || '')).toLowerCase();
+  const hay = (t.post.text + ' ' + (t.replies || []).map(r => r.text).join(' ') + ' ' + (t.word || '')).toLowerCase();
   return String(q || '').toLowerCase().split(/\s+/).filter(Boolean).every(w => hay.includes(w));
 }
 /* The talks a video may draw from: those that say the words typed, or else those of the chosen genres
    (every genre when none is chosen). */
 function talkPool() {
-  if (QUERY) return FEED.filter(t => says(t, QUERY));
-  const picked = pickedGenres().filter(id => FEED.some(t => t.genre === id));
-  return FEED.filter(t => !picked.length || picked.includes(t.genre));
+  /* Matching News draws posts; the reply is matched when the video is made. */
+  const all = matchOn() ? MATCH.posts.map(p => ({ id: 'm' + p.id, genre: p.genre, word: p.word || '', post: p })) : FEED;
+  if (QUERY) return all.filter(t => says(t, QUERY));
+  const picked = pickedGenres().filter(id => all.some(t => t.genre === id));
+  return all.filter(t => !picked.length || picked.includes(t.genre));
 }
 /* Talks for a video: the ones not played in this visit first, drawn at random, as many as Items has
    room for beside the pasted talks. */
@@ -3289,11 +3368,16 @@ function pickAuto(skip) {
   const langId = uiLang();
   const room = total() - TALKS.reduce((k, t) => k + talkCards(t, langId).length, 0);
   const out = [];
+  const on = matchOn();
+  const taken = new Set();
   let n = 0;
-  for (const t of fresh.map(x => [Math.random(), x]).sort((a, b) => a[0] - b[0]).map(x => x[1])) {
+  for (const x of fresh.map(x => [Math.random(), x]).sort((a, b) => a[0] - b[0]).map(x => x[1])) {
+    const t = on ? matchFor(x.post, taken) : x;
+    if (!t) continue;
     const c = talkCards(t, langId).length;
     if (n + c > room && (out.length || TALKS.length)) continue;
     out.push(t);
+    if (on) taken.add(t.replies[0].id);
     n += c;
     if (n >= room) break;
   }
@@ -3303,12 +3387,12 @@ function pickAuto(skip) {
 function chooseAuto(prepared) {
   AUTO = prepared && NEXT && NEXT.length ? NEXT : pickAuto();
   NEXT = null;
-  AUTO.forEach(t => SHOWN.add(t.id));
+  AUTO.forEach(t => { SHOWN.add(t.id); if (t.match) USED.add(t.replies[0].id); });
 }
 /* While a video plays, the next one is chosen and its letters' fonts are fetched, so it starts without a wait. */
 function prepareNext() {
   NEXT = null;
-  if (!FEED.length) return;
+  if (!FEED.length && !matchOn()) return;
   const next = pickAuto(new Set(AUTO.map(t => t.id)));
   if (!next.length) return;
   NEXT = next;
@@ -3368,7 +3452,7 @@ function threadCards(r, langId) {
     const card = storyFrom({ headline: m.text, link: m.url, source: m.handle, x: true, cat: 'REPLY' }, en || m.text, ja, langId);
     const shown = (langId !== 'en' && CJK.test(ja || en) ? (ja || en) : (en || m.text)).replace(/\s+/g, ' ').trim();
     const corner = r.corner || (r.travel ? (langId !== 'en' && CJK.test(shown) ? '観光' : 'TRAVEL') : card.topic);
-    return { ...card, topic: corner, cat: r.travel ? 'TRAVEL' : 'REPLY', src, url: m.url, key: r.keys, _main: true, _shown: shown };
+    return { ...card, topic: corner, cat: r.match ? 'MATCH' : r.travel ? 'TRAVEL' : 'REPLY', src, url: m.url, key: r.keys, _main: true, _shown: shown };
   };
   const st = r.story;
   const who = h => (h ? 'X @' + h : 'X');
@@ -3383,12 +3467,15 @@ function threadCards(r, langId) {
   }
   cards.push(post);
   st.replies.forEach(m => {
-    const reply = one(m, who(m.handle) + (st.post.handle ? ' → @' + st.post.handle : ''));
+    /* A reply names the post it answers (→). A match names nobody: the two are only shown together (×). */
+    const reply = one(m, who(m.handle) + (!r.match && st.post.handle ? ' → @' + st.post.handle : ''));
     cards.push(reply);
     if (charLen(post._shown) + charLen(reply._shown) <= (lang === 'en' ? 360 : 180)) {
-      cards.push({ ...post, jp: post.jp.concat('→ ' + reply._shown), src: reply.src, url: m.url, _main: false, _both: true });
+      cards.push({ ...post, jp: post.jp.concat((r.match ? '× ' : '→ ') + reply._shown), src: r.match ? who(st.post.handle) + ' × @' + m.handle : reply.src, url: m.url, _main: false, _both: true });
     }
   });
+  /* Under a match, both people's own posts are linked for as long as it plays. */
+  if (r.match && st.replies[0]) cards.forEach(c => { c.url = st.post.url; c.url2 = st.replies[0].url; });
   return cards;
 }
 /* ---------- text for the picture ---------- */
@@ -3471,7 +3558,7 @@ function normItem(it) {
     sub: arr(it.sub).slice(0, 3).map(l => String(l).trim().split(/\s+/).map(w => SMALL.has(w.toLowerCase()) ? w.toLowerCase() : w.toUpperCase()).join(' ')),
     jp: arr(it.jp).slice(0, 8),
     tags: arr(it.tags).map(up).slice(0, 4),
-    src: String(it.src || '').trim(), date: String(it.date || '').trim(), url: String(it.url || '').trim(),
+    src: String(it.src || '').trim(), date: String(it.date || '').trim(), url: String(it.url || '').trim(), url2: String(it.url2 || '').trim(),
     key: arr(it.key),
   };
 }
@@ -3510,13 +3597,17 @@ function draw(T) {
   const shown = Math.min(T, Math.max(0, S.show.duration - 1 / E.FPS));
   E.drawFrame(ctx, S.show, shown, S.bgs);
   $('time').textContent = `${T.toFixed(1)} / ${S.show.duration.toFixed(1)}`;
-  const a = $('storyLink');
   const i = Math.min(S.show.items.length - 1, Math.max(0, Math.floor(shown / (E.DUR || 3.2))));
-  const url = safeUrl(S.show.items[i] && S.show.items[i].url);
-  if (!url) { if (!a.hidden) { a.hidden = true; a.removeAttribute('href'); a.textContent = ''; a.dataset.u = ''; } return; }
-  a.hidden = false;
-  /* Only when the story changes, so the link is not rebuilt on every frame while it is being tapped. */
-  if (a.dataset.u !== url) { a.dataset.u = url; a.href = url; a.textContent = url.replace(/^https?:\/\//, ''); }
+  const it = S.show.items[i];
+  /* A match has two links, one for each person. */
+  [['storyLink', it && it.url], ['storyLink2', it && it.url2]].forEach(([id, u]) => {
+    const a = $(id);
+    const url = safeUrl(u);
+    if (!url) { if (!a.hidden) { a.hidden = true; a.removeAttribute('href'); a.textContent = ''; a.dataset.u = ''; } return; }
+    a.hidden = false;
+    /* Only when the story changes, so the link is not rebuilt on every frame while it is being tapped. */
+    if (a.dataset.u !== url) { a.dataset.u = url; a.href = url; a.textContent = url.replace(/^https?:\/\//, ''); }
+  });
 }
 function currentT() {
   if (!S.show) return 0;
@@ -3659,11 +3750,12 @@ async function nextVideo(prepared) {
 }
 /* The parts that belong to the day's data show only while it has talks. */
 function paintFeed() {
-  const on = FEED.length > 0;
+  paintMode();
+  const on = FEED.length > 0 || matchOn();
   $('update').hidden = !on;
   $('countRow').hidden = !on;
   const picked = pickedGenres();
-  document.querySelectorAll('#genreChips button:not(.mine)').forEach(b => b.classList.toggle('on', on && !QUERY && picked.includes(b.dataset.genre) && FEED.some(t => t.genre === b.dataset.genre)));
+  document.querySelectorAll('#genreChips button:not(.mine)').forEach(b => b.classList.toggle('on', on && !QUERY && picked.includes(b.dataset.genre) && hasGenre(b.dataset.genre)));
   document.querySelectorAll('#genreChips button.mine').forEach(b => b.remove());
   if (QUERY) {
     /* The words typed show as a lit button; a press takes them away. */
@@ -3689,6 +3781,7 @@ async function rebuild(autoplay) {
     $('seek').disabled = true;
     $('seek').value = '0';
     $('storyLink').hidden = true;
+    $('storyLink2').hidden = true;
     resetDownload();
     say("Today's talks have not arrived yet. Paste the link of a post and of a reply below, or come back later.");
     return;
@@ -4286,7 +4379,7 @@ function initUI() {
     /* A press chooses the genre (lit) and makes a new video from the day's talks of it. Nothing is opened. */
     b.onclick = () => {
       const id = b.dataset.genre;
-      if (!FEED.some(t => t.genre === id)) { say("No talks of this genre in today's data yet.", true); return; }
+      if (!hasGenre(id)) { say("No talks of this genre in today's data yet.", true); return; }
       QUERY = '';
       const picked = pickedGenres();
       store.set('genres', JSON.stringify(picked.includes(id) ? picked.filter(x => x !== id) : picked.concat(id)));
@@ -4295,6 +4388,10 @@ function initUI() {
     $('genreChips').appendChild(b);
   });
   $('update').onclick = () => { closeStudio(); nextVideo(true); };
+  /* Matching (a post with a reply written to another post, at random) or Replies (the reply really written to the post). */
+  document.querySelectorAll('#modeChips button').forEach(b => {
+    b.onclick = () => { if (mode() === b.dataset.mode) return; store.set('mode', b.dataset.mode); QUERY = ''; nextVideo(false); };
+  });
   COUNTS.forEach(n => {
     const b = document.createElement('button');
     b.type = 'button';
@@ -4314,7 +4411,7 @@ function initUI() {
     const v = $('askText').value.replace(/\s+/g, ' ').trim();
     $('askText').blur();
     if (!v) return;
-    if (!FEED.some(t => says(t, v))) { say("No talks say that in today's data.", true); return; }
+    if (!(matchOn() ? MATCH.posts.some(p => says({ post: p, word: p.word }, v)) : FEED.some(t => says(t, v)))) { say("No talks say that in today's data.", true); return; }
     QUERY = v;
     $('askText').value = '';
     nextVideo(false);
@@ -4423,7 +4520,7 @@ E.setMusicCredit(TRACKS[0].credit);
 /* A newer copy on the site: load it, so a copy the browser kept from before is not shown.
    version.json names the latest build of each page; it is read past the browser's cache. */
 function watchVersion(key, url) {
-  const BUILD = '9b62d2f5e29a';
+  const BUILD = 'ab2ff2cc94d5';
   if (location.protocol === 'file:' || BUILD.indexOf('BUILD_ID') >= 0) return;
   /* At the start it may reload at once; later it waits while a video is being made or saved. */
   const check = first => {
@@ -4459,8 +4556,11 @@ loadAssets().then(() => {
   /* The talks kept from the last visit play at once; the new file is read meanwhile and used from the next video on.
      With nothing kept, the first video waits for the file. */
   cachedFeed();
-  const first = FEED.length ? nextVideo(false) : null;
-  const fresh = loadFeed().then(ok => { paintFeed(); if (!S.script) return nextVideo(false); if (ok) prepareNext(); });
+  paintMode();
+  const first = FEED.length || matchOn() ? nextVideo(false) : null;
+  /* When the matching data arrives for the first time, the video changes to it at once. */
+  const was = matchOn();
+  const fresh = loadFeed().then(ok => { paintFeed(); if (!S.script || matchOn() !== was) return nextVideo(false); if (ok) prepareNext(); });
   /* While the page is open, the file is read again every ten minutes, so the 6:00, 12:00 and 18:00 talks come in. */
   setInterval(() => {
     if (document.visibilityState !== 'visible' || Date.now() - feedAt < 600000) return;

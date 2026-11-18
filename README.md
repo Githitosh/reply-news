@@ -22,6 +22,20 @@ Download saves the video as an MP4.
 The page connects to nothing else: no search service, no news service, no translation, no font
 service. The fonts (Noto Serif JP, Noto Sans JP, Tinos; SIL Open Font License) are in `assets/fonts/`.
 
+## Matching News
+
+The page opens in **Matching**: a person's post is shown with a reply that somebody else wrote to some
+other post, drawn at random, the way a matching app puts two people together.
+
+- The data is `v1/match-<lang>.json` in githito.xapi: posts that stand by themselves, and replies that
+  bring no subject of their own (a laugh, a "really?"). Each reply lists the words it needs the post to
+  say (`needs`), so a reply like "いっぱい買った？" is only matched to a post that says 買.
+- A match never pairs a reply with the post it was really written to, nor with its writer.
+- Every card says ランダムマッチング (Random match), the last card of a match names both people
+  (`X @a × @b`), and under the video there are two links, one to each person's own post.
+- Posts about politics are not matched.
+- The **Replies** button goes back to Reply News: the replies really written to each post.
+
 ## How it is used
 
 The page makes a video by itself. A genre button chooses that genre (lit) and makes a new video;
