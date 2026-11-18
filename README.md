@@ -26,17 +26,15 @@ service. The fonts (Noto Serif JP, Noto Sans JP, Tinos; SIL Open Font License) a
 
 ## Matching News
 
-The page opens in **Matching**: two short things said by two people are shown as an exchange, the way
-a matching app puts two people together.
+The page opens in **Matching**: two people's posts about love are shown together.
 
-    かわいい ー かっこいい              a word and the word that answers it
-    大阪万博いつ始まるの？ ー 博多万博の後     a question, and a short saying with its word
-    ディズニーランドと間違えた ー 今USJ      two words of one family
-    いい天気だな ー そうだね             a remark, and a word of agreement
+    好きだよ ー わたしも                         a confession the other side accepts
+    彼氏が迎えに来てくれた ー それもう付き合ってるじゃん   a hint, and a reply that plays along
 
-- The data is `v1/match-<lang>.json` in githito.xapi: short sayings (posts and replies, read from X) and
-  the pairs made of them. Which sayings go together is decided there, by rule; this page draws from
-  the pairs. Nobody speaks twice in one video, and no one rule fills it.
+Sleepy lines (ねむい, おやすみ) and other everyday remarks are not shown.
+
+- The data is `v1/match-<lang>.json` in githito.xapi: short sayings and the pairs made of them.
+  This page draws only the romantic pairs. Nobody speaks twice in one video.
 - The two did not write to each other. A real reply is never shown as a match with the post it answers.
 - Every card that shows a saying says マッチング (Match). The last card of a set names both people with a
   dash between them (`X @a ー @b`; a cross would read as the two being at odds), and under the video there
