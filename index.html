@@ -223,10 +223,12 @@ pre#sources { white-space: pre-wrap; font: 12px/1.5 ui-monospace,Menlo,monospace
         <option value="x">X comments only</option>
         <option value="news">News, then comments</option>
       </select>
+      <div hidden>
       <label for="lineup">Lineup</label>
       <button type="button" id="lineupGo">Lineup</button>
       <textarea id="lineup" rows="8" spellcheck="false" placeholder="Shibuya&#10;2002 World Cup final&#10;Romance&#10;Jokes"></textarea>
       <button id="applyLine" type="button">Apply lineup</button>
+      </div>
       <div class="music hides">
         <button type="button" id="hideSensitive" aria-pressed="false">Hide sensitive posts</button>
       </div>
@@ -6145,7 +6147,7 @@ E.setMusicCredit(TRACKS[0].credit);
 /* A newer copy on the site: load it, so a copy the browser kept from before is not shown.
    version.json names the latest build of each page; it is read past the browser's cache. */
 function watchVersion(key, url) {
-  const BUILD = '34f5650054f4';
+  const BUILD = '3444e9299a14';
   if (location.protocol === 'file:' || BUILD.indexOf('BUILD_ID') >= 0) return;
   /* At the start it may reload at once; later it waits while a video is being made or saved. */
   const check = first => {
