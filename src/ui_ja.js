@@ -35,7 +35,7 @@ const JA = {
   'Humor': 'ユーモア', 'News': 'ニュース', 'Pull down to refresh': '引っ張って更新', 'Release to refresh': '離すと更新',
   'Back to video': '動画に戻る', 'Play': '再生', 'Pause': '一時停止', 'Update': '更新', 'Creating…': '作成中…',
   'Full screen': '全画面', 'Exit': '全画面を終了', 'Sound': '音', 'Tap for sound': 'タップで音が出ます',
-  'Story length': '1話の長さ', 'Wallpaper': '壁紙', 'Music': '音楽', 'Items': '表示数',
+  'Story length': '1話の長さ', 'Wallpaper': '壁紙', 'Music': '音楽', 'Items': '表示数', 'Sets': 'セット数',
   'Download': 'ダウンロード', 'Saving…': '保存中…', 'Could not save the video.': '動画を保存できませんでした。', 'Making MP4…': '作成中…', 'Save': '保存',
   'The search on X is busy. This video keeps playing; a new one comes in a minute or two.': 'Xの検索が混み合っています。この動画を流し続け、1〜2分後に新しい動画を作ります。',
   'The search on X is busy. Press Update in a minute or two.': 'Xの検索が混み合っています。1〜2分後に「更新」を押してください。',

@@ -2,8 +2,9 @@
 
 https://githitosh.github.io/reply-news/
 
-A short video of a post on X and a reply to it, made in the browser. Each talk plays as four cards:
-the post's first word, the whole post, the whole reply, then the post and the reply together.
+A short video of a post on X and a reply to it, made in the browser. Each talk is one set of three
+cards: a word taken out of the post, shown large; the whole post; the post with its reply under it.
+A video joins six sets.
 Download saves the video as an MP4.
 
 ## Where the talks come from
@@ -42,7 +43,7 @@ wrote to some other post, drawn at random, the way a matching app puts two peopl
 The page makes a video by itself. A genre button chooses that genre (lit) and makes a new video;
 words typed in the box find the day's talks that say them. Update makes another video, and so does
 the end of a video; the next one is chosen and its fonts are fetched while the current one plays.
-Items in Settings sets how many cards the day's talks fill (5, 10 or 20).
+Sets in Settings chooses how many sets a video joins (3, 6 or 10; six unless changed).
 
 Settings: layout, color, items, story length, wallpaper, music and language.
 

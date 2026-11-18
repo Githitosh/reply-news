@@ -349,9 +349,24 @@ function splitHead(text, n) {
 /* Every story in the video gets the same headline size and the same news-line size.
    The news lines stay at OPT.jp, and the headline stays larger than them. The headline size is the
    largest at which every headline fits in four lines or fewer and every story still fits its box. */
-function uniformLayout(items) {
+function uniformLayout(all) {
   const avail = P.box.bottom - P.box.top;
   const sizeOf = lines => Math.min(P.head.max[Math.min(lines.length, P.head.max.length) - 1], P.head.maxW / Math.max(...lines.map(headW)));
+  /* A card that shows one word only (it.big) is not held to the size of the others: the word is as
+     large as it can be, on one line or two. */
+  all.filter(it => it.big).forEach(it => {
+    const text = headText(it) || String(it.kw || 'NEWS');
+    let top = null;
+    for (let n = 1; n <= 2; n++) {
+      const lines = splitHead(text, n);
+      if (n > 1 && lines.length < n) break;
+      const c = { lines, size: sizeOf(lines) };
+      if (!top || c.size > top.size) top = c;
+    }
+    it.L = layoutAt(it, OPT.jp || 1, { lines: top.lines, Sh: top.size });
+  });
+  const items = all.filter(it => !it.big);
+  if (!items.length) return;
   const choices = items.map(it => {
     const text = headText(it) || String(it.kw || 'NEWS');
     const list = [];

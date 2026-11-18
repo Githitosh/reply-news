@@ -224,7 +224,7 @@ pre#sources { white-space: pre-wrap; font: 12px/1.5 ui-monospace,Menlo,monospace
         <option value="mint">Mint</option>
       </select>
       <div id="countRow" hidden>
-      <label>Items</label>
+      <label>Sets</label>
       <div class="music" id="counts"></div>
       </div>
       <label>Story length</label>
@@ -2185,7 +2185,7 @@ const JA = {
   'Humor': 'ユーモア', 'News': 'ニュース', 'Pull down to refresh': '引っ張って更新', 'Release to refresh': '離すと更新',
   'Back to video': '動画に戻る', 'Play': '再生', 'Pause': '一時停止', 'Update': '更新', 'Creating…': '作成中…',
   'Full screen': '全画面', 'Exit': '全画面を終了', 'Sound': '音', 'Tap for sound': 'タップで音が出ます',
-  'Story length': '1話の長さ', 'Wallpaper': '壁紙', 'Music': '音楽', 'Items': '表示数',
+  'Story length': '1話の長さ', 'Wallpaper': '壁紙', 'Music': '音楽', 'Items': '表示数', 'Sets': 'セット数',
   'Download': 'ダウンロード', 'Saving…': '保存中…', 'Could not save the video.': '動画を保存できませんでした。', 'Making MP4…': '作成中…', 'Save': '保存',
   'The search on X is busy. This video keeps playing; a new one comes in a minute or two.': 'Xの検索が混み合っています。この動画を流し続け、1〜2分後に新しい動画を作ります。',
   'The search on X is busy. Press Update in a minute or two.': 'Xの検索が混み合っています。1〜2分後に「更新」を押してください。',
@@ -2723,9 +2723,24 @@ function splitHead(text, n) {
 /* Every story in the video gets the same headline size and the same news-line size.
    The news lines stay at OPT.jp, and the headline stays larger than them. The headline size is the
    largest at which every headline fits in four lines or fewer and every story still fits its box. */
-function uniformLayout(items) {
+function uniformLayout(all) {
   const avail = P.box.bottom - P.box.top;
   const sizeOf = lines => Math.min(P.head.max[Math.min(lines.length, P.head.max.length) - 1], P.head.maxW / Math.max(...lines.map(headW)));
+  /* A card that shows one word only (it.big) is not held to the size of the others: the word is as
+     large as it can be, on one line or two. */
+  all.filter(it => it.big).forEach(it => {
+    const text = headText(it) || String(it.kw || 'NEWS');
+    let top = null;
+    for (let n = 1; n <= 2; n++) {
+      const lines = splitHead(text, n);
+      if (n > 1 && lines.length < n) break;
+      const c = { lines, size: sizeOf(lines) };
+      if (!top || c.size > top.size) top = c;
+    }
+    it.L = layoutAt(it, OPT.jp || 1, { lines: top.lines, Sh: top.size });
+  });
+  const items = all.filter(it => !it.big);
+  if (!items.length) return;
   const choices = items.map(it => {
     const text = headText(it) || String(it.kw || 'NEWS');
     const list = [];
@@ -3053,11 +3068,12 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 const pad2 = n => String(n).padStart(2, '0');
 /* A video holds at most this many cards (a talk is four: the first word, the post, the reply, both). */
 const MAX_ITEMS = 40;
-/* Items: how many cards the talks from the site's own data service fill. Chosen in Settings. */
-const COUNTS = [5, 10, 20];
+/* Sets: how many talks a video joins. One talk is one set of three cards: the word taken out of the
+   post, shown large; the whole post; the post with its reply. Chosen in Settings. */
+const COUNTS = [3, 6, 10];
 function total() {
-  const n = Number(store.get('count', '10'));
-  return COUNTS.includes(n) ? n : 10;
+  const n = Number(store.get('sets', '6'));
+  return COUNTS.includes(n) ? n : 6;
 }
 /* Every card in a video gets the same headline size, and the Japanese lines below it are twice the usual size. */
 /* lang: the date line at the top is in the chosen language only. */
@@ -3230,7 +3246,8 @@ function readBox(raw) { const link = onlyLink(raw); return link ? readLink(link)
 function talkCards(t, langId) {
   /* A match says so on every card: the post and the reply were not written to each other. */
   const corner = t.match ? (langId === 'en' ? 'RANDOM MATCH' : 'ランダムマッチング') : (t.word || '');
-  return threadCards({ thread: true, match: !!t.match, story: { post: t.post, replies: t.replies }, hook: t.word || '', corner }, langId);
+  /* A talk from the day's data plays with one reply; a pasted talk with every reply that was pasted. */
+  return threadCards({ thread: true, match: !!t.match, story: { post: t.post, replies: t.id ? t.replies.slice(0, 1) : t.replies }, hook: t.match ? '' : (t.word || ''), corner }, langId);
 }
 /* A new talk goes first, so the video starts with it. When the video is full, the oldest talk leaves. */
 async function addTalk(postRaw, replyRaw) {
@@ -3360,8 +3377,8 @@ function talkPool() {
   const picked = pickedGenres().filter(id => all.some(t => t.genre === id));
   return all.filter(t => !picked.length || picked.includes(t.genre));
 }
-/* Talks for a video: the ones not played in this visit first, drawn at random, as many as Items has
-   room for beside the pasted talks. */
+/* Talks for a video: the ones not played in this visit first, drawn at random, as many sets as chosen
+   (the pasted talks count among them). */
 function pickAuto(skip) {
   const pool = talkPool();
   if (!pool.length) return [];
@@ -3369,20 +3386,21 @@ function pickAuto(skip) {
   if (!fresh.length) { pool.forEach(t => SHOWN.delete(t.id)); fresh = pool.filter(t => !(skip && skip.has(t.id))); }
   if (!fresh.length) fresh = pool;
   const langId = uiLang();
-  const room = total() - TALKS.reduce((k, t) => k + talkCards(t, langId).length, 0);
+  /* As many sets as chosen, the pasted talks among them; never more cards than a video holds. */
+  const room = total() - TALKS.length;
   const out = [];
   const on = matchOn();
   const taken = new Set();
-  let n = 0;
+  let n = TALKS.reduce((k, t) => k + talkCards(t, langId).length, 0);
   for (const x of fresh.map(x => [Math.random(), x]).sort((a, b) => a[0] - b[0]).map(x => x[1])) {
+    if (out.length >= room) break;
     const t = on ? matchFor(x.post, taken) : x;
     if (!t) continue;
     const c = talkCards(t, langId).length;
-    if (n + c > room && (out.length || TALKS.length)) continue;
+    if (n + c > MAX_ITEMS) continue;
     out.push(t);
     if (on) taken.add(t.replies[0].id);
     n += c;
-    if (n >= room) break;
   }
   return out;
 }
@@ -3436,6 +3454,8 @@ function hookOf(text, lang, word) {
     const runs = clause.match(/[ァ-ヴー]+|[ぁ-ゖ]+|[一-龯々〆ヶ]+|[A-Za-z0-9０-９]+|./gu) || [];
     for (let i = 0; i < runs.length; i++) {
       let r = runs[i];
+      /* この前彼女から: 前 belongs to この前, the word is 彼女. */
+      if (i > 0 && /(?:この|その|あの)$/.test(runs[i - 1]) && /^[前間時頃後日辺][一-龯]/.test(r)) r = r.slice(1);
       for (let m = r.match(HOOK_SKIP); m && m[0]; m = r.match(HOOK_SKIP)) r = r.slice(m[0].length);
       const k = charLen(r);
       const out = /^[ァ-ヴー]+$/.test(r) && /[ァ-ヴ]{2}/.test(r) && k >= 3 ? [...r].slice(0, 8).join('')
@@ -3462,20 +3482,21 @@ function threadCards(r, langId) {
   const post = one(st.post, who(st.post.handle));
   const lang = CJK.test(post._shown) ? 'ja' : 'en';
   const cards = [];
-  const open = hookOf(post._shown, lang, r.hook || (r.talk ? r.topic : ''));
+  /* One set of three cards. 1: a word taken out of the post, large (when the post gives none of its
+     own, its first word). 2: the whole post. 3: the post with the reply under it. */
+  const open = hookOf(post._shown, lang, r.hook || (r.talk ? r.topic : '')) || (lang === 'ja' ? jaWord(post._shown) : storyWord(post._shown, ''));
   if (open) {
     const bare = open.replace(/[\p{Extended_Pictographic}\u200d\ufe0f!！?？〜~…✨♪\s\d、。,.]/gu, '');
     const kw = bare && charLen(bare) <= 6 ? bare : (lang === 'ja' ? jaWord(open) : storyWord(open, ''));
-    cards.push({ ...post, kw, head: [open], sub: [], jp: [], _main: false, _tease: true });
+    cards.push({ ...post, kw, head: [open], sub: [], jp: [], big: true, _main: false, _tease: true });
   }
   cards.push(post);
   st.replies.forEach(m => {
     /* A reply names the post it answers (→). A match names nobody: the two are only shown together (×). */
     const reply = one(m, who(m.handle) + (!r.match && st.post.handle ? ' → @' + st.post.handle : ''));
-    cards.push(reply);
-    if (charLen(post._shown) + charLen(reply._shown) <= (lang === 'en' ? 360 : 180)) {
-      cards.push({ ...post, jp: post.jp.concat((r.match ? '× ' : '→ ') + reply._shown), src: r.match ? who(st.post.handle) + ' × @' + m.handle : reply.src, url: m.url, _main: false, _both: true });
-    }
+    /* Too long to show together (a pasted talk can be): the reply plays by itself. */
+    if (charLen(post._shown) + charLen(reply._shown) > (lang === 'en' ? 360 : 180)) { cards.push(reply); return; }
+    cards.push({ ...post, jp: post.jp.concat((r.match ? '× ' : '→ ') + reply._shown), src: r.match ? who(st.post.handle) + ' × @' + m.handle : reply.src, url: m.url, _main: false, _both: true });
   });
   /* Under a match, both people's own posts are linked for as long as it plays. */
   if (r.match && st.replies[0]) cards.forEach(c => { c.url = st.post.url; c.url2 = st.replies[0].url; });
@@ -3562,7 +3583,7 @@ function normItem(it) {
     jp: arr(it.jp).slice(0, 8),
     tags: arr(it.tags).map(up).slice(0, 4),
     src: String(it.src || '').trim(), date: String(it.date || '').trim(), url: String(it.url || '').trim(), url2: String(it.url2 || '').trim(),
-    key: arr(it.key),
+    key: arr(it.key), big: !!it.big,
   };
 }
 function normalize(s) {
@@ -4404,7 +4425,7 @@ function initUI() {
     b.dataset.n = String(n);
     b.textContent = String(n);
     b.onclick = () => {
-      store.set('count', String(n));
+      store.set('sets', String(n));
       document.querySelectorAll('#counts button').forEach(x => x.classList.toggle('on', Number(x.dataset.n) === total()));
       nextVideo(false);
     };
@@ -4526,7 +4547,7 @@ E.setMusicCredit(TRACKS[0].credit);
 /* A newer copy on the site: load it, so a copy the browser kept from before is not shown.
    version.json names the latest build of each page; it is read past the browser's cache. */
 function watchVersion(key, url) {
-  const BUILD = '6f2cd487a18e';
+  const BUILD = 'fdb32dee861b';
   if (location.protocol === 'file:' || BUILD.indexOf('BUILD_ID') >= 0) return;
   /* At the start it may reload at once; later it waits while a video is being made or saved. */
   const check = first => {
