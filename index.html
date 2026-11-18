@@ -110,6 +110,8 @@ textarea { min-height: 260px; font: 12px/1.5 ui-monospace,Menlo,monospace; }
 .check input { width: 18px; height: 18px; accent-color: var(--acc); }
 .filter-row:has(input:checked), .check:has(input:checked) { color: var(--acc); }
 .note { color: var(--mute); font-size: 12px; margin: 6px 0 0; }
+.repo-note { word-break: break-all; }
+.repo-note a { color: var(--acc); }
 .filters { display: grid; gap: 6px; margin: 4px 0 8px; }
 .source-group { color: var(--mute); font-size: 12px; margin: 14px 0 0; }
 .x-add { display: flex; gap: 8px; align-items: center; }
@@ -246,6 +248,8 @@ pre#sources { white-space: pre-wrap; font: 12px/1.5 ui-monospace,Menlo,monospace
       <pre id="sources"></pre>
       <button id="copySrc">Copy sources</button>
     </details>
+    <label>Program repository</label>
+    <p class="note repo-note"><a data-noi18n href="https://github.com/Githitosh/reply-news" target="_blank" rel="noopener">https://github.com/Githitosh/reply-news</a></p>
   </div>
 </main>
 <script>/* mp4-muxer 5.2.2 (MIT License, Copyright (c) 2023 Vanilagy) — lib/mp4-muxer.LICENSE */
@@ -2208,6 +2212,7 @@ const JA = {
   "Sensitive posts play at the start: couples' talk in Romance may be suggestive or sexual; jokes and places stay clean. Light Hide sensitive posts to leave them out everywhere. Violence and hard news such as deaths, accidents, disasters, illness, bullying and discrimination never play.":
     '最初はセンシティブな投稿も出します。恋愛のカップルの会話に限って、きわどい内容や性的な内容も出ます（ジョークと観光には出ません）。「センシティブを非表示」を点けると、どこにも出しません。暴力や、死亡・事故・災害・病気・いじめ・差別などの重い話題は、設定にかかわらず出しません。',
   'Sources': '情報源', 'X and web': 'Xとウェブ', 'Other web': 'その他のウェブ', 'International': '海外', 'Japanese media': '日本のメディア',
+  'Program repository': 'プログラムの保存先',
   'Reuters': 'ロイター', 'Associated Press': 'AP通信', 'BBC': 'BBC', 'CNN': 'CNN', 'The New York Times': 'ニューヨーク・タイムズ',
   'NHK': 'NHK', 'Asahi Shimbun': '朝日新聞', 'Yomiuri Shimbun': '読売新聞',
   'X accounts': 'Xアカウント', 'Add': '追加',
@@ -5547,7 +5552,7 @@ E.setMusicCredit(TRACKS[0].credit);
 /* A newer copy on the site: load it, so a copy the browser kept from before is not shown.
    version.json names the latest build of each page; it is read past the browser's cache. */
 function watchVersion(key, url) {
-  const BUILD = 'a4fe690adf45';
+  const BUILD = 'e4b17c9a2d60';
   if (location.protocol === 'file:' || BUILD.indexOf('BUILD_ID') >= 0) return;
   /* At the start it may reload at once; later it waits while a video is being made or saved. */
   const check = first => {
