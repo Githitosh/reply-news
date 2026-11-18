@@ -2,64 +2,36 @@
 
 https://githitosh.github.io/reply-news/
 
-A short video of funny X replies about today's news, couples' talk (恋愛) and
-posts from famous places (観光), made in the browser. Settings, the item count
-(5 / 10 / 20), story length, wallpaper and music are chosen on the page, and
-Download saves the video as an MP4.
+A short video of a post on X and a reply to it, made in the browser from what you paste.
+Each talk plays as four cards: the post's first word, the whole post, the whole reply,
+then the post and the reply together. Download saves the video as an MP4.
 
-## The box under the video and the genres
+## No outside services
 
-The genres sit under the video; pressing one makes the video again at once.
-Type something in the box and press Enter: it joins the genres (lit) and the lineup
-in Settings, and the video is made again. Press a lit genre to take it out.
+The page fetches nothing from outside: no search API, no news API, no translation, no font
+service. It only loads its own files (this repository, served by GitHub Pages). The fonts
+(Noto Serif JP, Noto Sans JP, Tinos; SIL Open Font License) are in `assets/fonts/`.
 
-- words (渋谷, 新しいiPhone): posts on X about them that people replied to, each followed by the replies under it
-- @account: that account's newest posts, each followed by its replies
-- a post's address (https://x.com/…/status/…): that post, then its replies
+## How it is used
 
-Only posts and replies that people wrote are shown; the page writes nothing itself.
-The same safety rules apply (no violence, no hard news, no ads). Items, story length,
-wallpaper and music are in Settings.
+1. Press a genre (or type words or an @account and press Enter). X's own search opens in a
+   new tab, for one of the genre's words, drawn at random each time. Only posts that someone
+   replied to are searched (`min_replies:1 -filter:replies`).
+2. Copy a post and a reply there.
+3. Paste them into Post and Reply (the Paste buttons read what was copied) and press
+   Add to the video. A blank line between replies adds more than one.
 
-## How posts and reports are chosen
+A post's address or an `@name` line in the pasted text gives the writer's name and the
+link shown in the video. The talks are kept in the browser only; the buttons under
+"In the video" remove them. A video holds up to 40 cards.
 
-No search engine, news aggregator or ad ranking decides what plays. The page uses
-its own rules:
-
-- **X** (on at the start): posts and replies found by X search for words of each
-  genre (one word drawn at random per genre), a free request typed in the lineup,
-  or an added account. Jokes, couples' talk and travel posts are chosen by this
-  page's own word rules, never by likes or views.
-- **Web** (off at the start) and **media typed in** (a site's address, like
-  asahi.com): reports from GDELT, an open database of news from sites around the
-  world, newest first, and Wikipedia's current events, written by volunteers.
-- Every genre gets the same share, one site gives at most two reports (more only
-  when few sites are chosen), and the reports are drawn at random.
-- Search words change every time, so the same words are never searched twice in a
-  row: each search adds a different word to the base (サッカー 試合 for one post,
-  サッカー alone for the next, サッカー 今日 after that; topic words come from
-  Wikipedia), and one post is taken from each search in turn. A genre's words, the
-  extra words and the couples' searches all take turns before one comes back, and
-  one search gives at most its share of the jokes.
-- Nothing that has played is stored: only what played in this visit is skipped.
-
-Google Fonts (the typefaces) and Google's translation service (only when a post
-is in the other language) are the remaining outside services; neither chooses
-what plays.
+Settings: layout, color, story length, wallpaper, music and language.
 
 ## Files
 
-- `index.html` – the page, built by `build.py` (one self-contained file)
-- `version.json` – the build id; an old copy kept by the browser loads the new one
-- `terms.html` – the terms of use (Japanese, then English), linked under the genres and in Settings
-- `src/reply.html` – the page source
-- `src/engine.js` – draws the video (1080×1920 portrait, 1920×1080 landscape)
-- `src/ui_ja.js` – Japanese for the page's own words
-- `lib/mp4-muxer.js` – MP4 export (MIT License, see `lib/mp4-muxer.LICENSE`)
-- `assets/` – wallpapers and music (public domain recordings)
+- `src/reply.html`: the page. `src/engine.js`: the video's drawing. `src/ui_ja.js`: Japanese for the page's words.
+- `lib/mp4-muxer.js`: MP4 writing (MIT License).
+- `assets/`: wallpapers, music and fonts.
+- `python3 build.py` writes `index.html` and `version.json`.
 
-## Build
-
-    python3 build.py
-
-Then commit `index.html` and `version.json`. GitHub Pages serves the repository root.
+The version that searched X through a search API is kept under the tag `with-search-api`.

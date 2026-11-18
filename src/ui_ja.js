@@ -7,16 +7,20 @@
 'use strict';
 
 const JA = {
+  // Finding posts on X and pasting them
+  'Find on X': 'Xで探す', 'Words or @account': '言葉・@アカウント', 'Add a talk': '会話を追加', 'In the video': '動画に入っている会話（押すと消えます）',
+  'Post': '投稿', 'Reply': 'リプライ', 'Paste': '貼り付け', 'Add to the video': '動画に追加',
+  'Paste the post here': 'ここに投稿を貼り付け', 'Paste the reply here': 'ここにリプライを貼り付け',
+  'Press a genre to open the search on X. Copy a post and a reply there, then paste them here.': 'ジャンルを押すと、Xの検索が開きます。そこで投稿とリプライをコピーして、ここに貼り付けてください。',
+  'Opened X. Copy a post and a reply there, then paste them here.': 'Xを開きました。投稿とリプライをコピーして、ここに貼り付けてください。',
+  'Paste the post first.': '先に投稿を貼り付けてください。', 'Removed.': '消しました。',
+  'Could not read what was copied. Press and hold the box and choose Paste.': 'コピーした内容を読めませんでした。入力欄を長押しして「貼り付け」を選んでください。',
   // Header and buttons
   'Shibuya': '渋谷', '2002 World Cup final': '2002年のワールドカップ決勝',
   'At the end': '最後まで再生したら', 'Repeat': '繰り返す', 'Update speed': '更新の速さ', 'Normal': 'ふつう', 'Fast': '高速',
   'Add an account to load its posts and the replies to them.': 'アカウントを追加すると、そのアカウントの投稿と、返信を読み込みます。',
   'Web': 'ウェブ', 'Media': 'メディア', 'Public page:': '公開ページ：', 'Replies': 'リプライ', 'Clear': '消す', 'Reading the post': '投稿を読み込んでいます',
   'Words, @account or post URL': '言葉・@アカウント・URL', 'Program repository:': 'プログラムの保存先：', 'Terms of use': '利用規約', 'Searching the web': 'ウェブを探しています',
-  "Type a site's address or a homepage (asahi.com, https://www.example.co.jp/) to add its newest posts. Press a name to remove it.": 'サイトのアドレスや企業などのホームページ（asahi.com、https://www.example.co.jp/）を入れて「追加」を押すと、そのサイトの新着を読み込みます。名前を押すと外せます。',
-  "Reports are chosen by this page's own rules, not by a search engine or ads: newest first from open sources (GDELT and Wikipedia's current events), the same share for every genre, at most two from one site, and drawn at random.":
-    '記事は、検索エンジンや広告の順位ではなく、このページ独自のルールで選びます。公開されている情報源（GDELT とウィキペディアの「最近の出来事」）から新しい順に集め、どのジャンルも同じ数ずつ、1つのサイトから2件まで、その中からランダムに選びます。',
-  "Type the site's address, like https://www.example.co.jp/": 'https://www.example.co.jp/ のようにサイトのアドレスを入れてください',
   'Reply News': 'リプライニュース', 'Reply News settings': 'リプライニュースの設定', 'Opening Reply News…': 'リプライニュースを開いています…',
   'Humor': 'ユーモア', 'News': 'ニュース', 'Pull down to refresh': '引っ張って更新', 'Release to refresh': '離すと更新',
   'Back to video': '動画に戻る', 'Play': '再生', 'Pause': '一時停止', 'Update': '更新', 'Creating…': '作成中…',

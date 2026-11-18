@@ -10,9 +10,7 @@ try { document.documentElement.dataset.theme = localStorage.getItem('replyNews.t
 <title>Reply News</title>
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=2">
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=2">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link id="gf" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&family=Noto+Serif+JP:wght@700;900&family=Tinos:wght@700&display=swap" rel="stylesheet">
+<link id="gf" href="assets/fonts/fonts.css" rel="stylesheet">
 <style>
 /* White: the page is white and the buttons, links and lit buttons are gray. */
 :root { --bg:#ffffff; --card:#f1f2f4; --line:#d9dbe0; --ink:#16181c; --mute:#62666d; --acc:#6b7078; --field:#ffffff; --on:#ffffff; --frame:#f2f3f5; }
@@ -35,14 +33,21 @@ main { padding: 0 16px calc(24px + env(safe-area-inset-bottom)); max-width: 1100
 /* The portrait video is as tall as the screen allows, leaving room for the title and the buttons. */
 .frame { width: min(100%, max(280px, calc((100vh - 150px) * 9 / 16))); width: min(100%, max(280px, calc((100dvh - 150px) * 9 / 16))); }
 .ctl, .seekrow, .caption, .music, .music-label, .ask { max-width: 560px; margin-left: auto; margin-right: auto; }
-/* The box under the video: what is typed joins the genres, and the video is made again. */
+/* The box under the video: what is typed is searched on X, in a new tab. */
 .ask { display: flex; gap: 8px; align-items: center; margin-top: 14px; }
 .ask input[type=text] { flex: 1 1 auto; width: auto; min-width: 0; font-size: 16px; padding: 10px 12px; }
 .ask button { flex: none; padding: 10px 12px; font-size: 14px; white-space: nowrap; }
 .ask #askGo { background: var(--acc); border-color: var(--acc); color: var(--on); }
-/* Genres on the main screen: the fixed ones, then what was typed (lit; a press removes it). */
-#genreChips { justify-content: center; }
-#genreChips button.mine { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+/* Genres on the main screen: a press opens the search on X. */
+#genreChips { justify-content: center; margin-top: 8px; }
+/* The post and the reply are pasted here; the talks in the video follow as buttons (a press removes one). */
+.compose, #talkList { max-width: 560px; margin-left: auto; margin-right: auto; }
+.paste-row { display: flex; gap: 8px; align-items: stretch; }
+.paste-row textarea { flex: 1 1 auto; min-width: 0; min-height: 0; font: 16px/1.5 "Noto Sans JP",sans-serif; resize: vertical; }
+.paste-row button { flex: none; padding: 10px 12px; font-size: 14px; white-space: nowrap; }
+#addTalk { margin-top: 12px; }
+#talkList { justify-content: center; }
+#talkList button { flex: 0 1 auto; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 /* Settings: the rows of buttons that were under the video. */
 .studio .music { margin-top: 2px; }
 .terms-foot { text-align: center; font-size: 13px; margin: 56px 0 0; padding: 18px 0 8px; border-top: 1px solid var(--line); }
@@ -62,7 +67,6 @@ video#fsv { position: absolute; inset: 0; z-index: 0; width: 100%; height: 100%;
 .watch.is-full .frame { flex: 1 1 auto; display: flex; align-items: center; justify-content: center; min-height: 0; width: 100%; }
 .watch.is-full canvas#cv { width: 100%; height: 100%; object-fit: contain; aspect-ratio: auto; border-radius: 0; }
 .watch.is-full .ctl { flex: none; width: 100%; max-width: 640px; }
-.watch.is-full .ctl #update { background: var(--acc); border-color: var(--acc); color: var(--on); }
 .watch.is-full .seekrow { flex: none; width: 100%; max-width: 640px; }
 .watch.is-full .linkbox { flex: none; }
 .watch.is-full .source-url { flex: none; }
@@ -83,7 +87,7 @@ button#sound.on { background: var(--acc); border-color: var(--acc); color: var(-
 .seekrow input[type=range] { flex: 1 1 auto; min-width: 0; margin: 0; accent-color: var(--acc); }
 .seekrow span { flex: none; color: var(--mute); font-variant-numeric: tabular-nums; min-width: 84px; text-align: right; font-size: 13px; }
 /* Play/Pause and Update/Creating keep one width, so the buttons stay on one row and in place. */
-#play, #update { min-width: 5.4em; }
+#play { min-width: 5.4em; }
 #dl { width: 7.4em; overflow: hidden; text-overflow: ellipsis; }
 @media (max-width: 480px) { .ctl { gap: 6px; } .ctl button { padding: 9px 8px; font-size: 13px; } }
 /* The link keeps the same height for every story, so nothing below it moves. */
@@ -92,7 +96,7 @@ button#sound.on { background: var(--acc); border-color: var(--acc); color: var(-
 @media (min-width: 820px) { .linkbox { height: calc(1.3 * 26px + 22px); } .linkbox .source-url { -webkit-line-clamp: 1; } }
 button, .btn { appearance: none; border: 1px solid var(--line); background: var(--card); color: var(--ink); font: 700 15px "Noto Sans JP",sans-serif; padding: 11px 14px; border-radius: 10px; cursor: pointer; text-decoration: none; display: inline-block; text-align: center; }
 button:disabled { opacity: .45; cursor: default; }
-.music button.on, .row button.on, #genreChips button.on, #xAccounts button { background: var(--acc); border-color: var(--acc); color: var(--on); }
+.music button.on, .row button.on { background: var(--acc); border-color: var(--acc); color: var(--on); }
 .caption { text-align: center; color: var(--mute); font-size: 13px; margin-top: 10px; margin-bottom: 0; }
 .caption.err { color: #9a3b28; }
 #sprog i { display: block; height: 100%; width: 0; background: var(--acc); }
@@ -104,7 +108,7 @@ button:disabled { opacity: .45; cursor: default; }
 .studio:not([hidden]) { position: fixed; z-index: 35; left: 0; right: 0; bottom: 0; top: var(--header-h, 64px); margin: 0; padding: 8px 16px calc(92px + env(safe-area-inset-bottom)); overflow: auto; background: var(--bg); }
 .studio > * { width: 100%; max-width: 640px; margin-left: auto; margin-right: auto; }
 .studio-bar { position: sticky; top: -8px; z-index: 2; padding: 12px 0 8px; margin-top: -8px; background: var(--bg); }
-#backVideo, #lineupGo, #applyLine { width: 100%; }
+#backVideo { width: 100%; }
 .back-dock { position: fixed; z-index: 60; left: 12px; right: 12px; bottom: calc(10px + env(safe-area-inset-bottom)); width: auto; background: var(--acc); color: var(--on); border-color: var(--acc); font-size: 17px; padding: 14px; }
 .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
 #status { min-height: 1.6em; color: var(--ink); font-size: 14px; margin-top: 10px; white-space: pre-wrap; }
@@ -116,8 +120,6 @@ summary { cursor: pointer; padding: 12px 0; font-weight: 700; }
 label { display: block; color: var(--mute); font-size: 13px; margin: 8px 0 4px; }
 input[type=text], input[type=date], select, textarea { width: 100%; background: var(--field); color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 10px; font: 15px "Noto Sans JP",sans-serif; }
 textarea { min-height: 260px; font: 12px/1.5 ui-monospace,Menlo,monospace; }
-#lineup { min-height: 180px; }
-#lineup.live { border-color: var(--acc); }
 .check { display: flex; align-items: center; gap: 8px; color: var(--ink); font-size: 14px; margin-top: 10px; }
 .check input { width: 18px; height: 18px; accent-color: var(--acc); }
 .filter-row:has(input:checked), .check:has(input:checked) { color: var(--acc); }
@@ -127,8 +129,7 @@ textarea { min-height: 260px; font: 12px/1.5 ui-monospace,Menlo,monospace; }
 .x-add { display: flex; gap: 8px; align-items: center; }
 .x-add input { flex: 1 1 auto; width: auto; }
 .x-add button { flex: 0 0 auto; }
-#xAccounts { margin-top: 8px; }
-#xAccounts button, #genreChips button { flex: 0 1 auto; }
+#genreChips button { flex: 0 1 auto; }
 .filter-row { display: flex; align-items: center; gap: 8px; }
 .filter-row .check { margin: 0; flex: 1; }
 .filter-row select { width: 7.2em; }
@@ -159,7 +160,6 @@ pre#sources { white-space: pre-wrap; font: 12px/1.5 ui-monospace,Menlo,monospace
       <button id="play" disabled>Play</button>
       <button id="sound" type="button" aria-pressed="false">Sound</button>
       <button id="full" type="button">Full screen</button>
-      <button id="update" type="button">Update</button>
       <button id="dl" type="button" disabled>Download</button>
     </div>
     <div class="seekrow">
@@ -167,12 +167,28 @@ pre#sources { white-space: pre-wrap; font: 12px/1.5 ui-monospace,Menlo,monospace
       <span id="time">0.0 / 0.0</span>
     </div>
   </div>
-  <form id="ask" class="ask" autocomplete="off">
-    <input type="text" id="askText" enterkeyhint="go" placeholder="Words, @account or post URL">
-  </form>
   <p id="caption" class="caption">Opening Reply News…</p>
-  <p class="music-label">Genres</p>
+  <p class="music-label">Find on X</p>
+  <form id="ask" class="ask" autocomplete="off">
+    <input type="text" id="askText" enterkeyhint="search" placeholder="Words or @account">
+  </form>
   <div id="genreChips" class="music"></div>
+  <p class="music-label">Add a talk</p>
+  <div class="compose">
+    <label for="postIn">Post</label>
+    <div class="paste-row">
+      <textarea id="postIn" rows="3" spellcheck="false" placeholder="Paste the post here"></textarea>
+      <button type="button" id="pastePost">Paste</button>
+    </div>
+    <label for="replyIn">Reply</label>
+    <div class="paste-row">
+      <textarea id="replyIn" rows="2" spellcheck="false" placeholder="Paste the reply here"></textarea>
+      <button type="button" id="pasteReply">Paste</button>
+    </div>
+    <button type="button" id="addTalk" class="primary">Add to the video</button>
+  </div>
+  <p class="music-label" id="talkLabel" hidden>In the video</p>
+  <div id="talkList" class="music"></div>
   <p class="terms-foot"><a class="terms" href="terms.html" target="_blank" rel="noopener">Terms of use</a></p>
 
   <div id="studio" class="studio" hidden>
@@ -196,86 +212,19 @@ pre#sources { white-space: pre-wrap; font: 12px/1.5 ui-monospace,Menlo,monospace
         <option value="sky">Sky blue</option>
         <option value="mint">Mint</option>
       </select>
-      <label>Items</label>
-      <div class="music" id="counts"></div>
       <label>Story length</label>
       <div class="music" id="paces"></div>
       <label>Wallpaper</label>
       <div class="music" id="walls"></div>
       <label>Music</label>
       <div class="music" id="music"></div>
-      <label for="country">Country</label>
-      <select id="country"></select>
       <label for="lang">Language</label>
       <select id="lang"></select>
-      <label for="endMode">At the end</label>
-      <select id="endMode">
-        <option value="update">Update</option>
-        <option value="loop">Repeat</option>
-      </select>
-      <label for="speed">Update speed</label>
-      <select id="speed">
-        <option value="normal">Normal</option>
-        <option value="fast">Fast</option>
-      </select>
-      <label for="feed">Feed</label>
-      <select id="feed">
-        <option value="x">X comments only</option>
-        <option value="news">News, then comments</option>
-      </select>
-      <div hidden>
-      <label for="lineup">Lineup</label>
-      <button type="button" id="lineupGo">Lineup</button>
-      <textarea id="lineup" rows="8" spellcheck="false" placeholder="Shibuya&#10;2002 World Cup final&#10;Romance&#10;Jokes"></textarea>
-      <button id="applyLine" type="button">Apply lineup</button>
-      </div>
-      <div class="music hides">
-        <button type="button" id="hideSensitive" aria-pressed="false">Hide sensitive posts</button>
-      </div>
-      <label>Sources</label>
-      <div id="sourceFilters" class="filters"></div>
-      <label for="mediaIn">Media</label>
-      <div class="x-add">
-        <input id="mediaIn" type="text" inputmode="url" spellcheck="false" placeholder="https://www.example.co.jp/">
-        <button type="button" id="addMedia">Add</button>
-      </div>
-      <div id="mediaList" class="music"></div>
-      <label for="xUser">X accounts</label>
-      <div class="x-add">
-        <input id="xUser" type="text" autocomplete="username" spellcheck="false" placeholder="@name">
-        <button type="button" id="addX">Add</button>
-      </div>
-      <div id="xAccounts" class="music"></div>
-      <label for="date">Date</label>
-      <input type="date" id="date">
-      <label class="check"><input type="checkbox" id="autoExport"> Export MP4 files after the stories are ready</label>
-      <div hidden>
-      <label>Formats to export</label>
-      <label class="check"><input type="checkbox" class="fx" value="x" checked> Phone and X (portrait 1080×1920)</label>
-      <label class="check"><input type="checkbox" class="fx" value="youtube" checked> YouTube (portrait 1080×1920, room for buttons)</label>
-      <label class="check"><input type="checkbox" class="fx" value="pc" checked> PC (landscape 1920×1080)</label>
-      <button id="go" class="primary">Collect and play</button>
-      </div>
       <div id="status">Opening Reply News…</div>
       <div id="sprog"><i></i></div>
       <div id="out" class="row"></div>
       <p class="note site-link">Public page: <a href="https://githitosh.github.io/reply-news/" target="_blank" rel="noopener">https://githitosh.github.io/reply-news/</a></p>
     </section>
-
-    <details hidden>
-      <summary>Script (JSON)</summary>
-      <textarea id="json" spellcheck="false"></textarea>
-      <div class="row" style="margin-top:8px">
-        <button id="apply">Apply script</button>
-        <button id="exportBtn" disabled>Export MP4</button>
-      </div>
-    </details>
-
-    <details hidden>
-      <summary>Sources</summary>
-      <pre id="sources"></pre>
-      <button id="copySrc">Copy sources</button>
-    </details>
   </div>
 </main>
 <script>/* mp4-muxer 5.2.2 (MIT License, Copyright (c) 2023 Vanilagy) — lib/mp4-muxer.LICENSE */
@@ -2193,16 +2142,20 @@ if (typeof module === "object" && typeof module.exports === "object") Object.ass
 'use strict';
 
 const JA = {
+  // Finding posts on X and pasting them
+  'Find on X': 'Xで探す', 'Words or @account': '言葉・@アカウント', 'Add a talk': '会話を追加', 'In the video': '動画に入っている会話（押すと消えます）',
+  'Post': '投稿', 'Reply': 'リプライ', 'Paste': '貼り付け', 'Add to the video': '動画に追加',
+  'Paste the post here': 'ここに投稿を貼り付け', 'Paste the reply here': 'ここにリプライを貼り付け',
+  'Press a genre to open the search on X. Copy a post and a reply there, then paste them here.': 'ジャンルを押すと、Xの検索が開きます。そこで投稿とリプライをコピーして、ここに貼り付けてください。',
+  'Opened X. Copy a post and a reply there, then paste them here.': 'Xを開きました。投稿とリプライをコピーして、ここに貼り付けてください。',
+  'Paste the post first.': '先に投稿を貼り付けてください。', 'Removed.': '消しました。',
+  'Could not read what was copied. Press and hold the box and choose Paste.': 'コピーした内容を読めませんでした。入力欄を長押しして「貼り付け」を選んでください。',
   // Header and buttons
   'Shibuya': '渋谷', '2002 World Cup final': '2002年のワールドカップ決勝',
   'At the end': '最後まで再生したら', 'Repeat': '繰り返す', 'Update speed': '更新の速さ', 'Normal': 'ふつう', 'Fast': '高速',
   'Add an account to load its posts and the replies to them.': 'アカウントを追加すると、そのアカウントの投稿と、返信を読み込みます。',
   'Web': 'ウェブ', 'Media': 'メディア', 'Public page:': '公開ページ：', 'Replies': 'リプライ', 'Clear': '消す', 'Reading the post': '投稿を読み込んでいます',
   'Words, @account or post URL': '言葉・@アカウント・URL', 'Program repository:': 'プログラムの保存先：', 'Terms of use': '利用規約', 'Searching the web': 'ウェブを探しています',
-  "Type a site's address or a homepage (asahi.com, https://www.example.co.jp/) to add its newest posts. Press a name to remove it.": 'サイトのアドレスや企業などのホームページ（asahi.com、https://www.example.co.jp/）を入れて「追加」を押すと、そのサイトの新着を読み込みます。名前を押すと外せます。',
-  "Reports are chosen by this page's own rules, not by a search engine or ads: newest first from open sources (GDELT and Wikipedia's current events), the same share for every genre, at most two from one site, and drawn at random.":
-    '記事は、検索エンジンや広告の順位ではなく、このページ独自のルールで選びます。公開されている情報源（GDELT とウィキペディアの「最近の出来事」）から新しい順に集め、どのジャンルも同じ数ずつ、1つのサイトから2件まで、その中からランダムに選びます。',
-  "Type the site's address, like https://www.example.co.jp/": 'https://www.example.co.jp/ のようにサイトのアドレスを入れてください',
   'Reply News': 'リプライニュース', 'Reply News settings': 'リプライニュースの設定', 'Opening Reply News…': 'リプライニュースを開いています…',
   'Humor': 'ユーモア', 'News': 'ニュース', 'Pull down to refresh': '引っ張って更新', 'Release to refresh': '離すと更新',
   'Back to video': '動画に戻る', 'Play': '再生', 'Pause': '一時停止', 'Update': '更新', 'Creating…': '作成中…',
@@ -3073,9 +3026,8 @@ const store = {
 };
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const pad2 = n => String(n).padStart(2, '0');
-/* Items: how many cards one video plays. Chosen under the video. */
-const COUNTS = [5, 10, 20];
-const MAX_ITEMS = 24;
+/* A video holds at most this many cards (a talk is four: the first word, the post, the reply, both). */
+const MAX_ITEMS = 40;
 /* Every card in a video gets the same headline size, and the Japanese lines below it are twice the usual size. */
 /* lang: the date line at the top is in the chosen language only. */
 const LOOK = { uniform: true, jp: 2, brand: { ja: 'リプライニュース', en: 'Reply News' }, get lang() { const el = document.getElementById('lang'); return el && el.value === 'en' ? 'en' : 'ja'; } };
@@ -3084,10 +3036,6 @@ const LOOK = { uniform: true, jp: 2, brand: { ja: 'リプライニュース', en
 const FORMATS = { x: 'Phone', youtube: 'YouTube', pc: 'PC' };
 /* PC uses the wide single-column layout, which keeps the large Japanese text whole. */
 const PRESET = { x: 'x', youtube: 'youtube', pc: 'wide' };
-const COUNTRIES = [
-  { id: 'JP', name: 'Japan', lang: 'ja' },
-  { id: 'US', name: 'United States', lang: 'en' },
-];
 const LANGS = [
   { id: 'en', name: 'English' },
   { id: 'ja', name: 'Japanese' },
@@ -3100,20 +3048,6 @@ const WALLS = [
   { id: 'night', name: 'Night' },
   { id: 'pop', name: 'Pop' },
 ];
-function total() {
-  const n = Number(store.get('count', '10'));
-  return COUNTS.includes(n) ? n : 10;
-}
-/* Split n over k lines: as even as possible, the first lines get the extra ones. */
-function shares(n, k) {
-  return Array.from({ length: k }, (_, i) => Math.floor(n / k) + (i < n % k ? 1 : 0));
-}
-/* Lineup lines are names only; an old count after the name is dropped. */
-function noCount(line) {
-  const t = String(line || '').trim();
-  if (/:\/\/|(?:x|twitter)\.com\//i.test(t)) return t;
-  return t.replace(/^\s*\d+\s*[\.\)、]\s*/, '').replace(/\s*[,、]\s*\d{1,2}\s*(?:個|件|本)?\s*$|\s+\d{1,2}\s*(?:個|件|本)\s*$/, '').trim();
-}
 const PACES = [
   { sec: 3.2, name: '3.2s' },
   { sec: 4.2, name: '4.2s' },
@@ -3125,7 +3059,6 @@ const TRACKS = [
   { id: 'neptune', name: 'Neptune', file: 'neptune_1923.m4a', credit: 'Music: Holst ‘Neptune’ – Holst / London Symphony Orchestra (Columbia, 1923), Wikimedia Commons' },
   { id: 'stripes', name: 'Stars and Stripes', file: 'stripes_1909.m4a', credit: 'Music: Sousa ‘Stars and Stripes Forever’ – Sousa’s Band (Edison, 1909), Wikimedia Commons' },
 ];
-const VIOLENT = /murder|stabbed|shot dead|shooting|killed|beheading|homicide|massacre|rape|sexual assault|robbery|凶悪|殺人|殺害|刺殺|遺体|刺され|死傷|銃乱射|暴行|強盗|レイプ|強姦/i;
 const GENRES = [
   { id: 'space', name: 'Space', place: 'middle', q: { JP: '宇宙', US: 'space NASA' } },
   { id: 'politics', name: 'Politics', place: 'top', q: { JP: '政治', US: 'politics' } },
@@ -3141,10 +3074,6 @@ const GENRES = [
   { id: 'travel', name: 'Travel', place: 'middle', q: { JP: '観光', US: 'travel sightseeing' } },
 ];
 /* Sources: X (on at the start) and Web (open reports, off at the start). Other media are typed in. */
-const SOURCES = [
-  { id: 'x', name: 'X' },
-  { id: 'web', name: 'Web' },
-];
 /* Words for each genre, in each country. One or two are drawn at random each time, so no single word leads. */
 const GENRE_WORDS = {
   space: { JP: ['宇宙', 'ロケット', '人工衛星', 'JAXA', '天体', '満月', '火星', '星空', '流れ星', '天文台', 'プラネタリウム', '宇宙飛行士', 'ISS', '望遠鏡', '銀河', '日食', '月食', '惑星', 'オーロラ', '宇宙食'],
@@ -3169,40 +3098,11 @@ const GENRE_WORDS = {
     US: ['restaurant', 'cafe', 'diner', 'chef', 'brunch', 'bakery', 'food truck', 'drive thru', 'buffet', 'waiter', 'menu', 'takeout', 'steakhouse', 'pizzeria', 'coffee shop', 'happy hour', 'reservation', 'tip'] },
 };
 function genreWords(g) {
-  const c = market().country.id;
+  const c = uiLang() === 'en' ? 'US' : 'JP';
   const w = GENRE_WORDS[g.id];
   return w ? (w[c] || w.US) : [g.q[c] || g.q.US];
 }
 const pick = list => list[Math.floor(Math.random() * list.length)];
-/* ---------- search words that change every time ----------
-   The same words are not searched twice in a row. Each search adds a different word to the base
-   (サッカー 試合 for one post, サッカー alone for the next, サッカー 選手 after that), and the words
-   used lately wait their turn. Kept in memory for this visit only. */
-const FACETS = {
-  ja: ['今日', '最近', '話題', '感想', '好き', '初めて', '思い出', '写真', 'ついに', '久しぶり', 'みんな', 'やっぱり', '昨日', '今年', '子供の頃', '友達', '家族', '先輩', '地元', '結局', 'まさか', 'なぜか', '毎日', '週末', '朝', '夜', '本当に', 'びっくり', '懐かしい', '憧れ', '苦手', '得意'],
-  en: ['today', 'just', 'finally', 'love', 'first time', 'remember', 'photo', 'again', 'everyone', 'best', 'yesterday', 'this year', 'as a kid', 'my friend', 'my family', 'somehow', 'every day', 'weekend', 'morning', 'tonight', 'honestly', 'surprised', 'nostalgic', 'never', 'always', 'worst', 'favorite', 'why'],
-};
-const USED_Q = new Map();
-function variantsFor(base, extra, lang, k, tag) {
-  base = String(base || '').trim();
-  const key = (tag || '') + ':' + lang + ':' + base.toLowerCase();
-  const own = (extra || []).filter(w => w && !base.toLowerCase().includes(String(w).toLowerCase()));
-  const all = [...new Set([''].concat(own, FACETS[lang] || FACETS.en))];
-  let used = USED_Q.get(key) || [];
-  let fresh = all.filter(f => !used.includes(f));
-  if (fresh.length < k) { used = used.slice(-1); fresh = all.filter(f => !used.includes(f)); }
-  /* Words that belong to the topic (from Wikipedia) and everyday words take turns. */
-  const topical = shuffle(fresh.filter(f => own.includes(f)));
-  const rest = shuffle(fresh.filter(f => !own.includes(f)));
-  const out = [];
-  while (out.length < k && (topical.length || rest.length)) {
-    if (topical.length) out.push(topical.shift());
-    if (out.length < k && rest.length) out.push(rest.shift());
-  }
-  /* Every word gets its turn before one comes back. */
-  USED_Q.set(key, used.concat(out).slice(-Math.max(k, all.length - k)));
-  return out.map(f => (base + (f ? ' ' + f : '')).trim());
-}
 /* A word from a list that was not used lately (a genre's words take turns). */
 const USED_W = new Map();
 function pickFresh(list, key) {
@@ -3213,15 +3113,6 @@ function pickFresh(list, key) {
   const w = pick(pool);
   USED_W.set(key, used.concat(w).slice(-Math.max(1, list.length - 1)));
   return w;
-}
-/* Searches from a list, taking turns: about half of them each time, not the ones used last time. */
-function rotate(list, key, k) {
-  const used = USED_W.get(key) || [];
-  const fresh = shuffle(list.filter(q => !used.includes(q)));
-  const out = fresh.slice(0, k);
-  if (out.length < k) out.push(...shuffle(list.filter(q => !out.includes(q))).slice(0, k - out.length));
-  USED_W.set(key, out);
-  return out;
 }
 const CHIPS = [
   { label: 'Space', line: 'Space' },
@@ -3269,24 +3160,7 @@ function todayJST() {
   const d = new Date(Date.now() + 9 * 3600e3);
   return `${d.getUTCFullYear()}-${pad2(d.getUTCMonth() + 1)}-${pad2(d.getUTCDate())}`;
 }
-function addDays(iso, n) { const d = new Date(iso + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); }
 function b64bytes(b64) { const s = atob(b64), u = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i); return u; }
-function shuffle(list) {
-  const a = list.slice();
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    const t = a[i]; a[i] = a[j]; a[j] = t;
-  }
-  return a;
-}
-function withTimeout(job, ms) {
-  return Promise.race([job, new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), ms))]);
-}
-async function getText(url, ms) {
-  const res = await withTimeout(fetch(url), ms || 12000);
-  if (!res.ok) throw new Error('Could not load (' + res.status + ').');
-  return res.text();
-}
 async function loadAssets() {
   await Promise.all('ABCDE'.split('').map(async g => {
     const im = new Image();
@@ -3297,1373 +3171,63 @@ async function loadAssets() {
   S.music = S.tracks.jupiter = b64bytes(ASSETS.track);
 }
 
-/* ---------- settings: market, accounts, filters ---------- */
-function market() {
-  const country = COUNTRIES.find(c => c.id === $('country').value) || COUNTRIES[0];
-  const lang = LANGS.find(l => l.id === $('lang').value) || LANGS.find(l => l.id === country.lang) || LANGS[0];
-  return { country, lang };
-}
-function feedMode() { return $('feed').value === 'x' ? 'x' : 'news'; }
-function chosenDate() { const v = $('date').value; return /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : todayJST(); }
-function pastDay() { const d = chosenDate(); return d !== todayJST() ? d : ''; }
-/* The language of the jokes: Japanese replies in Japanese, English replies in English. */
-function jokeLang() {
-  const { country, lang } = market();
-  if (lang.id === 'en') return 'en';
-  if (lang.id === 'ja') return 'ja';
-  return country.id === 'JP' ? 'ja' : 'en';
-}
-function xRange() { const day = pastDay(); return day ? ' since:' + day + ' until:' + addDays(day, 1) : ''; }
-function cleanHandle(v) {
-  const raw = String(v || '').trim();
-  const url = raw.match(/(?:x|twitter)\.com\/([A-Za-z0-9_]{1,15})/i);
-  return (url ? url[1] : raw).replace(/^@+/, '').split(/[\s/?#]/)[0];
-}
-function validHandle(name) { return /^[A-Za-z0-9_]{1,15}$/.test(name); }
-function xAccounts() {
-  let list = [];
-  try { list = JSON.parse(store.get('xAccounts', '[]')); } catch (e) { list = []; }
-  if (!Array.isArray(list)) list = [];
-  const out = [];
-  const seen = new Set();
-  list.forEach(v => {
-    const name = cleanHandle(v);
-    const key = name.toLowerCase();
-    if (!validHandle(name) || seen.has(key)) return;
-    seen.add(key);
-    out.push(name);
-  });
-  return out.slice(0, 8);
-}
-function saveAccounts(list) {
-  const clean = [];
-  const seen = new Set();
-  (list || []).forEach(v => {
-    const name = cleanHandle(v);
-    const key = name.toLowerCase();
-    if (!validHandle(name) || seen.has(key) || clean.length >= 8) return;
-    seen.add(key);
-    clean.push(name);
-  });
-  store.set('xAccounts', JSON.stringify(clean));
-  paintAccounts();
-  return clean;
-}
-function paintAccounts() {
-  const box = $('xAccounts');
-  box.innerHTML = '';
-  xAccounts().forEach(name => {
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.textContent = '@' + name + ' ×';
-    b.title = 'Remove @' + name;
-    b.onclick = () => {
-      saveAccounts(xAccounts().filter(n => n.toLowerCase() !== name.toLowerCase()));
-      say('Removed @' + name);
-      refreshMarket();
-    };
-    box.appendChild(b);
-  });
-}
-function addAccount() {
-  const name = cleanHandle($('xUser').value);
-  $('xUser').value = '';
-  if (!validHandle(name)) { say('Use an X account name, like @name'); return; }
-  const list = xAccounts();
-  if (list.some(n => n.toLowerCase() === name.toLowerCase())) { say('Already added @' + name); return; }
-  if (list.length >= 8) { say('Eight accounts is the limit'); return; }
-  saveAccounts(list.concat(name));
-  say('Loading @' + name);
-  refreshMarket();
-}
-function savedJson(key) { try { return JSON.parse(store.get(key, '{}')) || {}; } catch (e) { return {}; } }
-/* Every genre is used, in its usual place; the lineup chooses what to play. */
-function genreChoices() { return GENRES.map(g => ({ ...g, on: true })); }
-/* X is on and Web is off at the start. */
-const SOURCE_START = { x: true, web: false };
-function sourceOn(id) {
-  const box = document.querySelector('.srcf[value="' + id + '"]');
-  if (box) return box.checked;
-  const saved = savedJson('sources2');
-  return id in saved ? saved[id] !== false : !!SOURCE_START[id];
-}
-/* Media typed in: a site's address, or a name this page knows the address of. */
-const MEDIA_SITES = {
-  'nhk': 'nhk.or.jp', '朝日': 'asahi.com', '朝日新聞': 'asahi.com', '読売': 'yomiuri.co.jp', '読売新聞': 'yomiuri.co.jp',
-  '毎日': 'mainichi.jp', '毎日新聞': 'mainichi.jp', '日経': 'nikkei.com', '日本経済新聞': 'nikkei.com', '産経': 'sankei.com',
-  '産経新聞': 'sankei.com', '東京新聞': 'tokyo-np.co.jp', '共同': 'kyodonews.jp', '共同通信': 'kyodonews.jp', '時事': 'jiji.com', '時事通信': 'jiji.com',
-  '北國新聞': 'hokkoku.co.jp', '中日新聞': 'chunichi.co.jp',
-  'bbc': 'bbc.com', 'cnn': 'cnn.com', 'reuters': 'reuters.com', 'ap': 'apnews.com', 'abc': 'abcnews.go.com', 'nyt': 'nytimes.com',
-  'new york times': 'nytimes.com', 'guardian': 'theguardian.com', 'npr': 'npr.org', 'al jazeera': 'aljazeera.com',
-};
-function domainOf(name) {
-  const raw = String(name || '').trim();
-  const t = raw.toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').split(/[/?#\s]/)[0];
-  if (/^[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(t)) return t;
-  return MEDIA_SITES[t] || MEDIA_SITES[raw] || '';
-}
-function mediaList() {
-  let list = [];
-  try { list = JSON.parse(store.get('media', '[]')); } catch (e) { list = []; }
-  return (Array.isArray(list) ? list : []).filter(m => domainOf(m)).slice(0, 12);
-}
-function saveMedia(list) {
-  const out = [];
-  (list || []).forEach(m => { const d = domainOf(m); if (d && !out.some(x => domainOf(x) === d) && out.length < 12) out.push(String(m).trim()); });
-  store.set('media', JSON.stringify(out));
-  paintMedia();
-}
-function paintMedia() {
-  const box = $('mediaList');
-  if (!box) return;
-  box.innerHTML = '';
-  mediaList().forEach(m => {
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.textContent = m + ' ×';
-    b.onclick = () => { saveMedia(mediaList().filter(x => x !== m)); say('Removed ' + m); refreshMarket(); };
-    box.appendChild(b);
-  });
-}
-function addMedia() {
-  const raw = $('mediaIn').value.trim();
-  $('mediaIn').value = '';
-  if (!raw) return;
-  if (!domainOf(raw)) { say("Type the site's address, like https://www.example.co.jp/"); return; }
-  if (mediaList().some(m => domainOf(m) === domainOf(raw))) { say('Already added ' + raw); return; }
-  saveMedia(mediaList().concat(raw));
-  say('Added ' + raw);
-  refreshMarket();
-}
-/* The genre a report is about, by the genre's own words (both languages). The first genre that matches wins. */
-function matchedGenre(text, countryId) {
-  const hay = String(text || '').toLowerCase();
-  return GENRES.find(g => {
-    const own = GENRE_WORDS[g.id] ? GENRE_WORDS[g.id].JP.concat(GENRE_WORDS[g.id].US) : [];
-    const words = own.concat((g.q[countryId] || g.q.US).split(/\s+/), g.q.US.split(/\s+/)).map(w => w.toLowerCase()).filter(w => w.length > 1);
-    return words.some(w => (/^[a-z ]+$/.test(w) ? new RegExp('\\b' + w + '\\b').test(hay) : hay.includes(w)));
-  }) || null;
-}
-function sourceId(row) { return row && (row.x || /^x\b/i.test(String(row.source || ''))) ? 'x' : 'web'; }
-/* Violence never plays in Reply News; there is no setting for it. */
-function violentHidden() { return true; }
-/* Hard news never plays in Reply News, in any setting: deaths, accidents, disasters, illness, bullying, discrimination. */
-const HEAVY = /(?:^|[^必])死(?!ぬほど|ぬかと|んだ笑)|亡くな|遺体|事故|災害|震災|地震|津波|火災|病気|闘病|入院|がん(?!ば|が)|癌|自殺|自死|いじめ|虐待|差別|\bdied\b|\bdeath\b|\bcrash\b|\bdisaster\b|\bcancer\b|\bsuicide\b|\bbull(?:y|ied|ying)\b|\bracis/i;
-/* Sensitive: suggestive words and emoji, sexual words (ADULT, below) and posts X marks as sensitive.
-   Hidden while Hide sensitive posts is lit (the start). When it is off, only couples' talk may be sexual. */
-const SUGGESTIVE = /🔞|🍆|🍑|😏|💋|👅|寝かさない|抱いて|抱かれ|夜這い|ベッドで|一緒にお風呂|色っぽ|セクシー|えちえち|\bsexy\b|\bspicy\b|\bnaughty\b|\bin bed\b/i;
-function sensitiveHidden() { const b = $('hideSensitive'); return !b || b.classList.contains('on'); }
-function heavy(text) { return HEAVY.test(String(text || '')); }
-function flagged(st) { return !!(st && (st.possibly_sensitive || st.sensitive)); }
-/* Jokes, places and reports: hard news and sensitive posts never play. */
-function sensitive(text, st) { return heavy(text) || SUGGESTIVE.test(String(text || '')) || flagged(st); }
-function saveFilters() {
-  const sources = {};
-  SOURCES.forEach(s => {
-    const box = document.querySelector('.srcf[value="' + s.id + '"]');
-    sources[s.id] = !!(box && box.checked);
-  });
-  store.set('sources2', JSON.stringify(sources));
-  store.set('hideSensitive3', sensitiveHidden() ? '1' : '0');
-}
-function buildFilters() {
-  const savedS = savedJson('sources2');
-  /* Hide sensitive posts starts off: sensitive couple talk plays until the button is lit. */
-  [['hideSensitive', 'hideSensitive3']].forEach(([id, key]) => {
-    const b = $(id);
-    const paint = on => { b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false'); };
-    paint(store.get(key, '0') === '1');
-    b.onclick = () => { paint(!b.classList.contains('on')); saveFilters(); refreshMarket(); };
-  });
-  const sbox = $('sourceFilters');
-  let group = '';
-  SOURCES.forEach(s => {
-    if (s.group && s.group !== group) {
-      group = s.group;
-      const heading = document.createElement('p');
-      heading.className = 'source-group';
-      heading.textContent = group;
-      sbox.appendChild(heading);
-    }
-    const lab = document.createElement('label');
-    lab.className = 'check';
-    const input = document.createElement('input');
-    input.type = 'checkbox';
-    input.className = 'srcf';
-    input.value = s.id;
-    input.checked = s.id in savedS ? savedS[s.id] !== false : !!SOURCE_START[s.id];
-    input.onchange = () => { saveFilters(); refreshMarket(); };
-    lab.appendChild(input);
-    lab.appendChild(document.createTextNode(s.name));
-    sbox.appendChild(lab);
-  });
-}
-
-/* ---------- what has played: remembered in this visit only ---------- */
-/* Nothing piles up in storage: the choice is random each time, and only what played in this visit is skipped. */
-const SEEN_NEWS = 'news';
-const SEEN_JOKES = 'jokes';
-const RECENT = { news: [], jokes: [] };
-function seenSet(key) { return new Set(RECENT[key] || []); }
-function remember(key, keys, cap) {
-  RECENT[key] = keys.concat(RECENT[key] || []).filter((k, i, a) => k && a.indexOf(k) === i).slice(0, cap);
-}
-try { ['seenNews', 'seenJokes', 'seen', 'gen'].forEach(k => localStorage.removeItem('replyNews.' + k)); } catch (e) {}
-function squash(text) { return String(text || '').toLowerCase().replace(/[\s　"'“”‘’「」『』（）()\[\]【】、。，．,.!?！？…・:：;；\-–—~〜ｗw]+/g, ''); }
-function newsKeys(row) {
-  const keys = ['h:' + squash(row.headline).slice(0, 60)];
-  const link = String(row.link || '').replace(/[?#].*$/, '');
-  if (link) keys.push('u:' + link.slice(0, 160));
-  return keys;
-}
-function jokeKeys(row) {
-  const keys = ['t:' + squash(row.text || row.headline).slice(0, 50)];
-  const id = String(row.link || row.url || '').match(/status(?:es)?\/(\d+)/);
-  if (id) keys.push('id:' + id[1]);
-  return keys;
-}
-function playingKeys() {
-  const keys = new Set();
-  ((S.script && S.script.items) || []).forEach(it => {
-    if (it.url) keys.add('u:' + String(it.url).replace(/[?#].*$/, '').slice(0, 160));
-    const id = String(it.url || '').match(/status(?:es)?\/(\d+)/);
-    if (id) keys.add('id:' + id[1]);
-    if (it.key) arr(it.key).forEach(k => keys.add(k));
-  });
-  return keys;
-}
-
-/* ---------- reports, chosen by this page's own fair rules ---------- */
-/* No search engine or ad ranking decides what plays. Reports come from open sources, newest first:
-   GDELT (an open database of news from sites around the world) and Wikipedia's current events,
-   written by volunteers. Then every genre gets the same share, one site gives at most two reports,
-   and the reports are drawn at random from what is left. */
-/* Each new video reads the media again, so new posts show. */
-function beginCollect() { if (typeof siteMemo !== 'undefined') siteMemo.clear(); }
-function mergeRows(first, second) {
-  const out = [];
-  const seen = new Set();
-  first.concat(second).forEach(r => {
-    const key = squash(r.headline).slice(0, 60);
-    if (!key || seen.has(key)) return;
-    seen.add(key);
-    out.push(r);
-  });
-  return out;
-}
-/* A report's title without the site's name at the end (… - 朝日新聞, … | site.jp). */
-function cleanTitle(title) {
-  const raw = String(title || '').replace(/\s+/g, ' ').trim();
-  const m = raw.match(/^(.*\S)\s+[-–—|｜]\s+([^|｜]{1,40})$/);
-  if (!m) return raw;
-  const tail = m[2].trim();
-  const site = /\.[a-z]{2,}$/i.test(tail) || (tail.split(/\s+/).length <= 4 && !/[.?!。？！]/.test(tail));
-  return site && m[1].length >= 8 ? m[1].trim() : raw;
-}
-let gdeltNext = 0;
-function gdeltRange() {
-  const d = pastDay().replace(/-/g, '');
-  return d ? `&startdatetime=${d}000000&enddatetime=${d}235959` : '&timespan=3d';
-}
-async function gdeltList(query, max) {
-  const wait = gdeltNext - Date.now();
-  if (wait > 0) await sleep(wait);
-  gdeltNext = Date.now() + 5200;
-  const url = 'https://api.gdeltproject.org/api/v2/doc/doc?query=' + encodeURIComponent(query) + '&mode=artlist&format=json&sort=datedesc&maxrecords=' + (max || 75) + gdeltRange();
+/* ---------- the talks: what was pasted ---------- */
+/* This page fetches nothing from outside: no search service, no news service, no translation.
+   A genre opens X's own search in a new tab. The post and the reply are copied there and pasted here,
+   and the video is made from them. They are kept in this browser only. */
+const charLen = t => [...String(t || '')].length;
+function uiLang() { const el = $('lang'); return el && el.value === 'en' ? 'en' : 'ja'; }
+let TALKS = [];
+function loadTalks() {
   try {
-    const res = await withTimeout(fetch(url), 10000);
-    const text = await res.text();
-    if (!res.ok || !text || text[0] !== '{') return [];
-    return (JSON.parse(text).articles || []).map(a => ({
-      headline: cleanTitle(a.title),
-      link: a.url || '', pubDate: a.seendate || '', source: a.domain || 'Web', domain: a.domain || '', cat: 'NEWS', web: true,
-    })).filter(r => r.headline && r.headline.length >= 8);
-  } catch (e) { console.warn(e); return []; }
+    const list = JSON.parse(store.get('talks', '[]'));
+    TALKS = (Array.isArray(list) ? list : []).filter(t => t && t.post && t.post.text).map(t => ({ post: t.post, replies: Array.isArray(t.replies) ? t.replies.filter(r => r && r.text) : [] }));
+  } catch (e) { TALKS = []; }
 }
-function wikiPlain(line) {
-  return String(line || '')
-    .replace(/<ref[^>]*\/>/g, '').replace(/<ref[^>]*>[\s\S]*?<\/ref>/g, '').replace(/\{\{[^{}]*\}\}/g, '')
-    .replace(/\[\[(?:[^\]|]*\|)?([^\]]+)\]\]/g, '$1').replace(/\[https?:\/\/\S+\s+([^\]]+)\]/g, '$1').replace(/\[https?:\/\/\S+\]/g, '')
-    .replace(/'{2,}/g, '').replace(/<[^>]+>/g, '').replace(/^[*#:;\s]+/, '').replace(/\s+/g, ' ').trim();
-}
-/* Wikipedia's current events: Portal:最近の出来事 in Japanese, the day's Portal:Current events pages in English. */
-const MONTH_EN = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-async function wikiNews() {
-  const lang = jokeLang();
-  const day = new Date((chosenDate() || todayJST()) + 'T12:00:00+09:00');
-  const pages = lang === 'en'
-    ? [0, 1].map(k => { const d = new Date(day.getTime() - k * 864e5); return 'Portal:Current_events/' + d.getFullYear() + '_' + MONTH_EN[d.getMonth()] + '_' + d.getDate(); })
-    : ['Portal:最近の出来事'];
-  const lists = await Promise.all(pages.map(async page => {
-    try {
-      const res = await withTimeout(fetch(`https://${lang}.wikipedia.org/w/api.php?action=parse&prop=wikitext&format=json&origin=*&page=` + encodeURIComponent(page)), 9000);
-      if (!res.ok) return [];
-      const wt = String((((await res.json()).parse || {}).wikitext || {})['*'] || '');
-      const home = `https://${lang}.wikipedia.org/wiki/` + encodeURIComponent(page);
-      return wt.split('\n').filter(l => /^\*/.test(l)).map(l => {
-        const ref = (l.match(/https?:\/\/[^\s|\]}<]+/) || [])[0] || '';
-        return { headline: wikiPlain(l), link: ref || home, pubDate: '', source: 'Wikipedia', domain: ref ? ((ref.match(/^https?:\/\/([^/]+)/) || [])[1] || 'wikipedia.org') : 'wikipedia.org', cat: 'NEWS', web: true };
-      }).filter(r => charLen(r.headline) >= (lang === 'en' ? 40 : 15) && charLen(r.headline) <= 220);
-    } catch (e) { console.warn(e); return []; }
-  }));
-  return lists.flat();
-}
-/* Reports for some genres (or the words of a free request), from Web and the media typed in. */
-async function webRows(opts) {
-  const lang = jokeLang();
-  const jobs = [];
-  const words = opts.words || (opts.genres || []).flatMap(g => shuffle(genreWords(g)).slice(0, 2));
-  const q = words.filter(w => w && [...w].length >= 2).map(w => (/\s/.test(w) ? `"${w}"` : w));
-  if (sourceOn('web') && q.length) {
-    say('Searching the web');
-    jobs.push(gdeltList(`(${q.join(' OR ')}) sourcelang:${lang === 'ja' ? 'japanese' : 'english'}`, 75));
-    if (!opts.words) jobs.push(wikiNews());
+function saveTalks() { store.set('talks', JSON.stringify(TALKS)); }
+/* What was pasted: the words, and who wrote them when a post's address or an @name line came with them. */
+function readPaste(raw) {
+  let text = String(raw || '').replace(/\r/g, '');
+  let handle = '';
+  let url = '';
+  const m = text.match(/https?:\/\/(?:mobile\.|www\.)?(?:x|twitter)\.com\/([A-Za-z0-9_]{1,15})\/status(?:es)?\/(\d+)\S*/i);
+  if (m && !/^(?:i|home|search|explore)$/i.test(m[1])) { handle = m[1]; url = 'https://x.com/' + m[1] + '/status/' + m[2]; }
+  text = text.replace(/https?:\/\/\S+/g, ' ');
+  let lines = text.split('\n').map(l => l.trim());
+  /* Copied with the name above it: the name, the @name, the dot and the time go. */
+  const at = lines.findIndex(l => /^@[A-Za-z0-9_]{1,15}$/.test(l));
+  if (at >= 0 && at <= 2) {
+    if (!handle) handle = lines[at].slice(1);
+    lines = lines.slice(at + 1);
+    while (lines.length > 1 && /^(?:·|・|\d+\s*(?:s|m|h|d|秒|分|時間|日)|[A-Z][a-z]{2}\s\d{1,2}(?:,\s*\d{4})?|\d{1,2}月\d{1,2}日|)$/.test(lines[0])) lines.shift();
   }
-  const rows = (await Promise.all(jobs)).flat();
-  return rows.filter(allowedRow);
+  lines = lines.filter(l => !/^(?:Replying to|返信先)\s*[:：]?\s*@/.test(l));
+  /* The counts under a post (replies, reposts, likes, views) go too. */
+  while (lines.length > 1 && /^[\d.,]+\s*[KM万]?$/i.test(lines[lines.length - 1])) lines.pop();
+  text = lines.join('\n').replace(/^(?:@[A-Za-z0-9_]{1,15}\s+)+/, '').replace(/[ \t　]+/g, ' ').replace(/\n{2,}/g, '\n').trim();
+  return { text, handle, url };
 }
-/* Fair choice: the same share for each genre, at most two per site, drawn at random. */
-function fairPick(rows, need, genres, used) {
-  const { country } = market();
-  const past = seenSet(SEEN_NEWS);
-  const now = playingKeys();
-  const buckets = new Map();
-  mergeRows(rows, []).forEach(r => {
-    const keys = newsKeys(r);
-    if (keys.some(k => past.has(k) || now.has(k) || used.has(k))) return;
-    const g = matchedGenre(r.headline, country.id);
-    const rec = g && genres.find(x => x.id === g.id);
-    const id = rec ? rec.id : 'other';
-    if (!buckets.has(id)) buckets.set(id, []);
-    buckets.get(id).push({ ...r, place: rec ? rec.place : 'middle', cat: rec ? up(rec.name) : 'NEWS' });
-  });
-  const lists = shuffle([...buckets.values()].map(list => shuffle(list)));
-  const out = [];
-  const perSite = {};
-  /* At most two per site, or more when there are only a few sites (one medium typed in). */
-  const sites = new Set([...buckets.values()].flat().map(r => r.domain || r.source || 'web')).size || 1;
-  const cap = Math.max(2, Math.ceil(need / sites));
-  for (let round = 0; out.length < need && lists.some(l => l.length) && round < 200; round++) {
-    lists.forEach(l => {
-      while (out.length < need && l.length) {
-        const r = l.shift();
-        const site = r.domain || r.source || 'web';
-        if ((perSite[site] || 0) >= cap) continue;
-        perSite[site] = (perSite[site] || 0) + 1;
-        newsKeys(r).forEach(k => used.add(k));
-        out.push(r);
-        break;
-      }
-    });
-  }
-  const band = { top: 0, middle: 1, bottom: 2 };
-  return out.sort((a, b) => (band[a.place] ?? 1) - (band[b.place] ?? 1));
-}
-async function webNews(used, need) {
-  if (!need || (!sourceOn('web') && !mediaList().length)) return [];
-  const genres = genreChoices().filter(g => g.on && GENRE_WORDS[g.id]);
-  /* Media typed in come first (newest from each); Web fills the rest by the fair rules. */
-  const fromMedia = newestBySite(await mediaRows(), sourceOn('web') ? Math.ceil(need / 2) : need, used);
-  const rest = need - fromMedia.length;
-  const fromWeb = rest > 0 && sourceOn('web') ? fairPick(await webRows({ genres }), rest, genres, used) : [];
-  return fromMedia.concat(fromWeb);
-}
-/* ---------- media typed in: news sites, company and school homepages ---------- */
-/* A browser may not read another site directly. The page then asks a plain relay to pass it through;
-   the relays only carry the page and choose nothing. The newest posts are read from the site's own
-   feed (RSS or Atom), found on its homepage, or else from dated links on the page itself. */
-const RELAYS = [
-  u => u,
-  u => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u),
-  u => 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(u),
-  u => 'https://corsproxy.io/?url=' + encodeURIComponent(u),
-];
-const siteMemo = new Map();
-async function fetchSite(url, first) {
-  const order = first ? [first].concat(RELAYS.filter(r => r !== first)) : RELAYS;
-  for (const via of order) {
-    try {
-      const res = await withTimeout(fetch(via(url)), 9000);
-      if (!res.ok) continue;
-      const text = await res.text();
-      if (text && text.length > 120) return { text, via };
-    } catch (e) { /* the next relay */ }
-  }
-  return { text: '', via: null };
-}
-function mediaUrl(m) {
-  const raw = String(m || '').trim();
-  if (/^https?:\/\//i.test(raw)) return raw;
-  const d = domainOf(raw);
-  return d && /\./.test(d) ? 'https://' + d + '/' : '';
-}
-function siteName(m) {
-  const raw = String(m || '').trim();
-  return /^https?:\/\//i.test(raw) || /\.[a-z]{2,}/i.test(raw) ? (domainOf(raw) || raw) : raw;
-}
-function absUrl(href, base) { try { return new URL(String(href || '').trim(), base).href; } catch (e) { return ''; } }
-function kidText(n, names) {
-  for (const c of n.children) if (names.includes(c.localName)) return (c.textContent || '').replace(/\s+/g, ' ').trim();
-  return '';
-}
-/* Items of an RSS, RDF or Atom feed. */
-function feedItems(xml, base) {
-  if (!/<(rss|feed|rdf:RDF)\b/i.test(xml.slice(0, 2000))) return [];
-  const doc = new DOMParser().parseFromString(xml, 'text/xml');
-  if (doc.getElementsByTagName('parsererror').length) return [];
-  return [...doc.getElementsByTagName('*')].filter(n => n.localName === 'item' || n.localName === 'entry').map(n => {
-    let link = '';
-    for (const c of n.children) {
-      if (c.localName !== 'link') continue;
-      const rel = c.getAttribute('rel');
-      if (c.getAttribute('href') && (!rel || rel === 'alternate')) { link = c.getAttribute('href'); break; }
-      if (!link && c.textContent.trim()) link = c.textContent.trim();
-    }
-    link = link || n.getAttribute('rdf:about') || kidText(n, ['guid', 'id']);
-    return { title: kidText(n, ['title']), link: absUrl(link, base), date: kidText(n, ['pubDate', 'published', 'updated', 'date', 'issued']) };
-  }).filter(it => it.title && it.link);
-}
-/* Feeds a homepage names in its head, or links to. */
-function feedLinks(html, base) {
-  const doc = new DOMParser().parseFromString(html, 'text/html');
-  const head = [...doc.querySelectorAll('link[rel~="alternate"]')].filter(l => /rss|atom|rdf|xml/i.test(l.getAttribute('type') || '')).map(l => l.getAttribute('href'));
-  const body = [...doc.querySelectorAll('a[href]')].map(a => a.getAttribute('href')).filter(h => /(?:^|[/._-])(rss|atom|feed)(?:[/._-]|$)|\.rdf$/i.test(h || ''));
-  return [...new Set(head.concat(body).map(h => absUrl(h, base)).filter(u => /^https?:/.test(u)))].slice(0, 3);
-}
-/* Dated links on the page itself (お知らせ, News, プレスリリース lists): a link with a date beside it. */
-const DATE_RE = /(20\d{2})\s*[.\/年-]\s*(\d{1,2})\s*[.\/月-]\s*(\d{1,2})\s*日?/;
-function pageItems(html, base) {
-  const doc = new DOMParser().parseFromString(html, 'text/html');
-  doc.querySelectorAll('script, style, nav, header, footer, noscript').forEach(n => n.remove());
-  const out = [];
-  const seen = new Set();
-  doc.querySelectorAll('a[href]').forEach(a => {
-    const link = absUrl(a.getAttribute('href'), base);
-    const raw = (a.textContent || '').replace(/\s+/g, ' ').trim();
-    if (!/^https?:/.test(link) || seen.has(link)) return;
-    let date = '';
-    let box = a;
-    for (let up = 0; up < 4 && box && !date; up++) {
-      const near = (box.textContent || '').replace(/\s+/g, ' ');
-      const prev = box.previousElementSibling ? box.previousElementSibling.textContent || '' : '';
-      if (near.length <= 400) { const m = (near.match(DATE_RE) || prev.match(DATE_RE)); if (m) date = `${m[1]}-${String(m[2]).padStart(2, '0')}-${String(m[3]).padStart(2, '0')}`; }
-      box = box.parentElement;
-    }
-    const title = raw.replace(DATE_RE, '').replace(/^(NEW|新着|お知らせ|ニュース|NEWS|プレスリリース|IR|PR|イベント|重要)\s*/i, '').trim();
-    if (!date || charLen(title) < 8 || charLen(title) > 120) return;
-    seen.add(link);
-    out.push({ title, link, date });
-  });
-  return out;
-}
-/* The newest posts of one medium. */
-async function siteRows(m) {
-  const url = mediaUrl(m);
-  const host = domainOf(m);
-  const name = siteName(m);
-  if (siteMemo.has(m)) return siteMemo.get(m);
-  const job = (async () => {
-    let items = [];
-    if (url) {
-      const home = await fetchSite(url);
-      if (home.text) {
-        items = feedItems(home.text, url);
-        if (!items.length) {
-          for (const f of feedLinks(home.text, url)) {
-            const feed = await fetchSite(f, home.via);
-            items = feedItems(feed.text, f);
-            if (items.length) break;
-          }
-        }
-        if (!items.length) items = pageItems(home.text, url);
-      }
-    }
-    let rows = items.map(it => ({ headline: cleanTitle(it.title), link: it.link, pubDate: it.date, source: name, domain: host, cat: 'NEWS', web: true, media: true, corner: name }));
-    /* A news site that gives nothing directly: its reports in GDELT. */
-    if (rows.length < 3 && host && /\./.test(host)) rows = rows.concat((await gdeltList('domain:' + host, 30)).map(r => ({ ...r, source: name, media: true, corner: name })));
-    const t = r => { const v = Date.parse(r.pubDate || ''); return isNaN(v) ? 0 : v; };
-    return mergeRows(rows, []).filter(r => r.headline && charLen(r.headline) >= 6).sort((a, b) => t(b) - t(a)).slice(0, 20);
-  })();
-  siteMemo.set(m, job);
-  return job;
-}
-async function mediaRows(opts) {
-  const list = mediaList();
-  if (!list.length) return [];
-  say('Reading ' + list.join(', '));
-  let rows = (await Promise.all(list.map(m => siteRows(m).catch(e => { console.warn(e); return []; })))).flat();
-  if (opts && opts.words) {
-    const low = opts.words.map(w => w.toLowerCase());
-    rows = rows.filter(r => low.some(w => r.headline.toLowerCase().includes(w)));
-  }
-  return rows.filter(allowedRow);
-}
-/* Newest first from each medium, taking turns, so every medium shows. */
-function newestBySite(rows, need, used) {
-  const past = seenSet(SEEN_NEWS);
-  const now = playingKeys();
-  const by = new Map();
-  rows.forEach(r => {
-    if (newsKeys(r).some(k => past.has(k) || now.has(k) || used.has(k))) return;
-    const site = r.domain || r.source;
-    if (!by.has(site)) by.set(site, []);
-    by.get(site).push(r);
-  });
-  const lists = [...by.values()];
-  const out = [];
-  for (let k = 0; out.length < need && lists.some(l => l.length); k++) {
-    const l = lists[k % lists.length];
-    if (!l.length) continue;
-    const r = l.shift();
-    newsKeys(r).forEach(x => used.add(x));
-    out.push({ ...r, place: 'top' });
-  }
-  return out;
-}
-/* Update speed, Fast: fewer searches and shorter waits, so a new video comes sooner. */
-function fast() { const el = $('speed'); return !!el && el.value === 'fast'; }
-/* A search that takes too long is left out; the others go on. */
-function within(job, ms, empty) {
-  return withTimeout(Promise.resolve(job), ms).catch(e => { console.warn(e); return empty; });
-}
-/* Words like the one typed, for when it finds nothing: しょうゆこと gives しょうゆ. */
-function looser(text, lang) {
-  const t = String(text || '').trim();
-  const out = [];
-  const add = w => { w = String(w || '').trim(); if ([...w].length >= 2 && w !== t && out.indexOf(w) < 0) out.push(w); };
-  const parts = t.split(/[\s　、・,]+/).filter(Boolean);
-  if (parts.length > 1) { add(parts[0]); add(parts.slice().sort((a, b) => b.length - a.length)[0]); return out.slice(0, 2); }
-  if (lang === 'en' || !CJK.test(t)) return out;
-  try {
-    if (Intl.Segmenter) {
-      const segs = [...new Intl.Segmenter('ja', { granularity: 'word' }).segment(t)].filter(x => x.isWordLike !== false).map(x => x.segment);
-      if (segs.length > 1) { add(segs.slice(0, -1).join('')); add(segs[0]); add(segs.slice().sort((a, b) => b.length - a.length)[0]); }
-    }
-  } catch (e) {}
-  const ch = [...t];
-  if (ch.length >= 4) { add(ch.slice(0, Math.ceil(ch.length * 2 / 3)).join('')); add(ch.slice(0, Math.ceil(ch.length / 2)).join('')); }
-  return out.slice(0, 2);
-}
-/* The search service refuses for a while when it is asked too much (it answers 404; a search that simply
-   finds nothing answers 200). Three refusals in a row: searches rest for a minute and a half instead of
-   asking again and again, which only makes the wait longer. */
-const QUIET = { streak: 0, until: 0 };
-function searchResting() { return Date.now() < QUIET.until; }
-async function fxJson(url) {
-  const search = url.indexOf('/2/search') >= 0;
-  if (search && searchResting()) return null;
-  let data = null;
-  let status = 0;
-  try {
-    const res = await withTimeout(fetch(url), fast() ? 5000 : 9000);
-    status = res.status;
-    if (res.ok) data = await res.json();
-  } catch (e) {
-    if (!search) throw e;
-  }
-  if (search) {
-    if (status === 200 && (!data || data.code === undefined || data.code === 200)) QUIET.streak = 0;
-    else if (++QUIET.streak >= 3) { QUIET.streak = 0; QUIET.until = Date.now() + 90000; }
-  }
-  return data;
-}
-function rowFromStatus(st) {
-  if (!st || (st.type && st.type !== 'status')) return null;
-  const author = String((st.author && st.author.screen_name) || '').replace(/^@+/, '');
-  const text = String(st.text || '').replace(/https?:\/\/\S+/g, ' ').replace(/@\w+/g, ' ').replace(/[#＃][^\s#＃]+/g, ' ').replace(/\s+/g, ' ').trim();
-  if (!author || text.length < 12 || (violentHidden() && VIOLENT.test(text)) || sensitive(text, st)) return null;
-  return { headline: text.slice(0, 480), link: st.url || ('https://x.com/' + author), pubDate: st.created_at || '', cat: 'X', source: 'X @' + author, x: true };
-}
-async function searchPosts(query) {
-  const data = await fxJson('https://api.fxtwitter.com/2/search?q=' + encodeURIComponent(query));
-  const out = [];
-  ((data && data.results) || []).forEach(st => { const r = rowFromStatus(st); if (r) out.push(r); });
-  return out;
-}
-function lineupText() { return $('lineup').value; }
-function lineName(line) { return String(line || '').replace(/^\s*\d+\s*[\.\)、]\s*/, '').split(/[,、]/)[0].trim().toLowerCase(); }
-function parseLineup(text) {
-  const slots = [];
-  String(text || '').split(/\n/).forEach(raw => {
-    const s = noCount(raw);
-    if (!s) return;
-    slots.push(Object.assign({ count: 1 }, classifyRequest(s)));
-  });
-  return slots.slice(0, 12);
-}
-/* A genre name shown in Japanese means the same genre as its English name. */
-function enName(text) {
-  const s = String(text || '').trim();
-  if (!window.UIJA) return s;
-  const hit = CHIPS.find(c => UIJA.tr(c.label) === s);
-  return hit ? hit.label : s;
-}
-function chipKey(line) {
-  return enName(String(line || '').replace(/^\s*\d+\s*[\.\)、]\s*/, '').split(/[,、]/)[0]).toLowerCase();
-}
-function chipLine(chip) {
-  if (!window.UIJA || $('lang').value !== 'ja') return chip.label;
-  return UIJA.tr(chip.label);
-}
-function classifyRequest(text) {
-  const name = enName(text);
-  const low = name.toLowerCase();
-  if (/joke|humou?r|funny|coffee|ジョーク|笑い|ユーモア|ネタ|コーヒー/.test(low)) return { type: 'jokes', label: name };
-  if (/romance|love|couple|dating|恋愛|カップル|恋人|夫婦/.test(low)) return { type: 'romance', cat: 'ROMANCE', label: name };
-  if (/travel|trip|tourism|sightseeing|観光|旅行|名所/.test(low)) return { type: 'travel', cat: 'TRAVEL', label: name };
-  if (/マスク|elon|\bmusk\b/.test(low)) return { type: 'x', q: 'from:elonmusk', who: 'elonmusk', topic: 'Elon Musk', cat: 'X', label: name };
-  if (/spacex|スペース\s*x|スペースｘ/.test(low)) return { type: 'x', q: 'from:SpaceX', who: 'spacex', topic: 'SpaceX', cat: 'SPACEX', label: name };
-  if (/(?:^|\s)x\s*$|エックス\s*$|twitter\s*$/i.test(name)) {
-    const topic = name.replace(/\s*(?:on\s+)?(?:x|twitter|エックス)\s*$/i, '').trim();
-    return { type: 'x', q: topic || 'news', topic: topic || 'news', cat: 'X', label: name };
-  }
-  if (/食文化|food culture|^food$|食べ物/.test(low)) return Object.assign(requestForGenre(GENRES.find(g => g.id === 'food')), { label: name });
-  if (/レストラン|^restaurant$/.test(low)) return Object.assign(requestForGenre(GENRES.find(g => g.id === 'restaurant')), { label: name });
-  const genre = GENRES.find(g => g.name.toLowerCase() === low || (g.q.JP && name.includes(g.q.JP.split(' ')[0]) && g.q.JP.split(' ')[0].length > 1));
-  if (genre) return Object.assign(requestForGenre(genre), { label: name });
-  if (/スポーツ|^sports$/.test(low)) return requestForGenre(GENRES.find(g => g.id === 'sports'));
-  /* Anything else is a free request (渋谷, 2002年のワールドカップ決勝): posts about it, read with the help of Wikipedia. */
-  return { type: 'gdelt', q: name, cat: name.toUpperCase().slice(0, 16), source: 'News', label: name, free: true };
-}
-function requestForGenre(g) {
-  const name = g.name;
-  if (g.id === 'romance') return { type: 'romance', cat: 'ROMANCE', label: name };
-  if (g.id === 'travel') return { type: 'travel', cat: 'TRAVEL', label: name };
-  return { type: 'genre', genre: g.id, cat: up(name), label: name };
-}
-function allowedRow(r) {
-  if (!r || !r.headline) return false;
-  if (violentHidden() && VIOLENT.test(r.headline)) return false;
-  if (sensitive(r.headline)) return false;
+function talkCards(t, langId) { return threadCards({ thread: true, story: { post: t.post, replies: t.replies } }, langId); }
+/* A new talk goes first, so the video starts with it. When the video is full, the oldest talk leaves. */
+function addTalk(postRaw, replyRaw) {
+  const post = readPaste(postRaw);
+  if (!post.text) return false;
+  const replies = String(replyRaw || '').replace(/\r/g, '').split(/\n[ \t]*\n/).map(readPaste).filter(r => r.text).slice(0, 4);
+  TALKS.unshift({ post, replies });
+  const langId = uiLang();
+  while (TALKS.length > 1 && TALKS.reduce((k, t) => k + talkCards(t, langId).length, 0) > MAX_ITEMS) TALKS.pop();
+  saveTalks();
   return true;
 }
-async function rowsForSlot(slot) {
-  let rows = [];
-  try {
-    if (slot.type === 'x') {
-      if (!sourceOn('x')) return [];
-      rows = (await searchPosts(slot.q + xRange())).map(r => ({ ...r, cat: slot.cat || 'X' }));
-    } else if (slot.type === 'genre') {
-      const g = GENRES.find(x => x.id === slot.genre);
-      rows = g ? await webRows({ genres: [g] }) : [];
-    } else if (slot.free) {
-      const words = termsOf(slot.label, jokeLang());
-      rows = (await mediaRows({ words })).concat(await webRows({ words }));
-    }
-  } catch (e) { console.warn(e); }
-  return rows.filter(allowedRow);
+function makeScript() {
+  const langId = uiLang();
+  const items = TALKS.flatMap(t => talkCards(t, langId)).slice(0, MAX_ITEMS);
+  return items.length ? { date: todayJST(), items } : null;
 }
-/* Fresh rows only: not played before, not playing now, not picked already. */
-function freshRows(rows, used) {
-  const past = seenSet(SEEN_NEWS);
-  const now = playingKeys();
-  return rows.filter(r => {
-    const keys = newsKeys(r);
-    return !keys.some(k => past.has(k) || now.has(k) || used.has(k));
-  });
-}
-function takeRows(rows, used, count, perSource) {
-  const out = [];
-  const bySource = {};
-  const pass = limit => rows.forEach(r => {
-    if (out.length >= count) return;
-    const keys = newsKeys(r);
-    if (keys.some(k => used.has(k))) return;
-    const src = r.source || 'News';
-    if (limit && (bySource[src] || 0) >= limit) return;
-    bySource[src] = (bySource[src] || 0) + 1;
-    keys.forEach(k => used.add(k));
-    out.push(r);
-  });
-  pass(perSource || 0);
-  if (perSource) pass(0);
-  return out;
-}
-/* An empty lineup: reports for all genres, chosen fairly (see fairPick). */
-async function homeNews(used, need) { return webNews(used, need); }
-
-/* ---------- jokes ---------- */
-/* The laughing words searched for also change, so one way of laughing does not lead. */
-const FUNNY_QS = {
-  ja: ['(笑 OR 草 OR ワロタ OR 面白い)', '(笑 OR ウケる OR 冗談)', '(草 OR www OR 面白い)', '(笑った OR 爆笑 OR ワロタ)', '(😂 OR 🤣 OR 笑)'],
-  en: ['(lol OR lmao OR haha OR hilarious)', '(lol OR 😂 OR 🤣)', '(lmao OR "I\'m dead" OR hilarious)', '(haha OR hahaha OR lol)'],
-};
-/* Words that fit any day; three are drawn each time. */
-const ANY_Q = {
-  ja: ['ニュース', '今日', '話題', 'トレンド', '天気', '電車', '仕事', '学校', '家族', '買い物', '休日', 'ペット', '猫', '犬', '朝', '夜', '実家', '会社', 'コンビニ', '寝坊'],
-  en: ['news', 'today', 'trending', 'weird', 'weather', 'commute', 'work', 'my boss', 'family', 'shopping', 'weekend', 'my cat', 'my dog', 'morning', 'my mom', 'my dad', 'roommate', 'office', 'grocery store', 'overslept'],
-};
-function isFunny(text, lang) {
-  if (lang === 'en') return /\b(lol|lmao|lmfao|rofl|haha\w*|hilarious|i'?m dead|dying)\b|😂|🤣|💀|😆/i.test(text);
-  const t = String(text || '').replace(/笑顔|笑み|民草|草の根/g, '');
-  return /笑|ワロタ|ワロ[^ッ]|草草|(?:^|[\s　、。！？(（])草(?:$|[\s　、。！？)）])|[てでにのが]草(?=$|[\s　、。！？)）ｗw]|$)|ｗ{2,}|w{2,}|😂|🤣|😆|😅|面白い|冗談|ウケる/.test(t);
-}
-/* Comments that never play: adult words, minors, abuse. */
-/* Sexual words: only couples' talk may have them, and only with Hide sensitive posts off. */
-const ADULT = /セックス|エッチ|えっち|ｴｯﾁ|エロ|下ネタ|ヤる|ヤれ|体位|下着|裸|おっぱい|乳首|ちんこ|ちんちん|まんこ|射精|中出し|勃起|ムラムラ|性欲|童貞|処女|ラブホ|\bsex|nsfw|nude|naked|horny|kinky/i;
-/* Never, in any setting: minors, abuse and coercion, sex work and porn. */
-const NEVER = /ヤリモク|風俗|パパ活|ママ活|援交|AV女優|アダルト|porn|onlyfans|中学|小学|ＪＫ|ＪＣ|ＪＳ|\bJ[KCS]\b|高校生|女子高生|男子高生|未成年|ロリ|ショタ|\bteen|high school|middle school|underage|\bloli|\bshota|ＤＶ|\bDV\b|モラハラ|殴られ|abuse|レイプ|強姦|無理やり|盗撮|痴漢/i;
-/* Children: fine in everyday couple talk, never next to anything sexual. */
-const CHILD = /子供|子ども|こども|息子|娘|園児|赤ちゃん|\bkids?\b|\bchild|\bson\b|\bdaughter\b/i;
-const UNSAFE = new RegExp(ADULT.source + '|' + NEVER.source, 'i');
-/* School life: fine in everyday talk, never next to anything suggestive. */
-const YOUTH = /学校|放課後|部活|修学旅行|制服|受験|担任|学年|文化祭|体育祭|\bschool\b|\bprom\b|\bhomework\b|\bgrade\b/i;
-/* Accounts that say they are under 18 are never used for Romance. */
-const MINOR_BIO = /(?:^|[^0-9])1[0-7]\s*(?:歳|才|y\/?o\b|years? old)|高[1-3１-３一二三](?:$|[^0-9０-９])|中[1-3１-３一二三](?:$|[^0-9０-９])|高校生|中学生|ＪＫ|ＪＣ|\bJ[KC]\b|\bminor\b|\bunder ?18\b|\bteen\b/i;
-function minorAccount(st) {
-  const a = st && st.author;
-  return MINOR_BIO.test(String((a && (a.description || a.bio)) || '') + ' ' + String((a && a.name) || ''));
-}
-function suggestive(text, st) { return ADULT.test(text) || SUGGESTIVE.test(text) || flagged(st); }
-function postText(st) {
-  return String((st && st.text) || '').replace(/https?:\/\/\S+/g, ' ').replace(/@\w+/g, ' ').replace(/[#＃]\S+/g, ' ').replace(/\s+/g, ' ').trim();
-}
-function replyOf(st, lang) {
-  const author = String((st && st.author && st.author.screen_name) || '').replace(/^@+/, '');
-  if (!author) return null;
-  let text = postText(st);
-  if (UNSAFE.test(text)) return null;
-  if (violentHidden() && VIOLENT.test(text)) return null;
-  if (sensitive(text, st)) return null;
-  if (lang === 'en') {
-    if ((text.match(/[぀-ヿ一-鿿]/g) || []).length > 2 || !/[A-Za-z]{3,}/.test(text) || text.length < 12) return null;
-    if (/\b(rip|rest in peace|condolences|passed away)\b/i.test(text)) return null;
-  } else {
-    if ((text.match(/[぀-ヿ]/g) || []).length < 1) return null;
-    const at = text.search(/[぀-ヿ一-鿿]/);
-    if (at > 0) {
-      const lead = text.slice(0, at).trim();
-      if (lead.split(/\s+/).filter(w => /[A-Za-z]{4,}/.test(w)).length >= 2) text = text.slice(at);
-    }
-    if ([...text].length < 8 || /ご冥福|追悼|亡くな|お悔やみ|ご逝去|死去/.test(text)) return null;
-  }
-  if (!isFunny(text, lang) || TOXIC.test(text)) return null;
-  /* The whole comment always plays; one too long to read on a card is left out instead of cut. */
-  if (charLen(text) > (lang === 'en' ? 200 : 70)) return null;
-  const url = (st && st.url) || '';
-  return { handle: author, text, url, link: url, lang };
-}
-function humorScore(text, headlines, lang) {
-  let score = 0;
-  const funny = lang === 'en'
-    ? /\b(lol|lmao|haha\w*|hilarious|dead|joke|bruh)\b|😂|🤣|😆|😭|💀/i.test(text)
-    : /笑|草|ワロタ|ワロ|ウケ|ネタ|やば|マジ|でかっ|でっかい|かわい|面白い|ジョーク|皮肉|ｗ{2,}|w{2,}|😂|🤣|😆|😅|😭|〜|～/.test(text);
-  if (funny) score += 8;
-  if (/[！？!?]{2,}/.test(text)) score += 2;
-  const n = [...text].length;
-  if (lang === 'en') { if (n >= 20 && n <= 120) score += 3; else if (n > 200) score -= 5; }
-  else { if (/[゠-ヿ]{3,}/.test(text)) score += 2; if (n >= 8 && n <= 42) score += 3; else if (n > 70) score -= 5; }
-  if (/市況|株価|金利|為替|首相|政府|発表しました|によると|％|パーセント|\bpercent\b|according to|officials said/i.test(text)) score -= 6;
-  const bits = lang === 'en' ? (text.toLowerCase().match(/[a-z]{5,}/g) || []) : (text.match(/[゠-ヿ]{2,}|[一-鿿]{2,}/g) || []);
-  const blob = (headlines || []).join('\n').toLowerCase();
-  let hit = 0;
-  bits.forEach(b => { if (blob.includes(b.toLowerCase())) hit++; });
-  const over = bits.length ? hit / bits.length : 0;
-  if (over > 0.55 && !funny) score -= 6;
-  else if (over > 0.12) score += 2;
-  return score + Math.random();
-}
-function keywordsFor(headline, lang) {
-  const text = String(headline || '');
-  if (CJK.test(text)) {
-    const chunks = text.match(/[゠-ヿ]{2,}|[一-鿿]{2,}/g) || [];
-    const out = [];
-    chunks.forEach(c => {
-      const word = /[゠-ヿ]/.test(c[0]) ? c.slice(0, 8) : c.slice(0, 2);
-      if (word.length < 2 || /^(日本|今日|本日|政府|発表|首相|大統領|東京|大阪|京都|世界|会社|大学|ニュース)$/.test(word)) return;
-      if (out.indexOf(word) < 0) out.push(word);
-    });
-    return out.slice(0, 2);
-  }
-  const names = (text.match(/\b[A-Z][a-zA-Z]{3,}\b/g) || []).filter(w => !STOP.has(w.toUpperCase()));
-  const words = (text.match(/\b[a-zA-Z]{5,}\b/g) || []).filter(w => !STOP.has(w.toUpperCase()));
-  const out = [];
-  names.concat(words).forEach(w => { if (out.length < 2 && out.indexOf(w) < 0) out.push(w); });
-  return out;
-}
-function pickFunny(rows, n) {
-  /* Good jokes are drawn at random, not by rank; the weaker ones come only after them. */
-  const good = rows.filter(r => r.score >= 8);
-  const ranked = shuffle(good).concat(rows.filter(r => r.score < 8).sort((a, b) => b.score - a.score || a.text.length - b.text.length));
-  const out = [];
-  const handles = new Set();
-  /* One search gives only its share, so the jokes come from many different searches. */
-  const qOf = row => row.q || row.topic || '';
-  const cap = Math.max(1, Math.ceil(n / Math.max(1, new Set(rows.map(qOf)).size)));
-  const perQ = new Map();
-  const take = (allowSame, capped) => ranked.forEach(row => {
-    if (out.length >= n || out.indexOf(row) >= 0) return;
-    const who = row.handle.toLowerCase();
-    if (!allowSame && handles.has(who)) return;
-    if (capped && (perQ.get(qOf(row)) || 0) >= cap) return;
-    handles.add(who);
-    perQ.set(qOf(row), (perQ.get(qOf(row)) || 0) + 1);
-    out.push(row);
-  });
-  take(false, true);
-  if (out.length < n) take(true, true);
-  if (out.length < n) take(false, false);
-  if (out.length < n) take(true, false);
-  /* Two jokes from the same search do not play one after the other. */
-  const groups = new Map();
-  out.forEach(row => { const q = qOf(row); if (!groups.has(q)) groups.set(q, []); groups.get(q).push(row); });
-  const lists = [...groups.values()];
-  const mixed = [];
-  while (lists.some(l => l.length)) lists.forEach(l => { if (l.length) mixed.push(l.shift()); });
-  return mixed;
-}
-/* Funny posts about the topics. Jokes that played before are skipped, and more searches run until enough are new. */
-async function collectJokes(topics, need, opts) {
-  if (!need || !sourceOn('x')) return [];
-  const lang = jokeLang();
-  const replies = !(opts && opts.posts);
-  const past = seenSet(SEEN_JOKES);
-  const now = playingKeys();
-  const queries = [];
-  const baseOf = new Map();
-  const addQ = (q, base) => { if (q && queries.indexOf(q) < 0) { queries.push(q); baseOf.set(q, base || q); } };
-  /* Each word: two different searches (サッカー 試合, サッカー), changing every time.
-     The words are searched in a random order: every word once, then their second searches. */
-  const words = shuffle([...new Set(topics.map(t => String(t).trim()).filter(Boolean))]);
-  const second = [];
-  words.forEach(t => {
-    if (/^to:/.test(t)) { addQ(t, t); return; }
-    const v = variantsFor(t, [], lang, words.length <= 6 ? 2 : 1, 'joke');
-    addQ(v[0], t);
-    if (v[1]) second.push([v[1], t]);
-  });
-  const firstRound = queries.length;
-  shuffle(second).forEach(([q, t]) => addQ(q, t));
-  if (!(opts && opts.only)) rotate(ANY_Q[lang] || ANY_Q.en, 'any:' + lang, 3).forEach(q => addQ(q));
-  /* Today's video: half of the searches look at a day drawn at random from the last few days,
-     so the same newest posts do not come back every time. */
-  const dayOf = new Map();
-  const range = q => {
-    if (xRange() || !(opts && opts.anyDay)) return xRange();
-    if (!dayOf.has(q)) {
-      const d = addDays(todayJST(), -(1 + Math.floor(Math.random() * 5)));
-      dayOf.set(q, Math.random() < 0.5 ? '' : ' since:' + d + ' until:' + addDays(d, 1));
-    }
-    return dayOf.get(q);
-  };
-  const build = q => `${q} ${pick(FUNNY_QS[lang] || FUNNY_QS.en)} ${replies && !/^to:/.test(q) ? 'filter:replies ' : ''}lang:${lang}${range(q)}`;
-  const headlines = (opts && opts.headlines) || [];
-  const rows = [];
-  const keys = new Set();
-  for (let i = 0; i < queries.length && (rows.length < need * 2 || (!fast() && i < Math.min(firstRound, 12))) && i < (fast() ? 12 : 24); i += 6) {
-    if (S.again) break;
-    const batch = queries.slice(i, i + 6);
-    const lists = await Promise.all(batch.map(q => fxJson('https://api.fxtwitter.com/2/search?q=' + encodeURIComponent(build(q))).then(d => ((d && d.results) || []).map(st => ({ st, q }))).catch(() => [])));
-    lists.flat().forEach(({ st, q }) => {
-      const got = replyOf(st, lang);
-      if (!got) return;
-      /* For a free request, a joke must be about it. */
-      const must = (opts && opts.must) || [];
-      if (must.length && !must.some(w => (got.text + ' ' + String((st && st.text) || '')).toLowerCase().includes(w))) return;
-      got.topic = baseOf.get(q) || q;
-      got.id = statusId(st);
-      got.parent = parentOf(st);
-      got.q = q;
-      const ks = jokeKeys(got);
-      if (ks.some(k => past.has(k) || now.has(k) || keys.has(k))) return;
-      ks.forEach(k => keys.add(k));
-      got.score = humorScore(got.text, headlines, lang);
-      rows.push(got);
-    });
-  }
-  return pickFunny(rows, need);
-}
-
-/* ---------- talk: a person's post about the genre, then what someone replied ---------- */
-/* Fighting words: neither the post nor the reply may have them. */
-const TOXIC = /バカ|ばか(?!り)|馬鹿|アホ|あほ(?!う)|阿呆|クズ|カス(?![タテ])|キモ[いイッ]|きも[いっ]|気持ち悪|気色[わ悪]|ウザ|うざ[いっ]|消えろ|黙れ|だまれ|お前|おまえ|てめ[えぇー]|貴様|低脳|低能|無能|老害|痴呆|キチガイ|ガイジ|チー牛|ブス|デブ|ババア|ジジイ|嘘つき|ウソつき|うそつき|捏造|売国|反日|左翼|右翼|パヨク|ネトウヨ|恥を知|頭悪|頭おかし|\b(?:idiot|stupid|moron|dumb|loser|trash|shut up|stfu|libtard|clown)\b/i;
-/* Greetings say little; a post that is one is left out, and a reply that is only one too. */
-const GREET = /^[\s\p{Extended_Pictographic}️]*(?:おは|オハ|こんにち|こんばん|おやす|おつ|お疲れ|おめで|ありがと|はじめまして|初めまして|good morning|gm\b|good night|congrat|thank)|良い一日|よい一日|良い1日|素敵な(?:一日|1日|週末)|今日も(?:一日|1日)?(?:頑張|がんば|よろしく)|よろしくお願い|フォロー(?:ありがとう|失礼|させて)|have a (?:great|good|nice) day/iu;
-/* Injuries and losses are not for jokes. */
-const GLOOM = /骨折|折って|怪我|ケガ|手術|通院|発熱|インフル|コロナ|訃報|葬儀|お葬式|遺影|倒産|解雇|失業|借金|離婚|亡き|\b(?:injur|surgery|funeral|divorce|laid off|fired)\w*/i;
-/* Media, companies and offices: the first post is a person's own words. */
-const OFFICIAL = /公式|official|ニュース|新聞|news|報道|速報|通信社|放送|テレビ|編集部|広報|株式会社|\bbot\b|情報局|まとめ|運営|事務局|shop|store/i;
-function personal(st) {
-  const a = (st && st.author) || {};
-  const v = (a.verification && a.verification.type) || '';
-  if (v === 'organization' || v === 'government') return false;
-  return !OFFICIAL.test(String(a.name || '') + ' ' + String(a.screen_name || ''));
-}
-/* A post that can open a talk: a person's own post (not a reply or a quote), short enough to read whole. */
-function talkPost(st, lang) {
-  if (!st || (st.type && st.type !== 'status') || st.replying_to || st.quote || !personal(st)) return null;
-  if (/^\s*[>＞]|\n\s*[>＞]/.test(String(st.text || ''))) return null;
-  const text = postText(st);
-  const n = charLen(text);
-  const handle = handleOf(st);
-  const id = statusId(st);
-  if (!handle || !id || n < (lang === 'en' ? 12 : 10) || n > (lang === 'en' ? 220 : 110)) return null;
-  if (lang === 'en' ? !/[A-Za-z]{3,}/.test(text) : (text.match(/[぀-ヿ]/g) || []).length < 4) return null;
-  if (!askOk(st, text) || heavy(text) || TOXIC.test(text) || GREET.test(text) || GLOOM.test(text) || minorAccount(st)) return null;
-  /* A few words beside a picture say little without it. */
-  if (st.media && Object.keys(st.media).length && n < 20) return null;
-  return { handle, text, url: st.url || ('https://x.com/' + handle + '/status/' + id), id };
-}
-/* How lively a post is: a little trouble, a question or a laugh draws funny replies. */
-const ZEST = {
-  ja: /なんよ|なんだが|してしまっ|しまった|のに|なぜ|なんで|まさか|結局|気になる|わからん|分からん|無理|やばい|ヤバ|つら|詰んだ|終わった|泣|忘れ|寝坊|間違え|気づいた|気付いた|って何|[？?]|💦|😱|😇|🫠|🥲/,
-  en: /\b(?:why|somehow|accidentally|forgot|again|help|can't|cannot|never|nobody|apparently|turns out)\b|[?]/i,
-};
-function postZest(text, st, lang) {
-  let s = 0;
-  if (isFunny(text, lang)) s += 2;
-  if (ZEST[lang].test(text)) s += 3;
-  const rep = typeof st.replies === 'number' ? st.replies : 2;
-  s += Math.min(3, Math.log2(1 + rep));
-  if (rep > 60) s -= 3;
-  if (charLen(text) <= (lang === 'en' ? 120 : 60)) s += 2;
-  if (((st.author && st.author.followers) || 0) > 200000) s -= 3;
-  return s + Math.random() * 3;
-}
-/* A reply with a punch: a retort, a question back, a laugh. Polite small talk scores low. */
-const QUIP = {
-  ja: /かい[！!ｗw笑]*$|やん|やろ|やねん|じゃん|すぎ|なんで|なぜ|それな|まさか|だったんだ|じゃないの|のでは|ってこと|[？?]+[\s\p{Extended_Pictographic}️]*$|[wｗ]+$/u,
-  en: /\b(?:wait|bro|nah|same|literally|imagine|plot twist|so you|not the)\b|[?]+\s*$/i,
-};
-const POLITE = /素敵|楽しみ|頑張って|がんばって|お気をつけ|気をつけて|大変です|お疲れ|おつかれ|お大事|ゆっくり|楽しんで|いってらっしゃい|行ってらっしゃい|大丈夫[？?]|ですね[…。！!✨😊☺️🥰]*$|いいですね|良いですね|羨まし|うらやまし|\b(?:lovely|beautiful|so nice|well done|great job)\b/i;
-async function talkReplies(post, lang, seen, sameText) {
-  const list = await repliesOf(post.id);
-  const picks = [];
-  list.forEach(st => {
-    const who = handleOf(st);
-    const text = postText(st);
-    const rid = statusId(st);
-    const n = charLen(text);
-    if (!who || !rid || rid === post.id || who.toLowerCase() === post.handle.toLowerCase()) return;
-    /* Only what was said to the post itself, not to another reply. */
-    const par = parentOf(st);
-    if (par.id && par.id !== post.id) return;
-    if (n < 3 || n > (lang === 'en' ? 140 : 50) || charLen(post.text) + n > (lang === 'en' ? 280 : 140)) return;
-    if (lang === 'en' ? !/[A-Za-z]{2,}/.test(text) : !/[぀-ヿ一-鿿]/.test(text)) return;
-    if (/^\s*[>＞]/.test(String(st.text || '')) || !askOk(st, text) || heavy(text) || TOXIC.test(text) || minorAccount(st)) return;
-    const greet = GREET.test(text);
-    if (greet && n <= 14) return;
-    const tk = squash(text).slice(0, 50);
-    if (!tk || sameText.has(tk) || picks.some(x => x.tk === tk) || jokeKeys({ text, link: st.url || '' }).some(seen)) return;
-    let score = 0;
-    const funny = isFunny(text, lang);
-    const quip = QUIP[lang].test(text);
-    const trail = /…+$|\.{3}$/.test(text);
-    if (funny) score += 5;
-    if (quip) score += 3;
-    else if (trail) score += 2;
-    if (n <= (lang === 'en' ? 70 : 25)) score += 2;
-    if (greet) score -= 3;
-    if (POLITE.test(text)) score -= 2;
-    score += Math.min(2, Math.log2(1 + (typeof st.likes === 'number' ? st.likes : 0)));
-    /* punch: a laugh, a retort or a trailing thought, and not small talk. A talk in the genres needs one. */
-    picks.push({ handle: who, text, url: st.url || ('https://x.com/' + who + '/status/' + rid), id: rid, tk, punch: (funny || quip || trail) && score >= 4, score: score + Math.random() * 2 });
-  });
-  return picks.sort((a, b) => b.score - a.score);
-}
-/* How many cards a talk makes: the post's first words, the post, then two for each reply. */
-function talkSize(story, lang, word) { return (hookOf(story.post.text, lang, word) ? 1 : 0) + 1 + story.replies.length * 2; }
-/* Posts by people about the words, each with the liveliest reply under it. The words are searched in a
-   random order, half of them on a day drawn from the last few days; one word gives at most three talks.
-   Searches are few on purpose (the service refuses when asked too much): the replies are read from each
-   post's conversation, not searched for. */
-/* Talks found but not played yet wait here for the next videos, so a new video often needs no search at all
-   (the search service answers nothing for a while when it is asked too much). Kept for this visit, half an hour at most. */
-const TALK_POOL = [];
-function poolKey() { return jokeLang() + '|' + market().country.id + '|' + pastDay() + '|' + (sensitiveHidden() ? 1 : 0); }
-function poolTalks(rows) {
-  const key = poolKey();
-  rows.forEach(r => { if (r && r.talk && !TALK_POOL.some(x => x.row.story.post.id === r.story.post.id)) TALK_POOL.push({ key, at: Date.now(), row: r }); });
-  while (TALK_POOL.length > 40) TALK_POOL.shift();
-}
-function genreOfWord(w) {
-  const c = market().country.id;
-  return GENRES.find(g => GENRE_WORDS[g.id] && (GENRE_WORDS[g.id][c] || GENRE_WORDS[g.id].US).indexOf(w) >= 0) || null;
-}
-/* Couples and places wait the same way: one search finds a few, and the next videos need none. */
-const SIDE_POOL = { romance: [], travel: [] };
-function sideKeys(r) { return r.romance ? [r.story.a, r.story.b].flatMap(m => ['id:' + m.id, 't:' + squash(m.text).slice(0, 50)]) : jokeKeys(r); }
-async function sideRows(kind, need, place, collect) {
-  if (!need) return [];
-  const key = poolKey();
-  const past = seenSet(SEEN_JOKES);
-  const now = playingKeys();
-  const pool = SIDE_POOL[kind];
-  for (let i = pool.length - 1; i >= 0; i--) {
-    const x = pool[i];
-    if (x.key !== key || Date.now() - x.at > 30 * 60000 || sideKeys(x.row).some(k => past.has(k) || now.has(k))) pool.splice(i, 1);
-  }
-  const out = [];
-  while (out.length < need && pool.length) out.push({ ...pool.shift().row, place: place || 'middle' });
-  if (out.length >= need) return out;
-  /* Places are found three at a time; couples two, since the third best is often not a couple at all. */
-  const rows = await collect(Math.max(kind === 'travel' ? 3 : 2, need - out.length), place);
-  rows.forEach(r => { if (out.length < need) out.push(r); else pool.push({ key, at: Date.now(), row: r }); });
-  while (pool.length > 12) pool.shift();
-  return out;
-}
-async function collectTalk(words, need, fits) {
-  words = [...new Set((words || []).map(w => String(w).trim()).filter(w => w && !/^to:/.test(w)))];
-  if (!need || !sourceOn('x') || !words.length) return [];
-  const lang = jokeLang();
-  const past = seenSet(SEEN_JOKES);
-  const now = playingKeys();
-  const seen = k => past.has(k) || now.has(k);
-  /* First the talks that wait: those about the words asked for (or their genres), not played since. */
-  const key = poolKey();
-  for (let i = TALK_POOL.length - 1; i >= 0; i--) {
-    const x = TALK_POOL[i];
-    if (x.key !== key || Date.now() - x.at > 30 * 60000 || (x.row.keys || []).some(seen)) TALK_POOL.splice(i, 1);
-  }
-  const ok = fits || (w => words.indexOf(w) >= 0);
-  const waiting = shuffle(TALK_POOL.filter(x => ok(x.row.topic)));
-  const ready = [];
-  let have = 0;
-  waiting.forEach(x => {
-    if (have >= need) return;
-    ready.push(x.row);
-    have += talkSize(x.row.story, lang, x.row.topic);
-    TALK_POOL.splice(TALK_POOL.indexOf(x), 1);
-  });
-  if (have >= need) return ready;
-  const fresh = await searchTalk(words, lang, seen);
-  const out = ready.slice();
-  fresh.forEach(r => { if (have < need) { out.push(r); have += talkSize(r.story, lang, r.topic); } else poolTalks([r]); });
-  /* Too few talks for the cards asked: the ones found show a second reply. */
-  const sameText = new Set(out.flatMap(r => r.story.replies.map(m => m.tk)));
-  for (const r of out) {
-    if (have >= need) break;
-    const m = (r.spare || []).find(x => !sameText.has(x.tk));
-    if (!m) continue;
-    sameText.add(m.tk);
-    r.spare = r.spare.filter(x => x !== m);
-    r.story.replies.push(m);
-    r.keys = threadKeys(r.story);
-    have += 2;
-  }
-  return out;
-}
-async function searchTalk(words, lang, seen) {
-  /* Each word is searched one of three ways, drawn each time: on a day from the last few days,
-     with an everyday word beside it (ラーメン 初めて), or as it is. A search is never narrowed twice. */
-  const ask = w => {
-    const r = Math.random();
-    if (xRange()) return (r < 0.4 ? variantsFor(w, [], lang, 1, 'talk')[0] : w) + ' -filter:replies -filter:retweets min_replies:2 lang:' + lang + xRange();
-    if (r < 0.5) {
-      const d = addDays(todayJST(), -(1 + Math.floor(Math.random() * 5)));
-      return `${w} -filter:replies -filter:retweets min_replies:2 lang:${lang} since:${d} until:${addDays(d, 1)}`;
-    }
-    return `${r < 0.75 ? variantsFor(w, [], lang, 1, 'talk')[0] : w} -filter:replies -filter:retweets min_replies:2 lang:${lang}`;
-  };
-  const lists = await Promise.all(shuffle(words).slice(0, fast() ? 3 : 4).map(w => searchX(ask(w)).then(rs => ({ w, rs }))));
-  if (S.again) return [];
-  const byWord = lists.map(({ w, rs }) => {
-    const mine = [];
-    rs.forEach(st => {
-      const post = talkPost(st, lang);
-      if (!post || st.replies === 0 || jokeKeys({ text: post.text, link: post.url }).some(seen)) return;
-      mine.push({ w, post, zest: postZest(post.text, st, lang) });
-    });
-    return mine.sort((a, b) => b.zest - a.zest);
-  });
-  /* The liveliest posts, one from each word in turn, each from a different person. */
-  const cands = [];
-  const authors = new Set();
-  const most = fast() ? 9 : 14;
-  while (cands.length < most && byWord.some(l => l.length)) {
-    byWord.forEach(l => {
-      while (l.length && cands.length < most) {
-        const c = l.shift();
-        const who = c.post.handle.toLowerCase();
-        if (authors.has(who) || cands.some(x => x.post.id === c.post.id)) continue;
-        authors.add(who);
-        cands.push(c);
-        break;
-      }
-    });
-  }
-  const sameText = new Set();
-  const found = await Promise.all(cands.map(c => talkReplies(c.post, lang, seen, sameText).catch(() => [])));
-  const talks = [];
-  cands.forEach((c, i) => {
-    const best = found[i].find(m => m.punch);
-    if (!best) return;
-    talks.push({ ...c, spare: found[i].filter(m => m !== best && m.punch), first: best, quality: c.zest + best.score });
-  });
-  if (Q.get('debug')) console.log('talk', JSON.stringify({ found: lists.map(l => l.w + ':' + l.rs.length), cands: cands.length, replies: found.map(f => f.length + '/' + (f[0] ? f[0].score.toFixed(1) : '-')), talks: talks.length }));
-  talks.sort((a, b) => b.quality - a.quality);
-  /* Best first, but two talks about the same word do not follow each other. */
-  const groups = new Map();
-  talks.forEach(t => { if (!groups.has(t.w)) groups.set(t.w, []); if (groups.get(t.w).length < 3) groups.get(t.w).push(t); });
-  const order = [];
-  const gl = [...groups.values()];
-  while (gl.some(l => l.length)) gl.forEach(l => { if (l.length) order.push(l.shift()); });
-  const rows = [];
-  order.forEach(t => {
-    if (sameText.has(t.first.tk)) return;
-    sameText.add(t.first.tk);
-    const story = { post: t.post, replies: [t.first] };
-    rows.push({ thread: true, joke: true, talk: true, story, headline: t.post.text, cat: 'REPLY', topic: t.w, corner: t.w, keys: threadKeys(story), spare: t.spare });
-  });
-  rows.forEach(r => { r.spare = (r.spare || []).filter(m => !sameText.has(m.tk)); });
-  return rows;
-}
-
-/* ---------- romance: short, loving exchanges between two people, then what others said ---------- */
-/* Searches for loving replies; each one is read with the post it answers. */
-const ROMANCE_Q = {
-  ja: [
-    '(おやすみん OR おやすー OR ねんね OR すやぁ OR おやぴ OR おやすみなさいませ) filter:replies',
-    '(おはおは OR おはよーだよ OR おっはー OR おはよん OR おはよぉ OR おはよーん) filter:replies',
-    '(だいしゅき OR すきすき OR ぎゅーして OR ちゅー OR 会いたいよ OR なでなで OR ♡) filter:replies',
-    '(ただいまー OR おかえりー OR おつかれさま♡ OR おかえりなさい♡ OR がんばったね) filter:replies',
-    '(彼氏 OR 彼女 OR 旦那 OR 嫁) (すき OR ぎゅー OR だいすき OR ありがと) filter:replies',
-    '(愛してる OR あいしてる OR 愛してるよ OR 大好きすぎ OR ずっと一緒にいようね OR 一生離さない) filter:replies',
-    '(いちゃいちゃ OR イチャイチャ OR くっつきたい OR 甘えたい OR ぎゅーってして OR ちゅーして OR ちゅっ) filter:replies',
-  ],
-  en: [
-    '("night night" OR "nighty night" OR "sweet dreams" OR "sleep tight") filter:replies',
-    '("morning sunshine" OR "morning babe" OR "rise and shine" OR "good morning beautiful") filter:replies',
-    '("love you more" OR "miss you more" OR "love ya" OR "my love" OR babe) filter:replies',
-    '("i love you" OR "love you so much" OR "love you forever" OR cuddle OR snuggle OR "come cuddle") filter:replies',
-  ],
-};
-/* Playful hints between couples (今夜は寝かさない😏). Searched only while sensitive posts are shown. */
-const FLIRT_Q = {
-  ja: ['(寝かさない OR 覚悟してね OR 今夜は OR 離さない) (好き OR 大好き OR ♡ OR 😘 OR 🥰) filter:replies'],
-  en: ['("you\'re trouble" OR "come here" OR "behave") (babe OR baby OR "love you") filter:replies'],
-};
-/* The loving, lovey-dovey kind of talk comes first; playful hints next. */
-const ICHA = {
-  ja: /愛してる|あいしてる|いちゃ|イチャ|くっつ|甘え|ぎゅーって|ちゅーして|ちゅっ|一生離さない|ずっと一緒|大好きすぎ/,
-  en: /i love you|love you so much|love you forever|cuddle|snuggle|can'?t wait to (?:see|hold) you/i,
-};
-const HINT = {
-  /* Words only: emoji such as 🍑 are never searched for or ranked up, so they do not pile up. */
-  ja: /寝かさない|覚悟し|今夜は|離さない/,
-  en: /you'?re trouble|behave|come here/i,
-};
-/* Cute, loving ways of saying things are preferred to plain greetings. */
-const CUTE = {
-  ja: /おやすみん|おやすー|おやぴ|おやすみなさいませ|ねんね|すや|おはおは|おはよーだよ|おっはー|おはよん|おはよぉ|おはよーん|だいしゅき|しゅき|すきすき|大好きだよ|好きだよ|すきだよ|ぎゅー|ちゅ|なでなで|よしよし|がんばったね|会いたいよ|♡|❤|💕|💗|💖|🥰|😘|😚|だよ[〜ー♡❤]|ね[〜ー♡]|よ[〜ー♡]/,
-  en: /night night|nighty|sleep tight|sweet dreams|sunshine|rise and shine|love you more|miss you more|love ya|\bbabe\b|\bbaby\b|honey|cutie|xoxo|xxx|💕|🥰|😘|😚/i,
-};
-const PLAIN = {
-  ja: /^(?:おやすみ(?:なさい)?|おはよ(?:う|ー)?|ただいま|おかえり|おつかれ(?:さま)?|お疲れ(?:様)?)[。！!〜~ー]?\s*[\p{Extended_Pictographic}\u200d\ufe0f\s]*$/u,
-  en: /^(?:good ?night|good ?morning|night|morning|hi|hey)[.!]?\s*[\p{Extended_Pictographic}\u200d\ufe0f\s]*$/iu,
-};
-/* Innuendo emoji: never searched for, and at most one such story per video. */
-const EMOJI_HINT = /🍑|🍆|😏|🔞|💦|👅/u;
-/* The kind of talk, so a video does not play two good-nights. */
-function talkKind(text) {
-  const t = String(text || '');
-  if (/寝かさない|覚悟して|今夜は|離さない|you'?re trouble|behave/i.test(t)) return 'hint';
-  if (/愛してる|あいしてる|いちゃ|イチャ|くっつ|甘え|一生離さない|ずっと一緒|i love you|cuddle|snuggle/i.test(t)) return 'icha';
-  if (/おやす|ねんね|すや|寝|眠|night|sleep|dream|💤|😴/i.test(t)) return 'night';
-  if (/おは|朝|morning|rise and shine|sunshine|☀/i.test(t)) return 'morning';
-  if (/ただいま|おかえり|おつかれ|お疲れ|がんばった|home|welcome back/i.test(t)) return 'home';
-  if (/会いたい|あいたい|寂し|さみし|miss/i.test(t)) return 'miss';
-  if (/好き|すき|しゅき|愛|ぎゅ|ちゅ|なでなで|love|kiss|hug|♡|❤|💕/i.test(t)) return 'love';
-  return 'other';
-}
-/* Everyday couple talk: greetings, thanks, missing each other, and love. */
-const LOVE = {
-  ja: /大好き|だいすき|だいしゅき|しゅき|好き|すき|愛して|あいして|いちゃ|イチャ|くっつ|甘え|寝かさない|会いたい|あいたい|ぎゅ|ちゅ|なでなで|よしよし|かわいい|可愛い|かっこいい|おやす|ねんね|すや|おはよ|おはおは|おっはー|おつかれ|お疲れ|ただいま|おかえり|いってらっしゃ|いってきます|気をつけて|がんばったね|ありがと|ずっと一緒|一緒に|ハグ|彼氏|彼女|旦那|嫁|♡|❤|♥|💕|💗|💓|💖|💘|💞|🥰|😘|😚|😍|🤗|💤|😴|☺/,
-  en: /love you|love ya|luv u|\bily\b|cuddle|snuggle|miss you|my love|\bbabe\b|\bbaby\b|honey|sweetheart|cutie|handsome|beautiful|xoxo|xxx|forever|good ?night|night night|nighty|good ?morning|sunshine|rise and shine|sleep well|sleep tight|sweet dreams|home safe|take care|thank you|boyfriend|girlfriend|husband|wife|❤|♥|💕|💗|🥰|😘|😚|😍|🤗|💤|😴/i,
-};
-/* What onlookers say about a couple. */
-const CHEER = {
-  ja: /尊い|てぇてぇ|可愛い|かわいい|お幸せに|末永く|リア充|爆発しろ|微笑ましい|ほっこり|うらやま|羨ましい|素敵|仲良し|笑|草|ｗｗ|ww/,
-  en: /cute|adorable|goals|wholesome|get a room|love this|so sweet|\baw+\b|lol|lmao|🥹|😭/i,
-};
-/* Short, unless one long story is allowed in the video. */
-const SHORT = { ja: 30, en: 90 };
-const LONG = { ja: 60, en: 180 };
-const UNSAFE_ROMANCE = /浮気|不倫|別れ|離婚|ブロック|死ね|殺|嫌い|最低|ストーカー|cheat|divorce|break ?up|hate you/i;
-function romanceText(st, lang) {
-  const text = postText(st);
-  if (!text || NEVER.test(text) || VIOLENT.test(text) || UNSAFE_ROMANCE.test(text) || heavy(text) || minorAccount(st)) return '';
-  /* Suggestive couple talk plays only with Hide sensitive posts off, and never next to children or school life. */
-  if (suggestive(text, st) && (sensitiveHidden() || CHILD.test(text) || YOUTH.test(text))) return '';
-  if (lang === 'en') {
-    if ((text.match(/[぀-ヿ一-鿿]/g) || []).length > 2 || !/[A-Za-z]{2,}/.test(text) || text.length < 4) return '';
-  } else if ((text.match(/[぀-ヿ]/g) || []).length < 1 || [...text].length < 2) return '';
-  if (/ご冥福|追悼|亡くな|お悔やみ|死去|\brip\b|passed away/i.test(text)) return '';
-  return text;
-}
-const charLen = t => [...String(t || '')].length;
-/* The post a reply answers. The fxtwitter API gives it as replying_to { screen_name, status } or replying_to_status. */
-function parentOf(st) {
-  const rt = st && st.replying_to;
-  const id = (rt && typeof rt === 'object' && (rt.status || rt.status_id || rt.id)) || (st && (st.replying_to_status || st.in_reply_to_status_id_str || st.in_reply_to_status_id)) || '';
-  const who = (rt && typeof rt === 'object' && (rt.screen_name || rt.username)) || (typeof rt === 'string' ? rt : '') || '';
-  return { id: /^\d+$/.test(String(id)) ? String(id) : '', who: String(who).replace(/^@+/, '') };
-}
-function statusId(st) {
-  const m = String((st && st.url) || '').match(/status(?:es)?\/(\d+)/);
-  return (st && st.id && /^\d+$/.test(String(st.id)) ? String(st.id) : '') || (m ? m[1] : '');
-}
-function handleOf(st) { return String((st && st.author && st.author.screen_name) || '').replace(/^@+/, ''); }
-async function fetchStatus(id) {
-  try {
-    const d = await fxJson('https://api.fxtwitter.com/2/status/' + id);
-    if (d && (d.status || d.tweet)) return d.status || d.tweet;
-  } catch (e) { console.warn(e); }
-  try {
-    const d = await fxJson('https://api.fxtwitter.com/status/' + id);
-    if (d && d.tweet) return d.tweet;
-  } catch (e) { console.warn(e); }
-  return null;
-}
-/* The replies under a post. They are read from the post's own conversation, which the service does not
-   limit the way it limits searches; a search is made only when that cannot be read. */
-async function repliesOf(id) {
-  try {
-    const d = await fxJson('https://api.fxtwitter.com/2/conversation/' + id);
-    if (d && Array.isArray(d.replies)) return d.replies;
-  } catch (e) { console.warn(e); }
-  return searchX(`conversation_id:${id} filter:replies`);
-}
-function searchX(q) {
-  return fxJson('https://api.fxtwitter.com/2/search?q=' + encodeURIComponent(q)).then(d => (d && d.results) || []).catch(() => []);
-}
-/* Each story: a loving post, the partner's loving reply, then up to two onlookers' comments.
-   Most posts are short; at most one story in a video has a longer post. */
-async function collectRomance(need, place) {
-  if (!need || !sourceOn('x')) return [];
-  const lang = jokeLang();
-  const past = seenSet(SEEN_JOKES);
-  const now = playingKeys();
-  const queries = rotate(ROMANCE_Q[lang], 'romance:' + lang, need <= 3 ? 2 : Math.ceil(ROMANCE_Q[lang].length / 2) + 1).concat(sensitiveHidden() || need <= 3 ? [] : FLIRT_Q[lang]);
-  const lists = await Promise.all(queries.map(q => searchX(q + ' lang:' + lang + xRange())));
-  const used = new Set();
-  const cands = [];
-  lists.flat().forEach(st => {
-    const handle = handleOf(st);
-    const text = romanceText(st, lang);
-    const parent = parentOf(st);
-    if (!handle || !text || !parent.id || !LOVE[lang].test(text) || charLen(text) > LONG[lang]) return;
-    const id = statusId(st);
-    const tk = 't:' + squash(text).slice(0, 50);
-    if (!id || used.has(id) || used.has(tk) || past.has('id:' + id) || now.has('id:' + id) || past.has(tk) || now.has(tk) || past.has('id:' + parent.id) || now.has('id:' + parent.id)) return;
-    used.add(id);
-    used.add(tk);
-    const cute = CUTE[lang].test(text) ? 5 : 0;
-    const plain = PLAIN[lang].test(text) ? -5 : 0;
-    const icha = (ICHA[lang].test(text) ? 6 : 0) + (HINT[lang].test(text) ? 4 : 0);
-    /* Innuendo emoji (🍑 🍆 😏 🔞) never raise a post; they lower it so they do not crowd the video. */
-    const emoji = EMOJI_HINT.test(text) ? -6 : 0;
-    cands.push({ b: { handle, text, url: st.url || '', id }, parent, score: (charLen(text) <= SHORT[lang] ? 4 : 0) + cute + icha + plain + emoji + Math.random() * 3 });
-  });
-  const ranked = cands.sort((x, y) => y.score - x.score).slice(0, need * 4);
-  const parents = await Promise.all(ranked.map(c => fetchStatus(c.parent.id).catch(() => null)));
-  const stories = [];
-  let longs = 0;
-  /* A post that is itself a reply to the partner means the two are talking: those stories come first. */
-  const order = ranked.map((c, i) => {
-    const pst = parents[i];
-    const back = pst ? parentOf(pst) : { who: '' };
-    const mutual = !!back.who && back.who.toLowerCase() === c.b.handle.toLowerCase();
-    const at = pst ? postText(pst) : '';
-    const both = (CUTE[lang].test(at) ? 4 : 0) + (ICHA[lang].test(at) ? 4 : 0) + (HINT[lang].test(at) && !sensitiveHidden() ? 6 : 0) + (PLAIN[lang].test(at) && PLAIN[lang].test(c.b.text) ? -6 : 0);
-    return { i, w: (mutual ? 6 : 0) + c.score + both };
-  }).sort((x, y) => y.w - x.w).map(x => x.i);
-  /* One story of each kind per video (one good-night, one good-morning...), unless there are not enough. */
-  const kinds = new Set();
-  const spare = [];
-  let emojiStories = 0;
-  const mutualOf = i => { const back = parents[i] ? parentOf(parents[i]) : { who: '' }; return !!back.who && back.who.toLowerCase() === ranked[i].b.handle.toLowerCase(); };
-  /* A famous account's post with a fan's reply is not a couple. */
-  const famous = st => { const a = st && st.author; const n = a && (a.followers ?? a.followers_count); return typeof n === 'number' && n > 20000; };
-  order.forEach(i => {
-    const c = ranked[i];
-    if (stories.length >= need) return;
-    const pst = parents[i];
-    if (!pst || famous(pst)) return;
-    const aText = romanceText(pst, lang);
-    const aHandle = handleOf(pst) || c.parent.who;
-    const atk = 't:' + squash(aText).slice(0, 50);
-    if (!aText || !aHandle || aHandle.toLowerCase() === c.b.handle.toLowerCase() || charLen(aText) > LONG[lang] || past.has(atk) || now.has(atk) || used.has(atk)) return;
-    if (!LOVE[lang].test(aText) && !mutualOf(i) && charLen(aText) > (lang === 'en' ? 40 : 16)) return;
-    /* The pair read together: nothing suggestive next to children or school life, from either side. */
-    const pairText = aText + ' ' + c.b.text;
-    if (suggestive(pairText) && (CHILD.test(pairText) || YOUTH.test(pairText))) return;
-    /* At most one story with innuendo emoji per video. */
-    if (EMOJI_HINT.test(pairText) && emojiStories >= 1) return;
-    if (EMOJI_HINT.test(pairText)) emojiStories++;
-    const long = charLen(aText) > SHORT[lang] || charLen(c.b.text) > SHORT[lang];
-    if (long && longs >= 1) return;
-    const kind = talkKind(aText + ' ' + c.b.text);
-    if (kinds.has(kind)) { spare.push({ c, i, aText, aHandle, atk, long }); return; }
-    kinds.add(kind);
-    if (long) longs++;
-    used.add(atk);
-    stories.push({ a: { handle: aHandle, text: aText, url: pst.url || ('https://x.com/' + aHandle + '/status/' + c.parent.id), id: c.parent.id }, b: c.b, cheers: [] });
-  });
-  spare.forEach(x => {
-    if (stories.length >= need || (x.long && longs >= 1) || used.has(x.atk)) return;
-    if (x.long) longs++;
-    used.add(x.atk);
-    stories.push({ a: { handle: x.aHandle, text: x.aText, url: parents[x.i].url || ('https://x.com/' + x.aHandle + '/status/' + x.c.parent.id), id: x.c.parent.id }, b: x.c.b, cheers: [] });
-  });
-  /* What others said in the same conversation. */
-  const cheerLists = await Promise.all(stories.map(st => repliesOf(st.a.id)));
-  stories.forEach((st, i) => {
-    const pair = new Set([st.a.handle.toLowerCase(), st.b.handle.toLowerCase()]);
-    shuffle(cheerLists[i]).forEach(x => {
-      if (st.cheers.length >= 2) return;
-      const who = handleOf(x);
-      const text = romanceText(x, lang);
-      const id = statusId(x);
-      const tk = 't:' + squash(text).slice(0, 50);
-      if (!who || pair.has(who.toLowerCase()) || !text || !id || used.has(id) || used.has(tk) || past.has('id:' + id) || past.has(tk) || now.has(tk)) return;
-      if (!CHEER[lang].test(text) || charLen(text) > SHORT[lang]) return;
-      used.add(id);
-      used.add(tk);
-      st.cheers.push({ handle: who, text, url: x.url || '', id });
-    });
-  });
-  return stories.map(st => ({
-    romance: true, story: st, lang, place: place || 'middle',
-    keys: [st.a, st.b, ...st.cheers].flatMap(m => ['id:' + m.id, 't:' + squash(m.text).slice(0, 50)]),
-  }));
-}
-/* One story becomes several cards: the post, the reply, then what others said. */
-function romanceCards(r, langId) {
-  const st = r.story;
-  const ja = r.lang !== 'en';
-  /* The top-right corner says 恋愛 (ROMANCE in English); that is enough to set the scene. */
-  const corner = ja && langId !== 'en' ? '恋愛' : 'ROMANCE';
-  const one = (text, src, url) => {
-    let card;
-    if (ja && CJK.test(text) && langId !== 'en') {
-      const parts = largeJa(text);
-      const kw = jaWord(text);
-      card = { kw, cat: 'ROMANCE', topic: corner, head: parts.head, sub: [], jp: parts.rest ? [parts.rest] : [], tags: [], src };
-    } else {
-      const words = String(text).split(/\s+/).filter(Boolean);
-      const kw = storyWord(text, '');
-      card = { kw, cat: 'ROMANCE', topic: corner, head: [words.slice(0, 12).join(' ') || kw], sub: [], jp: words.length > 12 ? [words.slice(12).join(' ')] : [], tags: [], src };
-    }
-    card.url = url || '';
-    card.key = r.keys;
-    return card;
-  };
-  /* Like a talk: the post's first word, the whole post, the reply, then both together; onlookers after that. */
-  const a = one(st.a.text, 'X @' + st.a.handle, st.a.url);
-  const b = one(st.b.text, 'X @' + st.b.handle + ' → @' + st.a.handle, st.b.url);
-  const lang = ja && CJK.test(st.a.text) ? 'ja' : 'en';
-  const cards = [];
-  const open = hookOf(st.a.text, lang, '');
-  if (open) cards.push({ ...a, kw: charLen(open) <= 6 ? open : a.kw, head: [open], sub: [], jp: [], _tease: true });
-  cards.push(a, b);
-  if (charLen(st.a.text) + charLen(st.b.text) <= (lang === 'en' ? 280 : 140)) cards.push({ ...a, jp: a.jp.concat('→ ' + st.b.text), src: b.src, url: st.b.url, _both: true });
-  st.cheers.forEach(c => cards.push({ ...one(c.text, 'X @' + c.handle, c.url), _cheer: true }));
-  return cards;
-}
-
-/* ---------- travel: what people say at famous places ---------- */
-/* Famous places by prefecture (Japan) and by state (United States). Each region has the same chance. */
+/* ---------- finding posts: X's own search, opened in a new tab ---------- */
+const ROMANCE_WORDS = { ja: ['彼氏', '彼女', '旦那', '嫁', 'デート', '記念日', '同棲', 'カップル'], en: ['boyfriend', 'girlfriend', 'husband', 'wife', 'date night', 'anniversary'] };
+const LAUGH_Q = { ja: '(笑 OR 草 OR ワロタ)', en: '(lol OR lmao OR haha)' };
+/* Famous places, by prefecture and state: the Travel button draws one. */
 const SPOTS = {
   ja: [
     ['北海道', ['小樽運河', '旭山動物園', '函館山', '青い池']], ['青森', ['奥入瀬渓流', '弘前城', '十和田湖']], ['岩手', ['中尊寺', '浄土ヶ浜', '龍泉洞']],
@@ -4693,358 +3257,36 @@ const SPOTS = {
     ['Oregon', ['Crater Lake']], ['Maine', ['Acadia National Park']], ['Washington, D.C.', ['Lincoln Memorial', 'National Mall']],
   ],
 };
-const WOW_Q = { ja: '(すごい OR すごーい OR すげー OR きれい OR 綺麗 OR 絶景 OR 最高 OR 感動)', en: '(amazing OR stunning OR beautiful OR gorgeous OR wow OR breathtaking)' };
-const WOW = {
-  ja: /すご|すげ|スゴ|きれ[いー]|綺麗|キレイ|絶景|最高|感動|美し|やば|ヤバ|映え|エモ|圧巻|幻想的/,
-  en: /\b(amazing|stunning|beautiful|gorgeous|wow+|breathtaking|incredible|unreal|insane)\b/i,
-};
-/* Posts that sell something or report news are left out; people saying what they see stay. */
-const NOT_TRIP = /PR|広告|キャンペーン|プレゼント|予約|販売|募集|ツアー|セール|クーポン|ニュース|速報|公式|\bsale\b|\bbook now\b|\bgiveaway\b|\bnews\b|\btickets?\b/i;
-async function collectTravel(need, place) {
-  if (!need || !sourceOn('x')) return [];
-  const lang = jokeLang();
-  const past = seenSet(SEEN_JOKES);
-  const now = playingKeys();
-  /* Every prefecture (state) has the same chance, however often a place is posted about: the regions are
-     shuffled, the ones shown in this visit wait their turn, one place is drawn from each region, and at most
-     one post comes from a region. Posts are taken in the shuffled order, not by how many there are. */
-  const regions = SPOTS[lang] || SPOTS.ja;
-  const shown = new Set(RECENT.regions || []);
-  let order = shuffle(regions.filter(([r]) => !shown.has(r)));
-  if (order.length < need * 2) { RECENT.regions = []; order = order.concat(shuffle(regions.filter(([r]) => shown.has(r)))); }
-  const picks = order.slice(0, Math.min(16, Math.max(6, need * 3))).map(([region, spots]) => ({ region, spot: pick(spots) }));
-  const pairs = [];
-  for (let i = 0; i < picks.length; i += 3) pairs.push(picks.slice(i, i + 3));
-  const build = g => `(${g.map(x => (lang === 'en' ? '"' + x.spot + '"' : x.spot)).join(' OR ')}) ${WOW_Q[lang]} -filter:replies -filter:retweets min_replies:1 lang:${lang}${xRange()}`;
-  /* Posts that someone answered (min_replies), so each can play with a reply. */
-  const lists = await Promise.all(pairs.map(g => searchX(build(g))));
-  const best = new Map();
-  const keys = new Set();
-  lists.flat().forEach(st => {
-    const handle = handleOf(st);
-    const raw = String((st && st.text) || '');
-    const text = postText(st);
-    if (!handle || !text || UNSAFE.test(text) || VIOLENT.test(text) || NOT_TRIP.test(raw) || sensitive(text, st)) return;
-    if ((raw.match(/[#＃]/g) || []).length > 3 || !WOW[lang].test(text)) return;
-    const hit = picks.find(x => raw.toLowerCase().includes(x.spot.toLowerCase()));
-    if (!hit) return;
-    const n = charLen(text);
-    if (lang === 'ja' ? (n < 4 || n > 80 || !/[぀-ヿ]/.test(text)) : (n < 8 || n > 180)) return;
-    const url = st.url || '';
-    const ks = jokeKeys({ text, link: url });
-    if (ks.some(k => past.has(k) || now.has(k) || keys.has(k))) return;
-    ks.forEach(k => keys.add(k));
-    /* A post that someone answered comes first: it can play with the reply. */
-    const score = (n <= 30 ? 4 : 0) + (/[\p{Extended_Pictographic}]/u.test(text) ? 1 : 0) + (typeof st.replies === 'number' && st.replies > 0 ? 5 : 0) + Math.random();
-    const prev = best.get(hit.region);
-    if (!prev || score > prev.score) best.set(hit.region, { handle, text, url, spot: hit.spot, region: hit.region, score });
-  });
-  /* A few more places than asked for are looked at, so those with a reply can be chosen. */
-  const some = [];
-  for (const x of picks) {
-    if (some.length >= need + 3) break;
-    const r = best.get(x.region);
-    if (r) some.push(r);
+/* Posts that someone replied to (min_replies), not replies themselves, in the page's language. */
+function xSearch(words, lang) {
+  return 'https://x.com/search?q=' + encodeURIComponent(`${words} min_replies:1 -filter:replies lang:${lang}`) + '&src=typed_query';
+}
+function chipUrl(chip) {
+  const lang = uiLang();
+  const key = chip.label.toLowerCase();
+  if (key === 'musk x') return 'https://x.com/elonmusk';
+  if (key === 'spacex') return 'https://x.com/SpaceX';
+  if (key === 'jokes') return xSearch(LAUGH_Q[lang], lang);
+  if (key === 'romance') return xSearch(pickFresh(ROMANCE_WORDS[lang], 'romance:' + lang), lang);
+  if (key === 'travel') {
+    const spot = pick(pick(SPOTS[lang] || SPOTS.ja)[1]);
+    return xSearch(lang === 'en' ? '"' + spot + '"' : spot, lang);
   }
-  /* What someone answered: the post then plays with that reply, like a talk. Without one it plays alone. */
-  const seen = k => past.has(k) || now.has(k);
-  const sameText = new Set();
-  const idOf = t => (String(t.url).match(/status(?:es)?\/(\d+)/) || [])[1] || '';
-  const answers = await Promise.all(some.map(t => (idOf(t) ? talkReplies({ id: idOf(t), handle: t.handle, text: t.text }, lang, seen, sameText).catch(() => []) : [])));
-  const rows = some.map((t, i) => {
-    const row = { headline: t.text, text: t.text, link: t.url, source: 'X @' + t.handle, x: true, cat: 'TRAVEL', joke: true, travel: true, spot: t.spot, where: t.region, place: place || 'middle' };
-    const reply = answers[i].find(m => m.punch && !sameText.has(m.tk)) || answers[i].find(m => m.score >= 2 && !sameText.has(m.tk));
-    if (!reply) return row;
-    sameText.add(reply.tk);
-    const story = { post: { handle: t.handle, text: t.text, url: t.url, id: idOf(t) }, replies: [reply] };
-    return { ...row, thread: true, story, hook: t.spot, keys: threadKeys(story).concat(jokeKeys(row)) };
-  });
-  const out = rows.filter(r => r.thread).concat(rows.filter(r => !r.thread)).slice(0, need);
-  RECENT.regions = (RECENT.regions || []).concat(out.map(r => r.where)).slice(-60);
-  return out;
+  /* A genre: one of its words, drawn each time, so the search is never the same twice in a row. */
+  const g = GENRES.find(x => x.name.toLowerCase() === key);
+  return xSearch(g ? pickFresh(genreWords(g), 'g:' + g.id) : chip.label, lang);
+}
+function askUrl(v) {
+  const h = v.match(/^@([A-Za-z0-9_]{1,15})$/);
+  if (h) return 'https://x.com/' + h[1];
+  if (/^https?:\/\/(?:mobile\.|www\.)?(?:x|twitter)\.com\//i.test(v)) return v;
+  return xSearch(v, uiLang());
+}
+function openOnX(url) {
+  window.open(url, '_blank', 'noopener');
+  say('Opened X. Copy a post and a reply there, then paste them here.');
 }
 
-/* ---------- free requests: anything typed in the lineup ---------- */
-/* The words of a request: 2002年のワールドカップ決勝 → 2002, ワールドカップ, 決勝. */
-function termsOf(text, lang) {
-  const t = String(text || '').replace(/[「」『』（）()【】"“”'’!！?？]/g, ' ').trim();
-  if (!t) return [];
-  if (lang === 'en' || !CJK.test(t)) return [...new Set(t.split(/\s+/).filter(w => w.length >= 2 && !/^(the|of|and|in|on|at|for|an|to|about|from|with)$/i.test(w)))].slice(0, 5);
-  const out = [];
-  t.split(/について|に関する|における|での|の|[\s、・,]+/).forEach(part => {
-    (part.match(/[0-9０-９]{2,4}|[ァ-ヴー]{2,}|[一-龯々]+|[A-Za-z][A-Za-z0-9.\-]+/g) || []).forEach(r => { if ([...r].length >= 2) out.push(r); });
-  });
-  return [...new Set(out.length ? out : [t])].slice(0, 5);
-}
-/* What the request is about, from Wikipedia: the best page's title and the words its summary leans on. */
-const WIKI_STOP = /^(日本|大会|試合|開催|国際|世界|地域|一般|現在|以下|以上|最初|最後|今回|当時|自身|ほか|一つ|代表|東京都|日本国|所在|位置|存在|使用|中心|主要|最大|一部|後半|前半)$/;
-const WIKI_MEMO = new Map();
-function wikiMemo(text, lang) {
-  const key = lang + ':' + text;
-  if (!WIKI_MEMO.has(key)) WIKI_MEMO.set(key, wikiOf(text, lang));
-  return WIKI_MEMO.get(key);
-}
-async function wikiOf(text, lang) {
-  const host = lang === 'en' ? 'en' : 'ja';
-  try {
-    const sres = await withTimeout(fetch(`https://${host}.wikipedia.org/w/api.php?action=query&list=search&srlimit=1&format=json&origin=*&srsearch=` + encodeURIComponent(text)), 7000);
-    const hit = sres.ok ? (((await sres.json()).query || {}).search || [])[0] : null;
-    if (!hit || !hit.title) return { title: '', words: [] };
-    const pres = await withTimeout(fetch(`https://${host}.wikipedia.org/api/rest_v1/page/summary/` + encodeURIComponent(hit.title)), 7000);
-    const extract = pres.ok ? String((await pres.json()).extract || '') : '';
-    const own = new Set(termsOf(text, lang).concat(termsOf(hit.title, lang)).map(w => w.toLowerCase()));
-    const count = new Map();
-    const found = lang === 'en'
-      ? (extract.match(/\b[A-Z][a-zA-Z]{3,}(?:\s[A-Z][a-zA-Z]{2,})?/g) || []).filter(w => !/^(The|This|That|They|There|With|From|After|Before|During|When|Which|While|Their|These|Since|Also|Under)\b/.test(w))
-      : (extract.match(/[ァ-ヴー]{3,12}|[一-龯々]{2,4}/g) || []);
-    found.forEach((w, i) => { if (!own.has(w.toLowerCase()) && !WIKI_STOP.test(w)) count.set(w, (count.get(w) || 0) + 10 - Math.min(9, i / 4)); });
-    const words = [...count.entries()].sort((a, b) => b[1] - a[1]).map(e => e[0]).slice(0, 4);
-    return { title: hit.title, words };
-  } catch (e) { console.warn(e); return { title: '', words: [] }; }
-}
-const AD = /PR|広告|キャンペーン|プレゼント企画|応募|フォロー[&＆]|RTで|リツイートで|セール|クーポン|予約受付|販売中|\bgiveaway\b|\bsale\b|\bpromo\b|\bdiscount\b|\bsponsored\b/i;
-/* ---------- free lineup lines (the box under the video adds them): the replies under posts ---------- */
-/* Words: posts on X about them, each followed by the replies under it.
-   @account: that account's posts and their replies. A post's address: that post and its replies.
-   Only replies people posted are shown; nothing is written by this page. */
-const ASK_POST = /(?:x|twitter)\.com\/(?:i\/web\/|([A-Za-z0-9_]{1,15})\/)status(?:es)?\/(\d+)/i;
-const ASK_HANDLE = /^@([A-Za-z0-9_]{1,15})$/;
-function askOk(st, text) {
-  return !!text && !UNSAFE.test(text) && !VIOLENT.test(text) && !sensitive(text, st) && !AD.test(String((st && st.text) || ''));
-}
-/* The replies under one post, liveliest and shortest first. */
-async function repliesUnder(id, author, lang, seen, sameText) {
-  const list = await repliesOf(id);
-  const picks = [];
-  list.forEach(st => {
-    const who = handleOf(st);
-    const text = postText(st);
-    const rid = statusId(st);
-    if (!who || !rid || rid === id || who.toLowerCase() === String(author || '').toLowerCase() || picks.some(x => x.id === rid)) return;
-    if (!askOk(st, text) || charLen(text) < 2 || charLen(text) > (lang === 'en' ? 220 : 110) || jokeKeys({ text, link: st.url || '' }).some(seen)) return;
-    const tk = squash(text).slice(0, 50);
-    if (sameText.has(tk) || picks.some(x => x.tk === tk)) return;
-    const lively = isFunny(text, lang) || (WOW[lang] && WOW[lang].test(text));
-    picks.push({ handle: who, text, url: st.url || '', id: rid, tk, score: (lively ? 3 : 0) + (charLen(text) <= 40 ? 2 : 0) + Math.random() * 2 });
-  });
-  return picks.sort((a, b) => b.score - a.score);
-}
-/* Threads from candidate posts: three replies each at first, then more until the video is full. */
-async function askThreads(posts, need, lang, seen, sameText) {
-  const lists = await Promise.all(posts.map(p => repliesUnder(p.id, p.handle, lang, seen, sameText).catch(() => [])));
-  const threads = [];
-  let cards = 0;
-  posts.forEach((post, i) => {
-    if (cards >= need) return;
-    const fresh = lists[i].filter(m => !sameText.has(m.tk));
-    if (!fresh.length) return;
-    const replies = fresh.slice(0, Math.min(2, need - cards - 1));
-    if (!replies.length) return;
-    replies.forEach(m => sameText.add(m.tk));
-    threads.push({ post, replies, spare: fresh.slice(replies.length) });
-    cards += 1 + replies.length;
-  });
-  for (let more = true; cards < need && more;) {
-    more = false;
-    threads.forEach(t => {
-      if (cards >= need) return;
-      const m = t.spare.shift();
-      if (!m || sameText.has(m.tk)) return;
-      sameText.add(m.tk);
-      t.replies.push(m);
-      cards++;
-      more = true;
-    });
-  }
-  return threads.map(t => ({ post: t.post, replies: t.replies }));
-}
-async function collectAsk(raw, need) {
-  const label = String(raw || '').trim();
-  if (!label || !need) return [];
-  const lang = jokeLang();
-  const past = seenSet(SEEN_JOKES);
-  const now = playingKeys();
-  const seen = k => past.has(k) || now.has(k);
-  const sameText = new Set();
-  const short = charLen(label) <= 12 ? label : [...label].slice(0, 11).join('') + '…';
-  const toRow = (t, corner) => ({ thread: true, joke: true, story: t, headline: t.post.text, cat: 'REPLY', corner, hook: t.hook || '', place: 'top', keys: threadKeys(t) });
-  const asPost = st => ({ handle: handleOf(st), text: postText(st), url: st.url || '', id: statusId(st) });
-  /* A post's address: that post, then as many of its replies as the video holds. */
-  const m = label.match(ASK_POST);
-  if (m) {
-    say('Reading the post');
-    const st = await fetchStatus(m[2]);
-    const post = st ? asPost(st) : null;
-    if (!post || !askOk(st, post.text)) return [];
-    post.id = m[2];
-    if (!post.handle) post.handle = m[1] || '';
-    if (!post.url) post.url = 'https://x.com/' + (post.handle || 'i/web') + '/status/' + m[2];
-    const replies = (await repliesUnder(m[2], post.handle, lang, () => false, sameText)).slice(0, Math.max(1, need - 1));
-    return replies.length ? [toRow({ post, replies }, '@' + post.handle)] : [];
-  }
-  /* @account: its newest posts that have replies. */
-  const h = label.match(ASK_HANDLE);
-  if (h) {
-    say('Reading @' + h[1]);
-    const list = await searchX(`from:${h[1]} -filter:replies -filter:retweets${xRange()}`);
-    const posts = list.filter(st => handleOf(st).toLowerCase() === h[1].toLowerCase() && statusId(st) && askOk(st, postText(st)) && st.replies !== 0)
-      .map(asPost).filter(p => !jokeKeys({ text: p.text, link: p.url }).some(seen)).slice(0, 8);
-    return (await askThreads(posts, need, lang, seen, sameText)).map(t => toRow(t, '@' + h[1]));
-  }
-  /* Words: posts about them that people replied to. The words are read in the language of the posts. */
-  let text = label;
-  try {
-    if (lang === 'en' && CJK.test(text)) text = (await translateMany([text], 'en'))[0] || text;
-    else if (lang === 'ja' && !CJK.test(text) && /[A-Za-z]/.test(text)) { const t = (await translateMany([text], 'ja'))[0]; if (t && CJK.test(t)) text = t; }
-  } catch (e) { console.warn(e); }
-  say('Searching ' + label);
-  const find = async (text, loose) => {
-    const terms = termsOf(text, lang);
-    const sameText = new Set();
-    const query = terms.join(' ') || text;
-    /* Several searches with a different extra word each (渋谷 夜景, 渋谷, 渋谷 今日 …), changing every time;
-       the posts are taken one from each search in turn. */
-    const wiki = loose || fast() ? { words: [] } : await within(wikiMemo(text, lang), 5000, { words: [] });
-    const variants = variantsFor(query, wiki.words, lang, loose || fast() ? 2 : Math.max(2, Math.min(5, Math.ceil(need / 3))), 'post');
-    /* The words as typed are always searched, first. */
-    if (variants.indexOf(query) < 0) variants[0] = query;
-    const [lists, answers] = await Promise.all([
-      Promise.all(variants.map(q => searchX(`${q} -filter:replies -filter:retweets lang:${lang}${xRange()}`))),
-      searchX(`${variants[0]} filter:replies lang:${lang}${xRange()}`),
-    ]);
-    const low = t => String(t || '').toLowerCase();
-    const words = terms.map(low);
-    const authors = new Set();
-    const perList = lists.map(found => {
-      const mine = [];
-      found.forEach(st => {
-        const post = asPost(st);
-        const n = charLen(post.text);
-        if (!post.handle || !post.id || !askOk(st, post.text) || TOXIC.test(post.text) || st.replies === 0) return;
-        if (n < 4 || n > (lang === 'en' ? 240 : 120) || jokeKeys({ text: post.text, link: post.url }).some(seen)) return;
-        const body = low(String(st.text || '') + ' ' + post.text);
-        const hits = words.filter(w => body.includes(w)).length;
-        if (words.length && !hits) return;
-        const many = typeof st.replies === 'number' ? Math.min(4, Math.log2(1 + st.replies)) : 1;
-        mine.push({ ...post, score: (hits === words.length ? 5 : hits) + many + (n <= (lang === 'en' ? 180 : 90) ? 3 : 0) + Math.random() * 6 });
-      });
-      return mine.sort((a, b) => b.score - a.score);
-    });
-    const posts = [];
-    while (posts.length < 12 && perList.some(l => l.length)) {
-      perList.forEach(l => {
-        while (l.length) {
-          const p = l.shift();
-          if (posts.some(x => x.id === p.id) || authors.has(low(p.handle))) continue;
-          authors.add(low(p.handle));
-          posts.push(p);
-          break;
-        }
-      });
-    }
-    /* Each post with the liveliest reply to it (a retort or a laugh first); a second reply only when cards are short. */
-    const cands = posts.slice(0, Math.min(12, Math.ceil(need / 3) + 3));
-    const under = await Promise.all(cands.map(p => talkReplies(p, lang, seen, sameText).catch(() => [])));
-    const threads = [];
-    let cards = 0;
-    cands.map((post, i) => ({ post, list: under[i] })).filter(x => x.list.length).sort((a, b) => b.list[0].score - a.list[0].score).forEach(x => {
-      if (cards >= need || sameText.has(x.list[0].tk)) return;
-      sameText.add(x.list[0].tk);
-      threads.push({ post: x.post, replies: [x.list[0]], spare: x.list.slice(1), hook: terms[0] || '' });
-      cards += 4;
-    });
-    for (const t of threads) {
-      if (cards >= need) break;
-      const m = t.spare.find(x => !sameText.has(x.tk) && x.score >= 4);
-      if (!m) continue;
-      sameText.add(m.tk);
-      t.replies.push(m);
-      cards += 2;
-    }
-    /* Not enough: replies that themselves speak of the words, each shown under the post it answers. */
-    if (cards < need) {
-      const extra = [];
-      answers.forEach(st => {
-        const r = asPost(st);
-        const parent = parentOf(st);
-        const tk = squash(r.text).slice(0, 50);
-        if (!r.handle || !r.id || !parent.id || extra.length >= 5 || threads.some(t => t.post.id === parent.id) || extra.some(x => x.parent === parent.id)) return;
-        if (!askOk(st, r.text) || charLen(r.text) > (lang === 'en' ? 220 : 110) || sameText.has(tk) || jokeKeys({ text: r.text, link: r.url }).some(seen)) return;
-        if (words.length && !words.some(w => low(r.text).includes(w))) return;
-        extra.push({ parent: parent.id, who: parent.who, reply: { ...r, tk } });
-      });
-      const parents = await Promise.all(extra.map(x => fetchStatus(x.parent).catch(() => null)));
-      extra.forEach((x, i) => {
-        const st = parents[i];
-        if (cards + 2 > need || !st) return;
-        const post = asPost(st);
-        post.id = x.parent;
-        if (!post.handle) post.handle = x.who;
-        if (!post.text || !askOk(st, post.text) || charLen(post.text) > (lang === 'en' ? 280 : 140) || low(post.handle) === low(x.reply.handle)) return;
-        sameText.add(x.reply.tk);
-        threads.push({ post, replies: [x.reply] });
-        cards += 2;
-      });
-    }
-    return threads;
-  };
-  let threads = await find(text, false);
-  /* Nothing found: words like it are searched instead (しょうゆこと, then しょうゆ). Still nothing: it is left out. */
-  if (!threads.length) {
-    const tries = await Promise.all(looser(text, lang).map(w => find(w, true).catch(() => [])));
-    threads = tries.find(t => t.length) || [];
-  }
-  return threads.map(t => toRow(t, short));
-}
-/* ---------- accounts: their posts, each with the replies to it ---------- */
-function threadKeys(t) { return [t.post, ...t.replies].flatMap(m => jokeKeys({ text: m.text, link: m.url })); }
-async function collectAccounts(need) {
-  const names = xAccounts().slice(0, 4);
-  if (!need || !names.length || !sourceOn('x')) return [];
-  const lang = jokeLang();
-  const past = seenSet(SEEN_JOKES);
-  const now = playingKeys();
-  const seen = k => past.has(k) || now.has(k);
-  const ok = (st, text) => !!text && !UNSAFE.test(text) && !VIOLENT.test(text) && !sensitive(text, st) && !AD.test(String((st && st.text) || ''));
-  say('Reading @' + names[0]);
-  const per = Math.max(1, Math.ceil(need / names.length));
-  const lists = await Promise.all(names.map(h => searchX(`from:${h} -filter:replies -filter:retweets${xRange()}`)));
-  const threads = [];
-  names.forEach((h, i) => {
-    let n = 0;
-    (lists[i] || []).forEach(st => {
-      if (n >= per || handleOf(st).toLowerCase() !== h.toLowerCase()) return;
-      const text = postText(st);
-      const id = statusId(st);
-      if (!id || !ok(st, text) || charLen(text) < 4 || charLen(text) > (CJK.test(text) ? 120 : 260) || jokeKeys({ text, link: st.url || '' }).some(seen)) return;
-      threads.push({ post: { handle: handleOf(st), text, url: st.url || '', id }, replies: [] });
-      n++;
-    });
-  });
-  /* The replies under each post: short ones and lively ones first, up to two. */
-  const replyLists = await Promise.all(threads.map(t => searchX(`conversation_id:${t.post.id} filter:replies`)));
-  const sameText = new Set();
-  threads.forEach((t, i) => {
-    const picks = [];
-    (replyLists[i] || []).forEach(st => {
-      const who = handleOf(st);
-      const text = postText(st);
-      const id = statusId(st);
-      if (!who || !id || who.toLowerCase() === t.post.handle.toLowerCase() || picks.some(x => x.id === id)) return;
-      if (!ok(st, text) || charLen(text) < 2 || charLen(text) > (lang === 'en' ? 200 : 100) || jokeKeys({ text, link: st.url || '' }).some(seen)) return;
-      const tk = squash(text).slice(0, 50);
-      if (sameText.has(tk)) return;
-      const lively = isFunny(text, lang) || (WOW[lang] && WOW[lang].test(text));
-      picks.push({ handle: who, text, url: st.url || '', id, score: (lively ? 3 : 0) + (charLen(text) <= 40 ? 2 : 0) + Math.random() });
-    });
-    t.replies = picks.sort((a, b) => b.score - a.score).slice(0, 2);
-    t.replies.forEach(m => sameText.add(squash(m.text).slice(0, 50)));
-  });
-  return threads.map(t => ({ thread: true, joke: true, story: t, headline: t.post.text, cat: 'REPLY', corner: '@' + t.post.handle, place: 'top', keys: threadKeys(t) }));
-}
-/* One card for the post, then one for each reply. */
-/* A post and the replies to it. The post: its first words alone, then the whole post.
-   Each reply: the whole reply alone, then the post and the reply together (when both fit on a card). */
 const HOOK_SKIP = /^(?:今日|昨日|明日|最近|今夜|今朝|本日|今年|去年|来年|今週|先週|来週|自分|みんな|皆さん|皆様|さっき|なんか|ちょっと|やっぱり|ところで|そういえば|ちなみに|とりあえず|ほんとに|本当に|それで|だから|しかし|ただ|まじで|マジで|おはよう|こんにちは|こんばんは)/;
 function hookOf(text, lang, word) {
   const whole = String(text || '').trim();
@@ -5060,7 +3302,7 @@ function hookOf(text, lang, word) {
       const next = out ? out + ' ' + x : x;
       if (out && charLen(next) > 18) break;
       out = next;
-      if (charLen(out) >= 8) break;
+      if (charLen(out) >= 12) break;
     }
     out = out.replace(/[,.;:!?]+$/, '');
     return fits(out) ? out : '';
@@ -5096,7 +3338,8 @@ function threadCards(r, langId) {
     return { ...card, topic: corner, cat: r.travel ? 'TRAVEL' : 'REPLY', src, url: m.url, key: r.keys, _main: true, _shown: shown };
   };
   const st = r.story;
-  const post = one(st.post, 'X @' + st.post.handle);
+  const who = h => (h ? 'X @' + h : 'X');
+  const post = one(st.post, who(st.post.handle));
   const lang = CJK.test(post._shown) ? 'ja' : 'en';
   const cards = [];
   const open = hookOf(post._shown, lang, r.hook || (r.talk ? r.topic : ''));
@@ -5107,61 +3350,15 @@ function threadCards(r, langId) {
   }
   cards.push(post);
   st.replies.forEach(m => {
-    const reply = one(m, 'X @' + m.handle + ' → @' + st.post.handle);
+    const reply = one(m, who(m.handle) + (st.post.handle ? ' → @' + st.post.handle : ''));
     cards.push(reply);
-    if (charLen(post._shown) + charLen(reply._shown) <= (lang === 'en' ? 280 : 140)) {
+    if (charLen(post._shown) + charLen(reply._shown) <= (lang === 'en' ? 360 : 180)) {
       cards.push({ ...post, jp: post.jp.concat('→ ' + reply._shown), src: reply.src, url: m.url, _main: false, _both: true });
     }
   });
   return cards;
 }
-const REACT = {
-  ja: /(?:すご[ーぉおいっ〜~]*い?|すげ[ーぇえっ]*|スゴ[ーイい]*|やば[いぁーっ]*|ヤバ[いイー]*|かわい[いー〜]*|可愛[いー]*|きれ[いー]+|綺麗|キレイ|美し[いー]*|最高|さいこう|絶景|感動|圧巻|エモ[いー]*|尊[いー]*|うま[いー]+|美味し[いー]*|おいし[いー]*|楽し[いー]*|たのし[いー]*|ワロタ|爆笑|笑笑|ウケる|面白[いー]*|おもしろ[いー]*|草)[^、。！？!?\n]{0,6}[！!？?〜~ーｗw笑✨♪…]*[\s\p{Extended_Pictographic}‍️]*$/u,
-  en: /\b(?:wow+|omg|amazing|stunning|beautiful|gorgeous|breathtaking|incredible|insane|lol+|lmao+|haha\w*)\b[^.!?\n]{0,20}[.!?]*[\s\p{Extended_Pictographic}‍️]*$/iu,
-};
-function teaserOf(text, lang) {
-  const t = String(text || '').trim();
-  const n = charLen(t);
-  const fits = x => x && charLen(x) >= 2 && charLen(x) <= (lang === 'en' ? 40 : 14) && charLen(x) <= n - 3;
-  const m = t.match(REACT[lang]);
-  if (m && fits(m[0].trim())) return m[0].trim();
-  const parts = (lang === 'en' ? t.replace(/([.!?])\s+/g, '$1\u0000').split('\u0000') : t.split(/[、。！？!?\s]+/)).map(x => x.trim()).filter(Boolean);
-  const last = parts[parts.length - 1];
-  if (parts.length > 1 && fits(last)) return last;
-  return '';
-}
-function beats(r, card, langId) {
-  const ja = langId !== 'en' && CJK.test(card.head.join('') + (card.jp[0] || ''));
-  const text = ja ? (r._shownJa || r.headline) : (r._shownEn || r.headline);
-  const lang = ja ? 'ja' : 'en';
-  const corner = r.corner || (r.travel ? (ja ? '観光' : 'TRAVEL') : card.topic);
-  const main = { ...card, topic: corner, cat: r.travel ? 'TRAVEL' : card.cat, jp: card.jp.slice(), _main: true };
-  /* A place plays alone only when nobody answered: its first card is the place's name. */
-  const tease = r.travel ? hookOf(text, lang, r.spot) : teaserOf(text, lang);
-  if (tease) {
-    const bare = tease.replace(/[\p{Extended_Pictographic}\u200d\ufe0f!！?？〜~…✨♪\s\d]/gu, '');
-    const kw = bare && charLen(bare) <= 6 ? bare : (ja ? jaWord(tease) : storyWord(tease, ''));
-    return [{ ...card, topic: corner, cat: main.cat, kw, head: [tease], sub: [], jp: [] }, main];
-  }
-  return [main];
-}
-
 /* ---------- text for the picture ---------- */
-async function translateMany(texts, tl) {
-  const sep = '\n###\n';
-  const out = texts.slice();
-  for (let i = 0; i < texts.length; i += 5) {
-    const slice = texts.slice(i, i + 5);
-    try {
-      const url = 'https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=' + encodeURIComponent(tl) + '&dt=t&q=' + encodeURIComponent(slice.join(sep));
-      const data = JSON.parse(await getText(url, 10000));
-      const joined = (data[0] || []).map(row => (row && row[0]) || '').join('');
-      const parts = joined.split(/\s*###\s*/);
-      slice.forEach((src, k) => { out[i + k] = ((parts[k] || src).trim() || src); });
-    } catch (e) { console.warn(e); }
-  }
-  return out;
-}
 function contentWords(text) {
   return String(text || '').toUpperCase().replace(/[^A-Z0-9]+/g, ' ').split(/\s+/).filter(w => w.length > 1 && !SMALL.has(w.toLowerCase()));
 }
@@ -5223,6 +3420,8 @@ function storyFrom(raw, english, local, langId) {
   const head = [words.slice(0, 12).join(' ') || kw];
   const sub = words.length > 12 ? [words.slice(12, 22).join(' ')] : [];
   let jp;
+  /* Nothing is translated: the first twelve words are the headline, and the rest follows below, said once. */
+  if (!loc || loc === en) return { kw, cat: cat || kw, topic: kw, head, sub: [], jp: words.length > 12 ? [words.slice(12).join(' ')] : [], tags: [], src, date: monthDay(raw.pubDate), url: raw.link || '' };
   if (langId === 'en') jp = en ? [en] : [];
   else if (langId === 'ja') jp = [loc || en].filter(Boolean);
   else { jp = [loc || en].filter(Boolean); if (en && en !== (loc || en)) jp.push(en); }
@@ -5230,329 +3429,6 @@ function storyFrom(raw, english, local, langId) {
 }
 /* Translate each row into the chosen language, then make the cards. */
 /* The cards for each row, in the same order as the rows. Comments get two cards (see beats). */
-async function cardsFrom(rows, langId) {
-  const msgs = rows.filter(r => r.thread).flatMap(r => [r.story.post, ...r.story.replies]);
-  const mJa = langId !== 'en' ? msgs.filter(m => !CJK.test(m.text)) : [];
-  const mEn = langId !== 'ja' ? msgs.filter(m => CJK.test(m.text)) : [];
-  if (mJa.length) (await translateMany(mJa.map(m => m.text), 'ja')).forEach((t, i) => { mJa[i]._ja = t; });
-  if (mEn.length) (await translateMany(mEn.map(m => m.text), 'en')).forEach((t, i) => { mEn[i]._en = t; });
-  const plain = rows.filter(r => !r.romance && !r.thread);
-  const toJa = langId !== 'en' ? plain.filter(r => !CJK.test(r.headline)) : [];
-  const toEn = langId !== 'ja' ? plain.filter(r => CJK.test(r.headline)) : [];
-  if (toJa.length) (await translateMany(toJa.map(r => r.headline), 'ja')).forEach((t, i) => { toJa[i]._ja = t; });
-  if (toEn.length) (await translateMany(toEn.map(r => r.headline), 'en')).forEach((t, i) => { toEn[i]._en = t; });
-  return rows.map(r => {
-    if (r.romance) return romanceCards(r, langId);
-    if (r.thread) return threadCards(r, langId);
-    const cjk = CJK.test(r.headline);
-    const en = cjk ? (r._en || '') : r.headline;
-    const ja = cjk ? r.headline : (r._ja || '');
-    r._shownJa = ja; r._shownEn = en || r.headline;
-    const card = storyFrom(r, en || r.headline, ja, langId);
-    card.key = r.joke ? jokeKeys(r) : newsKeys(r);
-    if (!r.joke && r.corner) card.topic = r.corner;
-    return r.joke ? beats(r, card, langId) : [card];
-  });
-}
-
-/* ---------- making the video ---------- */
-async function collect() {
-  beginCollect();
-  const { country, lang } = market();
-  const mode = feedMode();
-  const N = total();
-  const slots = parseLineup(lineupText());
-  const SPECIAL = new Set(['jokes', 'romance', 'travel']);
-  const topicSlots = slots.filter(s => !SPECIAL.has(s.type));
-  const freeSlots = topicSlots.filter(s => s.free);
-  const used = new Set();
-  let sequence = [];
-  let jokeAt = -1;
-  let topicWords = [];
-  /* The genres' words: people's posts about them, each with a reply, make most of the video. */
-  const talkWords = [];
-  const topicPlace = {};
-  /* Items (5, 10 or 20) is the number of cards. News, then comments gives about 40% to the reports.
-     Each comment is two cards: the short part, then the whole comment.
-     Romance adds couples (the post, the reply, what others said); Travel adds what people said
-     at famous places. A lineup line asks for more of them; the genres, when the lineup has no
-     topics, add a few. A lineup of only Romance and Travel plays only those. */
-  const romanceSlot = slots.find(s => s.type === 'romance');
-  const travelSlot = slots.find(s => s.type === 'travel');
-  const romanceGenre = genreChoices().find(g => g.id === 'romance' && g.on);
-  const travelGenre = genreChoices().find(g => g.id === 'travel' && g.on);
-  const onlySpecial = slots.length > 0 && slots.every(s => s.type === 'romance' || s.type === 'travel');
-  const newsNeed = mode === 'x' ? 0 : Math.max(1, Math.round(N * 0.4));
-  const kinds = (romanceSlot ? 1 : 0) + (travelSlot ? 1 : 0);
-  const share = onlySpecial ? Math.ceil((N - newsNeed) / kinds) : 0;
-  const byGenre = !topicSlots.length;
-  /* X comments only, by genre: couples and places together get one card in five. A short video has
-     neither; ten cards or more have one of them, drawn each time. */
-  const side = N < 10 ? 'none' : Math.random() < 0.5 ? 'romance' : 'travel';
-  const romanceNeed = onlySpecial ? (romanceSlot ? Math.min(7, Math.ceil(share / 3)) : 0)
-    : romanceSlot ? Math.max(1, Math.round(N / 6)) : (byGenre && romanceGenre) ? (mode === 'x' ? (side === 'both' || side === 'romance' ? 1 : 0) : Math.max(1, Math.round(N / 10))) : 0;
-  const travelNeed = onlySpecial ? (travelSlot ? Math.min(10, Math.ceil(share / 2)) : 0)
-    : travelSlot ? Math.max(1, Math.round(N / 5)) : (byGenre && travelGenre) ? (mode === 'x' ? (side === 'both' || side === 'travel' ? 1 : 0) : Math.max(1, Math.round(N / 10))) : 0;
-  const romancePlace = romanceGenre ? romanceGenre.place : 'middle';
-  const travelPlace = travelGenre ? travelGenre.place : 'middle';
-  if (mode === 'x') {
-    /* X comments only: no reports. Funny replies about the lineup, the accounts,
-       and today's news in each chosen genre, in the genres' Top, Middle, Bottom order. */
-    say('Searching X');
-    progress(0.1);
-    /* Genres give a word drawn at random from their own list; no news ranking is used. */
-    topicSlots.filter(s => !s.free).forEach(s => {
-      const g = s.genre && GENRES.find(x => x.id === s.genre);
-      const w = s.who ? 'to:' + s.who : g ? pickFresh(genreWords(g), 'g:' + g.id) : (s.topic || s.q || s.label);
-      topicWords.push(w);
-      if (g) topicPlace[w] = g.place;
-      if (!s.who) talkWords.push(w);
-    });
-    /* A few chosen genres: each gives more of its own words, so the talks stay on them. */
-    const chosen = topicSlots.filter(s => !s.free && s.genre && GENRE_WORDS[s.genre]);
-    if (chosen.length && chosen.length < 6) {
-      const extra = Math.min(3, Math.ceil(6 / chosen.length)) - 1;
-      chosen.forEach(s => {
-        const g = GENRES.find(x => x.id === s.genre);
-        for (let k = 0; g && k < extra; k++) {
-          const w = pickFresh(genreWords(g), 'g:' + g.id);
-          if (talkWords.indexOf(w) < 0) { talkWords.push(w); topicPlace[w] = g.place; }
-        }
-      });
-    }
-    /* A free request: jokes about the same thing, and nothing else is added. */
-    freeSlots.forEach(s => topicWords.push(termsOf(s.label, jokeLang()).join(' ')));
-    if (topicWords.length < 3 && !onlySpecial && !freeSlots.length) {
-      /* An empty lineup: every genre has the same chance; each gives one word drawn at random. */
-      shuffle(genreChoices().filter(g => g.on && GENRE_WORDS[g.id])).slice(0, 6).forEach(g => {
-        const w = pickFresh(genreWords(g), 'g:' + g.id);
-        topicWords.push(w);
-        if (!chosen.length) talkWords.push(w);
-        topicPlace[w] = g.place;
-      });
-    }
-    /* Media typed in: their newest posts come first, then the comments. */
-    if (mediaList().length) sequence = newestBySite(await mediaRows(), Math.max(1, Math.round(N * 0.4)), used);
-    jokeAt = sequence.length;
-  } else if (topicSlots.length) {
-    const parts = shares(newsNeed, topicSlots.length);
-    topicSlots.forEach((s, i) => { s.count = parts[i]; });
-    for (const slot of slots) {
-      if (S.again || sequence.length >= MAX_ITEMS) break;
-      if (slot.type === 'jokes') { jokeAt = sequence.length; continue; }
-      if (slot.type === 'romance' || slot.type === 'travel') { if (jokeAt < 0) jokeAt = sequence.length; continue; }
-      if (!slot.count) continue;
-      say('Searching ' + (slot.label || slot.cat || 'news'));
-      progress(0.08 + 0.4 * slots.indexOf(slot) / slots.length);
-      let rows = freshRows(await rowsForSlot(slot), used);
-      takeRows(shuffle(rows), used, slot.count, 0).forEach(r => sequence.push(r));
-    }
-  } else {
-    sequence = await homeNews(used, newsNeed);
-  }
-  if (S.again) return null;
-  sequence = sequence.slice(0, N);
-  if (jokeAt < 0) jokeAt = sequence.length;
-  const headlines = sequence.map(r => r.headline);
-  if (mode !== 'x') sequence.forEach(r => keywordsFor(r.headline, jokeLang()).forEach(w => topicWords.push(w)));
-  progress(0.55);
-  /* Jokes fill whatever the couples and places leave, so ask for enough to fill the rest on their own. */
-  const left0 = Math.max(0, N - sequence.length);
-  /* Free requests (words, @account, a post's address): posts with the replies under them.
-     Alone in the lineup they fill the video; with genres they share it. */
-  const others = slots.length - freeSlots.length;
-  const perFree = freeSlots.length ? Math.max(2, Math.ceil(left0 / (others ? slots.length : freeSlots.length))) : 0;
-  /* Accounts: their posts with the replies, about three cards each. */
-  const threadNeed = xAccounts().length ? Math.ceil(left0 / 3) + 1 : 0;
-  const cap = fast() ? 8000 : 20000;
-  /* X comments only: four cards in five are talks (a person's post, then a reply to it). Jokes found
-     on their own are searched only when the talks leave room. */
-  const useTalk = mode === 'x' && !onlySpecial && talkWords.length > 0;
-  /* Talks that wait from an earlier search fit when they are about a chosen genre (any genre, when none is chosen). */
-  const chosenIds = topicSlots.filter(s => !s.free && s.genre).map(s => s.genre);
-  const talkFits = w => { const g = genreOfWord(w); return talkWords.indexOf(w) >= 0 || (!!g && (!chosenIds.length || chosenIds.indexOf(g.id) >= 0)); };
-  const jokeOpts = {
-    headlines, only: freeSlots.length > 0, anyDay: mode === 'x',
-    must: freeSlots.length && topicSlots.every(s => s.free) ? [...new Set(freeSlots.flatMap(s => termsOf(s.label, jokeLang())).map(w => w.toLowerCase()))] : [],
-  };
-  let [found, couples, trips, topics, threadRows, talks] = await Promise.all([
-    useTalk ? [] : collectJokes(topicWords, onlySpecial ? 0 : left0, jokeOpts),
-    within(sideRows('romance', romanceNeed, romancePlace, collectRomance), cap, []),
-    within(sideRows('travel', travelNeed, travelPlace, collectTravel), cap, []),
-    Promise.all(freeSlots.map(s => sourceOn('x') ? within(collectAsk(s.label, Math.max(perFree, Math.ceil(left0 / freeSlots.length))), cap, []) : [])),
-    within(collectAccounts(threadNeed), cap, []),
-    useTalk ? within(collectTalk(talkWords, left0, talkFits), cap, []) : [],
-  ]);
-  if (S.again) { poolTalks(talks); return null; }
-  const sizeOf = r => (r.thread ? talkSize(r.story, jokeLang(), r.hook || (r.talk ? r.topic : '')) : 2);
-  const gotCards = () => found.length * 2 + [threadRows, talks, topics.flat()].flat().reduce((k, r) => k + sizeOf(r), 0)
-    + couples.reduce((k, r) => k + 3 + r.story.cheers.length, 0) + trips.reduce((k, r) => k + sizeOf(r), 0);
-  if (useTalk && gotCards() < left0) {
-    /* A joke on its own is often one card, so as many jokes as cards are asked for; what does not fit is left out. */
-    found = await within(collectJokes(topicWords, left0 - gotCards(), jokeOpts), cap, []);
-    if (S.again) { poolTalks(talks); return null; }
-  }
-  /* A typed word that finds little does not stop the video: jokes about words like it
-     (しょうゆこと, then しょうゆ) and talks about the genres fill the rest. */
-  if (freeSlots.length && !onlySpecial && gotCards() < left0) {
-    const like = fast() ? [] : freeSlots.flatMap(s => looser(s.label, jokeLang())).slice(0, 3);
-    const fill = [];
-    shuffle(genreChoices().filter(g => g.on && GENRE_WORDS[g.id])).slice(0, 5).forEach(g => {
-      const w = pickFresh(genreWords(g), 'g:' + g.id);
-      fill.push(w);
-      topicPlace[w] = g.place;
-    });
-    const short = left0 - gotCards();
-    const have = new Set(found.flatMap(j => jokeKeys({ text: j.text, link: j.url })));
-    const [more, moreTalks] = await Promise.all([
-      like.length ? within(collectJokes(like, Math.ceil(short / 2), { headlines, only: true, anyDay: mode === 'x' }), cap, []) : [],
-      within(collectTalk(fill, short, w => !!genreOfWord(w)), cap, []),
-    ]);
-    found = found.concat(more.filter(j => !jokeKeys({ text: j.text, link: j.url }).some(k => have.has(k))));
-    talks = talks.concat(moreTalks);
-    if (gotCards() < left0) {
-      const last = await within(collectJokes(fill, Math.ceil((left0 - gotCards()) / 2), { headlines, only: true, anyDay: mode === 'x' }), cap, []);
-      found = found.concat(last.filter(j => !jokeKeys({ text: j.text, link: j.url }).some(k => have.has(k))));
-    }
-    if (S.again) { poolTalks(talks); return null; }
-  }
-  const talkRows = talks.map(r => ({ ...r, place: topicPlace[r.topic] || (genreOfWord(r.topic) || {}).place || 'middle' }));
-  /* Beside the talks, a couple shows the post and the reply; onlookers only when a place does not need the room. */
-  if (useTalk && byGenre && !romanceSlot) couples.forEach(r => { r.story.cheers = r.story.cheers.slice(0, Math.max(0, Math.round(left0 * 0.2) - 4)); });
-  /* The talks that make four cards in five come first; the others wait and fill what is left. */
-  const talkFirst = [];
-  const talkRest = [];
-  const talkShare = Math.round(left0 * 0.8);
-  let talkCards = 0;
-  talkRows.forEach(r => { if (talkCards < talkShare) { talkFirst.push(r); talkCards += sizeOf(r); } else talkRest.push(r); });
-
-  const topicRows = topics.flat();
-  /* Each typed line first gets its share; what it found beyond that fills the video after the genres. */
-  const topicFirst = [];
-  const topicRest = [];
-  topics.forEach(list => {
-    let n = 0;
-    list.forEach(r => {
-      const size = sizeOf(r);
-      if (n < perFree) { topicFirst.push(r); n += size; } else topicRest.push(r);
-    });
-  });
-  /* A comment found both as a joke and under a couple plays once, as the joke. */
-  const jokeKeySet = new Set(found.flatMap(j => jokeKeys({ text: j.text, link: j.url })));
-  const coupleKeys = r => [r.story.a, r.story.b, ...r.story.cheers].flatMap(m => ['id:' + m.id, 't:' + squash(m.text).slice(0, 50)]);
-  couples.forEach(r => {
-    r.story.cheers = r.story.cheers.filter(c => !jokeKeySet.has('id:' + c.id) && !jokeKeySet.has('t:' + squash(c.text).slice(0, 50)));
-    r.keys = coupleKeys(r);
-  });
-  /* A joke is a reply: the post it answers is read too, so the video shows the post, then the reply,
-     then both together. The first jokes get this; one whose post cannot be read plays alone. */
-  const withPost = found.filter(j => j.parent && j.parent.id).slice(0, Math.ceil(left0 / 3) + 2);
-  const parents = await Promise.all(withPost.map(j => within(fetchStatus(j.parent.id), fast() ? 4000 : 7000, null)));
-  withPost.forEach((j, i) => {
-    const st = parents[i];
-    if (!st) return;
-    const lang = CJK.test(postText(st)) ? 'ja' : 'en';
-    const post = talkPost(st, lang);
-    if (!post || post.handle.toLowerCase() === j.handle.toLowerCase() || charLen(post.text) + charLen(j.text) > (lang === 'en' ? 280 : 140)) return;
-    j.post = post;
-  });
-  if (S.again) { poolTalks(talks); return null; }
-  const jokeRows = found.map(j => {
-    const place = topicPlace[j.topic] || 'middle';
-    if (!j.post) return { headline: j.text, text: j.text, link: j.url, source: 'X @' + j.handle, x: true, cat: 'REPLY', joke: true, topic: j.topic, place };
-    const story = { post: j.post, replies: [{ handle: j.handle, text: j.text, url: j.url, id: j.id }] };
-    return { thread: true, joke: true, story, headline: j.post.text, text: j.text, link: j.url, cat: 'REPLY', topic: j.topic, place, keys: threadKeys(story).concat(jokeKeys({ text: j.text, link: j.url })) };
-  });
-  const coupleRows = couples.map(r => ({ ...r, headline: r.story.a.text, joke: true }));
-  if (S.again) { poolTalks(talks); return null; }
-  if (!sequence.length && !jokeRows.length && !coupleRows.length && !trips.length && !topicRows.length && !threadRows.length && !talkRows.length) return { empty: true };
-  say('Reading the text');
-  progress(0.75);
-  /* Fit the cards to Items: reports, couples and places first, then jokes fill the rest.
-     A comment without room for two cards keeps only the whole comment. */
-  const all = sequence.concat(threadRows, talkFirst, coupleRows, trips, topicFirst, talkRest, jokeRows, topicRest);
-  const cards = await cardsFrom(all, lang.id);
-  if (S.again) { poolTalks(talks); return null; }
-  let left = N;
-  all.forEach((r, i) => {
-    let c = cards[i];
-    r._cards = null;
-    if (!c.length || left <= 0) return;
-    if (c.length > left) {
-      if (r.romance) {
-        if (left === 1) {
-          c = c.filter(card => card._both).slice(0, 1);
-          if (!c.length) return;
-        } else {
-          /* Too many cards: onlookers go first, then the first word, then the card with both. */
-          while (c.length > left && c[c.length - 1]._cheer) c = c.slice(0, -1);
-          if (c.length > left) c = c.filter(card => !card._tease);
-          if (c.length > left) c = c.filter(card => !card._both);
-          if (c.length > left) return;
-        }
-        r.story.cheers = r.story.cheers.slice(0, c.filter(card => card._cheer).length);
-        r.keys = coupleKeys(r);
-        c.forEach(card => { card.key = r.keys; });
-      } else if (r.thread) {
-        /* Too many cards: the opening words go first, then the cards that show post and reply together. */
-        if (left === 1) {
-          /* Room for one card: the one that shows the post and the reply together. */
-          c = c.filter(card => card._both).slice(0, 1);
-          if (!c.length) return;
-        } else {
-          if (c.length > left) c = c.filter(card => !card._tease);
-          if (c.length > left) c = c.filter(card => !card._both);
-          c = c.slice(0, left);
-          if (c.length < 2) return;
-        }
-        const kept = new Set(c.map(card => card.url));
-        r.story.replies = r.story.replies.filter(m => kept.has(m.url));
-        r.keys = threadKeys(r.story).concat(r.text ? jokeKeys({ text: r.text, link: r.link }) : []);
-        c.forEach(card => { card.key = r.keys; });
-      } else c = c.filter(card => card._main).slice(0, left);
-    }
-    if (!c.length) return;
-    r._cards = c;
-    left -= c.length;
-  });
-  /* Cards left over: a talk already in the video shows one more reply. */
-  for (const r of all) {
-    if (left <= 0) break;
-    if (!r._cards || !r.talk || !(r.spare && r.spare.length)) continue;
-    const m = r.spare.shift();
-    const more = threadCards({ ...r, story: { post: r.story.post, replies: [m] } }, lang.id).filter(c => c.url === m.url).slice(0, left);
-    if (!more.length) continue;
-    r.story.replies.push(m);
-    r.keys = threadKeys(r.story);
-    r._cards = r._cards.concat(more);
-    r._cards.forEach(c => { c.key = r.keys; });
-    left -= more.length;
-  }
-  /* Talks, couples and places that found no room wait for the next video. */
-  poolTalks(talks.filter(t => !talkRows.some(r => r._cards && r.story.post.id === t.story.post.id)));
-  couples.forEach((r, i) => { if (!coupleRows[i]._cards) SIDE_POOL.romance.push({ key: poolKey(), at: Date.now(), row: r }); });
-  trips.forEach(r => { if (!r._cards) SIDE_POOL.travel.push({ key: poolKey(), at: Date.now(), row: r }); });
-  /* Jokes, couples and places take turns within each band (Top, Middle, Bottom). */
-  const band = { top: 0, middle: 1, bottom: 2 };
-  const extra = [];
-  ['top', 'middle', 'bottom'].forEach(b => {
-    const lists = [threadRows, talkRows, topicRows, jokeRows, coupleRows, trips].map(list => list.filter(r => r._cards && (band[r.place] === undefined ? 'middle' : r.place) === b));
-    for (let k = 0; lists.some(l => l.length); k++) {
-      const l = lists[k % lists.length];
-      if (l.length) extra.push(l.shift());
-    }
-  });
-  /* The search was refused and almost nothing came: the video on screen keeps playing instead of a stub. */
-  if (S.show && searchResting() && all.reduce((k, r) => k + (r._cards ? r._cards.length : 0), 0) < Math.min(4, N)) return { empty: true };
-  const news = sequence.filter(r => r._cards);
-  const at = Math.min(jokeAt, news.length);
-  const rows = news.slice(0, at).concat(extra, news.slice(at));
-  const items = rows.flatMap(r => r._cards);
-  return {
-    date: chosenDate(), items, market: country.name + ' · ' + lang.name,
-    played: { news: news.flatMap(newsKeys), jokes: extra.flatMap(j => j.keys || jokeKeys(j)) },
-  };
-}
 function normItem(it) {
   const head = arr(it.head).map(up).slice(0, 3);
   return {
@@ -5569,11 +3445,7 @@ function normItem(it) {
 function normalize(s) {
   const items = (s.items || []).slice(0, MAX_ITEMS).filter(Boolean).map(normItem);
   if (!items.length) throw new Error('The script has no stories');
-  return { date: /^\d{4}-\d{2}-\d{2}$/.test(s.date || '') ? s.date : chosenDate(), items, market: String(s.market || '').trim() };
-}
-function sourcesText(s) {
-  const lines = s.items.map((it, i) => `${pad2(i + 1)} ${it.head.join(' ')} — ${it.src}${it.date ? ' (' + it.date + ')' : ''}${it.url ? '\n   ' + it.url : ''}`);
-  return lines.join('\n') + '\n\n' + S.track.credit + ', public domain\nPhotos: U.S. National Park Service & NOAA, public domain';
+  return { date: /^\d{4}-\d{2}-\d{2}$/.test(s.date || '') ? s.date : todayJST(), items, market: String(s.market || '').trim() };
 }
 async function loadFonts(script) {
   const txt = E.allText(script);
@@ -5593,6 +3465,7 @@ function sizeCanvas() {
   if (S.show && (cv.width !== S.show.W || cv.height !== S.show.H)) { cv.width = S.show.W; cv.height = S.show.H; }
 }
 function safeUrl(u) {
+  if (!u) return '';
   try {
     const x = new URL(String(u || ''), location.href);
     return x.protocol === 'http:' || x.protocol === 'https:' ? x.href : '';
@@ -5694,21 +3567,12 @@ function beginPlayback(T0) {
   paintSound();
   if (!S.raf) S.raf = requestAnimationFrame(tick);
 }
-function endMode() { const el = $('endMode'); return el && el.value === 'loop' ? 'loop' : 'update'; }
 function tick() {
   S.raf = 0;
   if (!S.playing || !S.show) return;
   let T = currentT();
   if (S.show.duration > 0 && T >= S.show.duration) {
-    /* At the end: a new video (Update, the default) or the same one again (Repeat).
-       If nothing new is found, the video plays again and the next end tries again (at most every 30 s). */
-    if (!S.busy && endMode() === 'update' && Date.now() - (S.endTry || 0) > 30000) { S.endTry = Date.now(); refreshMarket(); }
-    if (S.busy) {
-      draw(Math.max(0, S.show.duration - 1 / E.FPS));
-      $('seek').value = '1000';
-      if (S.playing) S.raf = requestAnimationFrame(tick);
-      return;
-    }
+    /* At the end the video plays again. */
     const over = T % S.show.duration;
     S.origin = over;
     S.t0perf = performance.now();
@@ -5725,12 +3589,8 @@ async function setScript(raw, autoplay) {
   S.script = s;
   S.show = E.prepare(s, preset(), LOOK);
   sizeCanvas();
-  $('json').value = JSON.stringify(s, null, 2);
-  S.jsonClean = $('json').value;
-  $('sources').textContent = sourcesText(s);
   $('play').disabled = false;
   $('seek').disabled = false;
-  $('exportBtn').disabled = false;
   /* An MP4 that waits to be saved stays ready; one whose save was already tried makes room for the new video. */
   if (S.ready && S.ready.tried) S.ready = null;
   resetDownload();
@@ -5751,54 +3611,28 @@ async function setScript(raw, autoplay) {
 }
 function setBusy(b) {
   S.busy = b;
-  $('update').disabled = !!b;
-  $('update').textContent = b ? 'Creating…' : 'Update';
-  ['go', 'apply', 'exportBtn', 'dl'].forEach(id => { $(id).disabled = !!b || ((id === 'exportBtn' || id === 'dl') && !S.show); });
-  if (S.ready) $('dl').disabled = false;
+  $('addTalk').disabled = !!b;
+  $('dl').disabled = !S.ready && (!!b || !S.show);
 }
-async function runAll(opts) {
-  opts = opts || {};
-  if (S.busy) { S.again = opts; return; }
-  setBusy(true);
-  say('Searching ' + (feedMode() === 'x' ? 'X' : 'the news'));
-  progress(0.05);
-  let script = null;
-  try {
-    script = await collect();
-  } catch (e) {
-    console.error(e);
-    if (!S.again) { say(e.message || String(e), true); progress(0); }
-  }
-  const again = S.again;
-  S.again = null;
-  setBusy(false);
-  /* A newer request came in while collecting: collect again instead of showing the older result. */
-  if (again) return runAll(again);
-  if (!script) return;
-  if (script.empty) {
-    progress(0);
-    if (searchResting()) say(S.show ? 'The search on X is busy. This video keeps playing; a new one comes in a minute or two.' : 'The search on X is busy. Press Update in a minute or two.', !S.show);
-    else say(S.show ? 'No new stories or jokes yet. This video keeps playing. Press Update again later.' : 'No new stories or jokes yet. Press Update again later.', !S.show);
+/* The video is made again from the talks. With none, the picture is empty and the page says what to do. */
+async function rebuild(autoplay) {
+  const script = makeScript();
+  if (!script) {
+    stop();
+    S.script = null;
+    S.show = null;
+    ctx.clearRect(0, 0, $('cv').width, $('cv').height);
+    $('play').disabled = true;
+    $('play').textContent = 'Play';
+    $('seek').disabled = true;
+    $('seek').value = '0';
+    $('storyLink').hidden = true;
+    resetDownload();
+    say('Press a genre to open the search on X. Copy a post and a reply there, then paste them here.');
     return;
   }
-  try {
-    progress(1);
-    await setScript(script, true);
-    remember(SEEN_NEWS, script.played.news, 600);
-    remember(SEEN_JOKES, script.played.jokes, 600);
-    if (opts.export) await exportMP4(chosenFormats());
-  } catch (e) {
-    console.error(e);
-    say(e.message || String(e), true);
-    progress(0);
-  }
-}
-let refreshTimer = 0;
-function refreshMarket() { clearTimeout(refreshTimer); refreshTimer = 0; return runAll({ export: false }).catch(() => {}); }
-function scheduleRefresh(delay) {
-  clearTimeout(refreshTimer);
-  if (!delay) { refreshMarket(); return; }
-  refreshTimer = setTimeout(refreshMarket, delay);
+  try { await setScript(script, autoplay !== false); }
+  catch (e) { console.error(e); say(e.message || String(e), true); }
 }
 function toggle() {
   if (!S.show) return;
@@ -5891,7 +3725,6 @@ async function useTrack(id) {
   S.track = t;
   S.music = bytes;
   E.setMusicCredit(t.credit);
-  if (S.script) $('sources').textContent = sourcesText(S.script);
   redraw();
   if (!S.el) return;
   /* The same audio element keeps playing, so iPhone still allows it after the change. */
@@ -5910,7 +3743,6 @@ async function useTrack(id) {
 }
 
 /* ---------- MP4 export (as on the News page) ---------- */
-function chosenFormats() { return [...document.querySelectorAll('.fx')].filter(x => x.checked).map(x => x.value); }
 function parseM4A(u8) {
   const dv = new DataView(u8.buffer, u8.byteOffset, u8.byteLength);
   const str = (p, n) => String.fromCharCode(...u8.subarray(p, p + n));
@@ -6316,13 +4148,10 @@ function openStudio() {
   $('gear').setAttribute('aria-expanded', 'true');
 }
 function initUI() {
-  $('date').value = Q.get('date') || todayJST();
-  $('autoExport').checked = store.get('autoExport', '0') === '1';
-  $('autoExport').onchange = () => store.set('autoExport', $('autoExport').checked ? '1' : '0');
   $('gear').onclick = () => { if (studioOpen()) closeStudio(); else openStudio(); };
   $('backVideo').onclick = closeStudio;
   $('backDock').onclick = closeStudio;
-  $('home').onclick = () => { closeStudio(); window.scrollTo(0, 0); refreshMarket(); };
+  $('home').onclick = () => { closeStudio(); window.scrollTo(0, 0); };
   if (Q.get('edit') === '1') openStudio();
   /* Reply News starts on Auto: portrait on phones, landscape on computers, until another layout is chosen. */
   const forced = Q.get('format');
@@ -6331,22 +4160,6 @@ function initUI() {
   $('layout').value = forced === 'pc' || forced === 'youtube' ? forced : (forced === 'x' ? 'phone' : (['auto', 'phone', 'x', 'youtube', 'pc'].includes(savedLayout) ? savedLayout : 'auto'));
   $('layout').onchange = () => { if (!Q.get('format')) store.set('layout', $('layout').value); applyLayout(); };
   applyLayout();
-  const arm = id => ['applyLine', 'apply', 'go'].forEach(x => $(x).classList.toggle('on', x === id));
-  $('go').onclick = () => { arm('go'); runAll({ export: $('autoExport').checked }); };
-  $('apply').onclick = () => {
-    arm('apply');
-    if ($('json').value !== (S.jsonClean || '')) {
-      try { setScript(JSON.parse($('json').value), true).catch(e => say(e.message, true)); } catch (e) { say('Could not read the JSON: ' + e.message, true); }
-      return;
-    }
-    refreshMarket();
-  };
-  $('exportBtn').onclick = () => exportMP4(chosenFormats()).catch(e => { console.error(e); say('Export failed: ' + e.message, true); });
-  $('copySrc').onclick = () => {
-    const text = $('sources').textContent;
-    const done = () => say('Copied the sources.');
-    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done).catch(() => say('Could not copy. Select the text instead.', true));
-  };
   let resizeTimer = 0;
   window.addEventListener('resize', () => {
     if (Q.get('format') || $('layout').value !== 'auto' || S.busy) return;
@@ -6379,22 +4192,6 @@ function initUI() {
     b.onclick = () => usePace(p.sec);
     $('paces').appendChild(b);
   });
-  const countBox = $('counts');
-  const paintCounts = () => countBox.querySelectorAll('button').forEach(b => b.classList.toggle('on', Number(b.dataset.n) === total()));
-  COUNTS.forEach(n => {
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.dataset.n = String(n);
-    b.textContent = String(n);
-    b.onclick = () => {
-      if (total() === n) return;
-      store.set('count', String(n));
-      paintCounts();
-      scheduleRefresh(0);
-    };
-    countBox.appendChild(b);
-  });
-  paintCounts();
   const themeBox = $('theme');
   const paintTheme = () => {
     document.documentElement.dataset.theme = themeBox.value;
@@ -6405,136 +4202,85 @@ function initUI() {
   themeBox.value = [...themeBox.options].some(o => o.value === savedTheme) ? savedTheme : 'dark';
   paintTheme();
   themeBox.addEventListener('change', () => { store.set('theme', themeBox.value); paintTheme(); });
-  $('endMode').value = store.get('endMode', 'update') === 'loop' ? 'loop' : 'update';
-  $('endMode').onchange = () => store.set('endMode', $('endMode').value);
-  $('speed').value = store.get('speed', 'normal') === 'fast' ? 'fast' : 'normal';
-  $('speed').onchange = () => store.set('speed', $('speed').value);
   const savedPace = Number(Q.get('pace') || store.get('pace', '3.2'));
   usePace(PACES.some(p => p.sec === savedPace) ? savedPace : 3.2);
-  const countryBox = $('country');
+  /* Language: the page's words, the date line of the video, and the language X is searched in. */
   const langBox = $('lang');
-  COUNTRIES.forEach(c => { const o = document.createElement('option'); o.value = c.id; o.textContent = c.name; countryBox.appendChild(o); });
   LANGS.forEach(l => { const o = document.createElement('option'); o.value = l.id; o.textContent = l.name; langBox.appendChild(o); });
-  const nav = (navigator.language || 'ja').toLowerCase();
-  const navCountry = nav.startsWith('en') ? 'US' : 'JP';
-  const pickedCountry = COUNTRIES.some(c => c.id === (Q.get('country') || '')) ? Q.get('country')
-    : (COUNTRIES.some(c => c.id === store.get('country', '')) ? store.get('country', '') : navCountry);
-  countryBox.value = pickedCountry;
-  const countryDefault = (COUNTRIES.find(c => c.id === pickedCountry) || COUNTRIES[0]).lang;
+  const navLang = (navigator.language || 'ja').toLowerCase().startsWith('en') ? 'en' : 'ja';
   langBox.value = LANGS.some(l => l.id === (Q.get('lang') || '')) ? Q.get('lang')
-    : (LANGS.some(l => l.id === store.get('lang', '')) ? store.get('lang', '') : countryDefault);
-  /* X comments only is the default. */
-  $('feed').value = store.get('feedMode', 'x') === 'news' ? 'news' : 'x';
-  $('feed').onchange = () => { store.set('feedMode', $('feed').value); refreshMarket(); };
-  saveAccounts(xAccounts());
-  $('addX').onclick = addAccount;
-  $('xUser').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addAccount(); } });
-  paintMedia();
-  $('addMedia').onclick = addMedia;
-  $('mediaIn').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addMedia(); } });
-  const saveMarket = () => { store.set('country', countryBox.value); store.set('lang', langBox.value); };
-  buildFilters();
-  countryBox.onchange = () => {
-    const next = COUNTRIES.find(c => c.id === countryBox.value);
-    if (next) langBox.value = next.lang;
-    saveMarket();
-    paintTerms();
-    refreshMarket();
-  };
+    : (LANGS.some(l => l.id === store.get('lang', '')) ? store.get('lang', '') : navLang);
   /* The terms open in the chosen language. */
   const paintTerms = () => document.querySelectorAll('a.terms').forEach(a => { a.href = 'terms.html' + (langBox.value === 'en' ? '#en' : ''); });
   paintTerms();
-  langBox.onchange = () => { saveMarket(); paintTerms(); refreshMarket(); };
-  $('date').onchange = () => scheduleRefresh(0);
-  const saved = (store.get('formats', '') || '').split(',').filter(f => FORMATS[f]);
-  const on = saved.length ? saved : Object.keys(FORMATS);
-  document.querySelectorAll('.fx').forEach(x => { x.checked = on.includes(x.value); x.onchange = () => store.set('formats', chosenFormats().join(',')); });
-  const lineup = $('lineup');
-  lineup.value = store.get('lineup', '').split(/\n/).map(noCount).filter(Boolean).join('\n');
-  store.set('lineup', lineup.value);
-  const fixedKeys = new Set(CHIPS.map(c => c.label.toLowerCase()));
-  const lineList = () => lineup.value.split(/\n/).map(x => x.trim()).filter(Boolean);
-  const setLines = lines => { lineup.value = lines.join('\n'); store.set('lineup', lineup.value); paintChips(); };
-  /* What was typed shows as a lit genre after the fixed ones; a press takes it out. */
-  const chipName = line => {
-    const m = line.match(/(?:x|twitter)\.com\/(?:([A-Za-z0-9_]{1,15})\/)?status/i);
-    const t = m ? '@' + (m[1] || 'X') + ' ↩' : line;
-    return charLen(t) > 18 ? [...t].slice(0, 17).join('') + '…' : t;
-  };
-  function paintChips() {
-    const lines = lineList();
-    const keys = new Set(lines.map(chipKey).filter(Boolean));
-    document.querySelectorAll('#genreChips button:not(.mine)').forEach(b => b.classList.toggle('on', keys.has(b.dataset.line)));
-    document.querySelectorAll('#genreChips button.mine').forEach(b => b.remove());
-    lines.filter(line => !fixedKeys.has(chipKey(line))).forEach(line => {
-      const b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'mine on';
-      b.dataset.noi18n = '';
-      b.textContent = chipName(line);
-      b.title = line;
-      b.onclick = () => { setLines(lineList().filter(x => x !== line)); scheduleRefresh(300); };
-      $('genreChips').appendChild(b);
-    });
-    lineup.classList.toggle('live', !!lineup.value.trim());
-  }
+  langBox.onchange = () => { store.set('lang', langBox.value); paintTerms(); reshow(); };
+
+  /* Genres: a press opens X's own search for one of the genre's words. Nothing is fetched by this page. */
   CHIPS.forEach(chip => {
     const b = document.createElement('button');
     b.type = 'button';
     b.textContent = chip.label;
-    b.dataset.line = chip.label.toLowerCase();
-    b.onclick = () => {
-      const lines = lineup.value.split(/\n/).map(s => s.trim()).filter(Boolean);
-      const key = chip.label.toLowerCase();
-      const idx = lines.findIndex(line => chipKey(line) === key);
-      if (idx >= 0) lines.splice(idx, 1);
-      else lines.push(chipLine(chip));
-      lineup.value = lines.join('\n');
-      store.set('lineup', lineup.value);
-      paintChips();
-      arm('applyLine');
-      scheduleRefresh(300);
-    };
+    b.onclick = () => openOnX(chipUrl(chip));
     $('genreChips').appendChild(b);
   });
-  paintChips();
-  /* The box under the video: what is typed joins the lineup as a genre, and the video is made again.
-     With the box empty, Update makes a new video from the lineup as it is. */
+  /* The box: words are searched on X, an @name opens that account, a post's address opens the post. */
   $('ask').onsubmit = e => {
     e.preventDefault();
     const v = $('askText').value.replace(/\s+/g, ' ').trim();
     $('askText').blur();
-    if (v) {
-      const lines = lineList();
-      if (!lines.some(line => chipKey(line) === chipKey(v))) lines.push(v);
-      setLines(lines);
-      $('askText').value = '';
+    if (v) openOnX(askUrl(v));
+  };
+  /* The talks that were pasted: each is a button; a press takes it out of the video. */
+  const paintTalks = () => {
+    const box = $('talkList');
+    box.innerHTML = '';
+    TALKS.forEach(t => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'on';
+      b.dataset.noi18n = '';
+      const name = hookOf(t.post.text, CJK.test(t.post.text) ? 'ja' : 'en', '') || [...t.post.text].slice(0, 8).join('');
+      b.textContent = name + ' ×';
+      b.title = t.post.text;
+      b.onclick = () => {
+        TALKS = TALKS.filter(x => x !== t);
+        saveTalks();
+        paintTalks();
+        rebuild(true).then(() => { if (TALKS.length) say('Removed.'); });
+      };
+      box.appendChild(b);
+    });
+    $('talkLabel').hidden = !TALKS.length;
+  };
+  const pasteInto = async el => {
+    try {
+      const t = await navigator.clipboard.readText();
+      if (!t) throw new Error('empty');
+      el.value = t;
+    } catch (e) {
+      el.focus();
+      say('Could not read what was copied. Press and hold the box and choose Paste.', true);
     }
-    refreshMarket();
   };
-  lineup.addEventListener('input', () => {
-    store.set('lineup', lineup.value);
-    paintChips();
-    $('applyLine').classList.remove('on');
-    scheduleRefresh(1500);
-  });
-  const applyLineup = () => {
-    clearTimeout(refreshTimer);
-    store.set('lineup', lineup.value);
-    paintChips();
-    arm('applyLine');
-    closeStudio();
+  $('pastePost').onclick = () => pasteInto($('postIn'));
+  $('pasteReply').onclick = () => pasteInto($('replyIn'));
+  $('addTalk').onclick = () => {
+    if (S.busy) return;
+    if (!addTalk($('postIn').value, $('replyIn').value)) { $('postIn').focus(); say('Paste the post first.', true); return; }
+    $('postIn').value = '';
+    $('replyIn').value = '';
+    paintTalks();
     window.scrollTo(0, 0);
-    refreshMarket();
+    rebuild(true);
   };
-  $('applyLine').onclick = applyLineup;
-  $('lineupGo').onclick = applyLineup;
+  loadTalks();
+  paintTalks();
+
   $('play').onclick = toggle;
-  /* A tap or click on the picture pauses and plays. A pull to refresh is not a tap. */
-  $('cv').addEventListener('click', () => { if (Date.now() - (S.pulledAt || 0) < 500) return; toggle(); });
+  /* A tap or click on the picture pauses and plays. */
+  $('cv').addEventListener('click', () => toggle());
   $('dl').onclick = () => download();
   $('full').onclick = () => toggleFull().catch(e => say(e.message || String(e), true));
-  $('update').onclick = () => { closeStudio(); refreshMarket(); };
   $('sound').onclick = () => toggleSound();
   $('seek').addEventListener('input', () => {
     if (!S.show) return;
@@ -6556,61 +4302,6 @@ function initUI() {
     tick();
   }, 40);
   setupVideoFull();
-  initPull();
-}
-
-/* ---------- pull down to refresh ---------- */
-function initPull() {
-  /* Touch uses touch events, which keep coming while the browser scrolls; a mouse uses pointer events.
-     A pull that is cancelled or lifted ends without a refresh, so it never stays half-open over the buttons. */
-  const PULL_AT = 70;
-  const frame = document.querySelector('.frame');
-  let pull = null;
-  const show = dy => {
-    const label = document.querySelector('header .pull');
-    if (label) label.textContent = dy > PULL_AT ? 'Release to refresh' : 'Pull down to refresh';
-    if (dy > 0) { frame.classList.add('pulling'); frame.style.transform = 'translateY(' + Math.min(dy * 0.35, 72) + 'px)'; }
-    else { frame.classList.remove('pulling'); frame.style.transform = ''; }
-  };
-  const end = go => {
-    const p = pull;
-    pull = null;
-    if (p && p.dy > 8) S.pulledAt = Date.now();
-    show(0);
-    if (go && p && !p.dead && p.dy > PULL_AT) refreshMarket();
-  };
-  const begin = (target, y, kind) => {
-    if (pull) end(false);
-    if (S.vfull || studioOpen() || (!fullOn() && window.scrollY > 8)) return;
-    if (target && target.closest && target.closest('button, a, input, select, textarea, .ctl, .music')) return;
-    pull = { y, kind, dy: 0, dead: false };
-  };
-  const move = y => {
-    if (!pull || pull.dead) return false;
-    pull.dy = y - pull.y;
-    if (pull.dy < -12) { pull.dead = true; show(0); return false; }
-    show(pull.dy);
-    return pull.dy > 8;
-  };
-  window.addEventListener('touchstart', e => {
-    if (e.touches.length !== 1) { if (pull) end(false); return; }
-    begin(e.target, e.touches[0].clientY, 'touch');
-  }, { passive: true });
-  window.addEventListener('touchmove', e => {
-    if (!pull || pull.kind !== 'touch' || e.touches.length !== 1) return;
-    if (move(e.touches[0].clientY) && e.cancelable) e.preventDefault();
-  }, { passive: false });
-  window.addEventListener('touchend', () => { if (pull && pull.kind === 'touch') end(true); });
-  window.addEventListener('touchcancel', () => { if (pull && pull.kind === 'touch') end(false); });
-  window.addEventListener('pointerdown', e => { if (e.pointerType === 'mouse' && e.button === 0) begin(e.target, e.clientY, 'mouse'); });
-  window.addEventListener('pointermove', e => {
-    if (!pull || pull.kind !== 'mouse' || e.pointerType !== 'mouse') return;
-    if (!(e.buttons & 1)) { end(false); return; }
-    move(e.clientY);
-  });
-  window.addEventListener('pointerup', e => { if (pull && pull.kind === 'mouse' && e.pointerType === 'mouse') end(true); });
-  window.addEventListener('pointercancel', e => { if (pull && pull.kind === 'mouse' && e.pointerType === 'mouse') end(false); });
-  window.addEventListener('blur', () => { if (pull) end(false); });
 }
 
 /* ---------- start ---------- */
@@ -6619,7 +4310,7 @@ E.setMusicCredit(TRACKS[0].credit);
 /* A newer copy on the site: load it, so a copy the browser kept from before is not shown.
    version.json names the latest build of each page; it is read past the browser's cache. */
 function watchVersion(key, url) {
-  const BUILD = '8578d129a96c';
+  const BUILD = '04a0a9bbd8b1';
   if (location.protocol === 'file:' || BUILD.indexOf('BUILD_ID') >= 0) return;
   /* At the start it may reload at once; later it waits while a video is being made or saved. */
   const check = first => {
@@ -6645,14 +4336,14 @@ watchVersion('reply', 'version.json');
 /* Japanese for the page's own words when Language is Japanese. */
 if (window.UIJA) {
   UIJA.start(() => $('lang').value);
-  ['lang', 'country'].forEach(id => $(id).addEventListener('change', () => UIJA.apply()));
+  $('lang').addEventListener('change', () => UIJA.apply());
 }
 loadAssets().then(() => {
   window.NS.ready = true;
   const requested = Q.get('music') || store.get('music', 'jupiter');
   if (requested !== 'jupiter') useTrack(requested);
   else document.querySelectorAll('#music button').forEach(b => b.classList.toggle('on', b.dataset.m === 'jupiter'));
-  runAll({ export: false });
+  rebuild(true);
 }).catch(e => { window.NS.ready = true; say(e.message || String(e), true); });
 })();
 </script>
