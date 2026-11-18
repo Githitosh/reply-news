@@ -1492,7 +1492,6 @@ async function collectRomance(need, place) {
   const lang = jokeLang();
   const past = seenSet(SEEN_JOKES);
   const now = playingKeys();
-  say('Searching couples on X');
   const queries = rotate(ROMANCE_Q[lang], 'romance:' + lang, Math.ceil(ROMANCE_Q[lang].length / 2) + 1).concat(sensitiveHidden() ? [] : FLIRT_Q[lang]);
   const lists = await Promise.all(queries.map(q => searchX(q + ' lang:' + lang + xRange())));
   const used = new Set();
@@ -1658,7 +1657,6 @@ async function collectTravel(need, place) {
   const lang = jokeLang();
   const past = seenSet(SEEN_JOKES);
   const now = playingKeys();
-  say('Searching famous places on X');
   /* Every prefecture (state) has the same chance, however often a place is posted about: the regions are
      shuffled, the ones shown in this visit wait their turn, one place is drawn from each region, and at most
      one post comes from a region. Posts are taken in the shuffled order, not by how many there are. */

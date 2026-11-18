@@ -36,7 +36,7 @@ const JA = {
   'These settings are for News only. Humor keeps its own.': 'この設定はニュース専用です。ユーモアには別の設定があります。',
   'These settings are for Humor only. News keeps its own.': 'この設定はユーモア専用です。ニュースには別の設定があります。',
   'Color': '色', 'White': '白', 'Beige': 'ベージュ', 'Pink': 'ピンク', 'Sky blue': '水色', 'Mint': 'ミント', 'Dark': 'ダーク',
-  'Travel': '観光', 'Searching famous places on X': 'Xで観光地の投稿を探しています',
+  'Travel': '観光',
   'Layout': 'レイアウト', 'Auto': '自動', 'Phone': 'スマホ', 'X': 'X', 'YouTube': 'YouTube', 'PC': 'PC',
   'Country': '国', 'Japan': '日本', 'United States': 'アメリカ',
   'Language': '言語', 'English': '英語', 'Japanese': '日本語', 'Both': '両方',
@@ -78,7 +78,7 @@ const JA = {
   'Sample (Nov 14)': 'サンプル（11月14日）', 'Copy sources': '情報源をコピー',
   // Messages
   'Searching the news': 'ニュースを探しています', 'Searching comments': 'コメントを探しています', 'Searching X': 'Xを探しています',
-  'Searching couples on X': 'Xでカップルを探しています', 'Searching jokes': 'ジョークを探しています',
+  'Searching jokes': 'ジョークを探しています',
   'Reading the text': '文章を読み込んでいます', 'Reading genres, sources, and X accounts': 'ジャンル、情報源、Xアカウントを読み込んでいます',
   'Eight accounts is the limit': 'アカウントは8つまでです', 'Use an X account name, like @name': 'Xのアカウント名を入れてください（例：@name）',
   'Copied the sources.': '情報源をコピーしました。', 'Could not copy.': 'コピーできませんでした。', 'Select the text instead.': '文字を選んでコピーしてください。',

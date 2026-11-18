@@ -2220,7 +2220,7 @@ const JA = {
   'These settings are for News only. Humor keeps its own.': 'この設定はニュース専用です。ユーモアには別の設定があります。',
   'These settings are for Humor only. News keeps its own.': 'この設定はユーモア専用です。ニュースには別の設定があります。',
   'Color': '色', 'White': '白', 'Beige': 'ベージュ', 'Pink': 'ピンク', 'Sky blue': '水色', 'Mint': 'ミント', 'Dark': 'ダーク',
-  'Travel': '観光', 'Searching famous places on X': 'Xで観光地の投稿を探しています',
+  'Travel': '観光',
   'Layout': 'レイアウト', 'Auto': '自動', 'Phone': 'スマホ', 'X': 'X', 'YouTube': 'YouTube', 'PC': 'PC',
   'Country': '国', 'Japan': '日本', 'United States': 'アメリカ',
   'Language': '言語', 'English': '英語', 'Japanese': '日本語', 'Both': '両方',
@@ -2262,7 +2262,7 @@ const JA = {
   'Sample (Nov 14)': 'サンプル（11月14日）', 'Copy sources': '情報源をコピー',
   // Messages
   'Searching the news': 'ニュースを探しています', 'Searching comments': 'コメントを探しています', 'Searching X': 'Xを探しています',
-  'Searching couples on X': 'Xでカップルを探しています', 'Searching jokes': 'ジョークを探しています',
+  'Searching jokes': 'ジョークを探しています',
   'Reading the text': '文章を読み込んでいます', 'Reading genres, sources, and X accounts': 'ジャンル、情報源、Xアカウントを読み込んでいます',
   'Eight accounts is the limit': 'アカウントは8つまでです', 'Use an X account name, like @name': 'Xのアカウント名を入れてください（例：@name）',
   'Copied the sources.': '情報源をコピーしました。', 'Could not copy.': 'コピーできませんでした。', 'Select the text instead.': '文字を選んでコピーしてください。',
@@ -4266,7 +4266,6 @@ async function collectRomance(need, place) {
   const lang = jokeLang();
   const past = seenSet(SEEN_JOKES);
   const now = playingKeys();
-  say('Searching couples on X');
   const queries = rotate(ROMANCE_Q[lang], 'romance:' + lang, Math.ceil(ROMANCE_Q[lang].length / 2) + 1).concat(sensitiveHidden() ? [] : FLIRT_Q[lang]);
   const lists = await Promise.all(queries.map(q => searchX(q + ' lang:' + lang + xRange())));
   const used = new Set();
@@ -4432,7 +4431,6 @@ async function collectTravel(need, place) {
   const lang = jokeLang();
   const past = seenSet(SEEN_JOKES);
   const now = playingKeys();
-  say('Searching famous places on X');
   /* Every prefecture (state) has the same chance, however often a place is posted about: the regions are
      shuffled, the ones shown in this visit wait their turn, one place is drawn from each region, and at most
      one post comes from a region. Posts are taken in the shuffled order, not by how many there are. */
@@ -6147,7 +6145,7 @@ E.setMusicCredit(TRACKS[0].credit);
 /* A newer copy on the site: load it, so a copy the browser kept from before is not shown.
    version.json names the latest build of each page; it is read past the browser's cache. */
 function watchVersion(key, url) {
-  const BUILD = '7ab4e4094a24';
+  const BUILD = '820551176e1d';
   if (location.protocol === 'file:' || BUILD.indexOf('BUILD_ID') >= 0) return;
   /* At the start it may reload at once; later it waits while a video is being made or saved. */
   const check = first => {
