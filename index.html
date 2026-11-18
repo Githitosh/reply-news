@@ -213,6 +213,11 @@ pre#sources { white-space: pre-wrap; font: 12px/1.5 ui-monospace,Menlo,monospace
         <option value="update">Update</option>
         <option value="loop">Repeat</option>
       </select>
+      <label for="speed">Update speed</label>
+      <select id="speed">
+        <option value="normal">Normal</option>
+        <option value="fast">Fast</option>
+      </select>
       <label for="feed">Feed</label>
       <select id="feed">
         <option value="x">X comments only</option>
@@ -2188,7 +2193,7 @@ if (typeof module === "object" && typeof module.exports === "object") Object.ass
 const JA = {
   // Header and buttons
   'Shibuya': '渋谷', '2002 World Cup final': '2002年のワールドカップ決勝',
-  'At the end': '最後まで再生したら', 'Repeat': '繰り返す',
+  'At the end': '最後まで再生したら', 'Repeat': '繰り返す', 'Update speed': '更新の速さ', 'Normal': 'ふつう', 'Fast': '高速',
   'Add an account to load its posts and the replies to them.': 'アカウントを追加すると、そのアカウントの投稿と、返信を読み込みます。',
   'Web': 'ウェブ', 'Media': 'メディア', 'Public page:': '公開ページ：', 'Replies': 'リプライ', 'Clear': '消す', 'Reading the post': '投稿を読み込んでいます',
   'Words, @account or post URL': '言葉・@アカウント・URL', 'Program repository:': 'プログラムの保存先：', 'Terms of use': '利用規約', 'Searching the web': 'ウェブを探しています',
@@ -3811,8 +3816,32 @@ function newestBySite(rows, need, used) {
   }
   return out;
 }
+/* Update speed, Fast: fewer searches and shorter waits, so a new video comes sooner. */
+function fast() { const el = $('speed'); return !!el && el.value === 'fast'; }
+/* A search that takes too long is left out; the others go on. */
+function within(job, ms, empty) {
+  return withTimeout(Promise.resolve(job), ms).catch(e => { console.warn(e); return empty; });
+}
+/* Words like the one typed, for when it finds nothing: しょうゆこと gives しょうゆ. */
+function looser(text, lang) {
+  const t = String(text || '').trim();
+  const out = [];
+  const add = w => { w = String(w || '').trim(); if ([...w].length >= 2 && w !== t && out.indexOf(w) < 0) out.push(w); };
+  const parts = t.split(/[\s　、・,]+/).filter(Boolean);
+  if (parts.length > 1) { add(parts[0]); add(parts.slice().sort((a, b) => b.length - a.length)[0]); return out.slice(0, 2); }
+  if (lang === 'en' || !CJK.test(t)) return out;
+  try {
+    if (Intl.Segmenter) {
+      const segs = [...new Intl.Segmenter('ja', { granularity: 'word' }).segment(t)].filter(x => x.isWordLike !== false).map(x => x.segment);
+      if (segs.length > 1) { add(segs.slice(0, -1).join('')); add(segs[0]); add(segs.slice().sort((a, b) => b.length - a.length)[0]); }
+    }
+  } catch (e) {}
+  const ch = [...t];
+  if (ch.length >= 4) { add(ch.slice(0, Math.ceil(ch.length * 2 / 3)).join('')); add(ch.slice(0, Math.ceil(ch.length / 2)).join('')); }
+  return out.slice(0, 2);
+}
 async function fxJson(url) {
-  const res = await withTimeout(fetch(url), 9000);
+  const res = await withTimeout(fetch(url), fast() ? 5000 : 9000);
   if (!res.ok) return null;
   return res.json();
 }
@@ -4099,7 +4128,7 @@ async function collectJokes(topics, need, opts) {
   const headlines = (opts && opts.headlines) || [];
   const rows = [];
   const keys = new Set();
-  for (let i = 0; i < queries.length && (rows.length < need * 2 || i < Math.min(firstRound, 12)) && i < 24; i += 6) {
+  for (let i = 0; i < queries.length && (rows.length < need * 2 || (!fast() && i < Math.min(firstRound, 12))) && i < (fast() ? 12 : 24); i += 6) {
     if (S.again) break;
     const batch = queries.slice(i, i + 6);
     const lists = await Promise.all(batch.map(q => fxJson('https://api.fxtwitter.com/2/search?q=' + encodeURIComponent(build(q))).then(d => ((d && d.results) || []).map(st => ({ st, q }))).catch(() => [])));
@@ -4580,72 +4609,84 @@ async function collectAsk(raw, need) {
     else if (lang === 'ja' && !CJK.test(text) && /[A-Za-z]/.test(text)) { const t = (await translateMany([text], 'ja'))[0]; if (t && CJK.test(t)) text = t; }
   } catch (e) { console.warn(e); }
   say('Searching ' + label);
-  const terms = termsOf(text, lang);
-  const query = terms.join(' ') || text;
-  /* Several searches with a different extra word each (渋谷 夜景, 渋谷, 渋谷 今日 …), changing every time;
-     the posts are taken one from each search in turn. */
-  const wiki = await wikiMemo(text, lang);
-  const variants = variantsFor(query, wiki.words, lang, Math.max(2, Math.min(5, Math.ceil(need / 3))), 'post');
-  const [lists, answers] = await Promise.all([
-    Promise.all(variants.map(q => searchX(`${q} -filter:replies -filter:retweets lang:${lang}${xRange()}`))),
-    searchX(`${variants[0]} filter:replies lang:${lang}${xRange()}`),
-  ]);
-  const low = t => String(t || '').toLowerCase();
-  const words = terms.map(low);
-  const authors = new Set();
-  const perList = lists.map(found => {
-    const mine = [];
-    found.forEach(st => {
-      const post = asPost(st);
-      const n = charLen(post.text);
-      if (!post.handle || !post.id || !askOk(st, post.text) || st.replies === 0) return;
-      if (n < 4 || n > (lang === 'en' ? 280 : 140) || jokeKeys({ text: post.text, link: post.url }).some(seen)) return;
-      const body = low(String(st.text || '') + ' ' + post.text);
-      const hits = words.filter(w => body.includes(w)).length;
-      if (words.length && !hits) return;
-      const many = typeof st.replies === 'number' ? Math.min(4, Math.log2(1 + st.replies)) : 1;
-      mine.push({ ...post, score: (hits === words.length ? 5 : hits) + many + (n <= 70 ? 2 : 0) + Math.random() * 6 });
+  const find = async (text, loose) => {
+    const terms = termsOf(text, lang);
+    const sameText = new Set();
+    const query = terms.join(' ') || text;
+    /* Several searches with a different extra word each (渋谷 夜景, 渋谷, 渋谷 今日 …), changing every time;
+       the posts are taken one from each search in turn. */
+    const wiki = loose || fast() ? { words: [] } : await within(wikiMemo(text, lang), 5000, { words: [] });
+    const variants = variantsFor(query, wiki.words, lang, loose || fast() ? 2 : Math.max(2, Math.min(5, Math.ceil(need / 3))), 'post');
+    /* The words as typed are always searched, first. */
+    if (variants.indexOf(query) < 0) variants[0] = query;
+    const [lists, answers] = await Promise.all([
+      Promise.all(variants.map(q => searchX(`${q} -filter:replies -filter:retweets lang:${lang}${xRange()}`))),
+      searchX(`${variants[0]} filter:replies lang:${lang}${xRange()}`),
+    ]);
+    const low = t => String(t || '').toLowerCase();
+    const words = terms.map(low);
+    const authors = new Set();
+    const perList = lists.map(found => {
+      const mine = [];
+      found.forEach(st => {
+        const post = asPost(st);
+        const n = charLen(post.text);
+        if (!post.handle || !post.id || !askOk(st, post.text) || st.replies === 0) return;
+        if (n < 4 || n > (lang === 'en' ? 280 : 140) || jokeKeys({ text: post.text, link: post.url }).some(seen)) return;
+        const body = low(String(st.text || '') + ' ' + post.text);
+        const hits = words.filter(w => body.includes(w)).length;
+        if (words.length && !hits) return;
+        const many = typeof st.replies === 'number' ? Math.min(4, Math.log2(1 + st.replies)) : 1;
+        mine.push({ ...post, score: (hits === words.length ? 5 : hits) + many + (n <= 70 ? 2 : 0) + Math.random() * 6 });
+      });
+      return mine.sort((a, b) => b.score - a.score);
     });
-    return mine.sort((a, b) => b.score - a.score);
-  });
-  const posts = [];
-  while (posts.length < 12 && perList.some(l => l.length)) {
-    perList.forEach(l => {
-      while (l.length) {
-        const p = l.shift();
-        if (posts.some(x => x.id === p.id) || authors.has(low(p.handle))) continue;
-        authors.add(low(p.handle));
-        posts.push(p);
-        break;
-      }
-    });
-  }
-  const threads = await askThreads(posts.slice(0, Math.min(12, Math.ceil(need / 2) + 3)), need, lang, seen, sameText);
-  /* Not enough: replies that themselves speak of the words, each shown under the post it answers. */
-  let cards = threads.reduce((k, t) => k + 1 + t.replies.length, 0);
-  if (cards < need) {
-    const extra = [];
-    answers.forEach(st => {
-      const r = asPost(st);
-      const parent = parentOf(st);
-      const tk = squash(r.text).slice(0, 50);
-      if (!r.handle || !r.id || !parent.id || extra.length >= 5 || threads.some(t => t.post.id === parent.id) || extra.some(x => x.parent === parent.id)) return;
-      if (!askOk(st, r.text) || charLen(r.text) > (lang === 'en' ? 220 : 110) || sameText.has(tk) || jokeKeys({ text: r.text, link: r.url }).some(seen)) return;
-      if (words.length && !words.some(w => low(r.text).includes(w))) return;
-      extra.push({ parent: parent.id, who: parent.who, reply: { ...r, tk } });
-    });
-    const parents = await Promise.all(extra.map(x => fetchStatus(x.parent).catch(() => null)));
-    extra.forEach((x, i) => {
-      const st = parents[i];
-      if (cards + 2 > need || !st) return;
-      const post = asPost(st);
-      post.id = x.parent;
-      if (!post.handle) post.handle = x.who;
-      if (!post.text || !askOk(st, post.text) || charLen(post.text) > (lang === 'en' ? 280 : 140) || low(post.handle) === low(x.reply.handle)) return;
-      sameText.add(x.reply.tk);
-      threads.push({ post, replies: [x.reply] });
-      cards += 2;
-    });
+    const posts = [];
+    while (posts.length < 12 && perList.some(l => l.length)) {
+      perList.forEach(l => {
+        while (l.length) {
+          const p = l.shift();
+          if (posts.some(x => x.id === p.id) || authors.has(low(p.handle))) continue;
+          authors.add(low(p.handle));
+          posts.push(p);
+          break;
+        }
+      });
+    }
+    const threads = await askThreads(posts.slice(0, Math.min(12, Math.ceil(need / 2) + 3)), need, lang, seen, sameText);
+    /* Not enough: replies that themselves speak of the words, each shown under the post it answers. */
+    let cards = threads.reduce((k, t) => k + 1 + t.replies.length, 0);
+    if (cards < need) {
+      const extra = [];
+      answers.forEach(st => {
+        const r = asPost(st);
+        const parent = parentOf(st);
+        const tk = squash(r.text).slice(0, 50);
+        if (!r.handle || !r.id || !parent.id || extra.length >= 5 || threads.some(t => t.post.id === parent.id) || extra.some(x => x.parent === parent.id)) return;
+        if (!askOk(st, r.text) || charLen(r.text) > (lang === 'en' ? 220 : 110) || sameText.has(tk) || jokeKeys({ text: r.text, link: r.url }).some(seen)) return;
+        if (words.length && !words.some(w => low(r.text).includes(w))) return;
+        extra.push({ parent: parent.id, who: parent.who, reply: { ...r, tk } });
+      });
+      const parents = await Promise.all(extra.map(x => fetchStatus(x.parent).catch(() => null)));
+      extra.forEach((x, i) => {
+        const st = parents[i];
+        if (cards + 2 > need || !st) return;
+        const post = asPost(st);
+        post.id = x.parent;
+        if (!post.handle) post.handle = x.who;
+        if (!post.text || !askOk(st, post.text) || charLen(post.text) > (lang === 'en' ? 280 : 140) || low(post.handle) === low(x.reply.handle)) return;
+        sameText.add(x.reply.tk);
+        threads.push({ post, replies: [x.reply] });
+        cards += 2;
+      });
+    }
+    return threads;
+  };
+  let threads = await find(text, false);
+  /* Nothing found: words like it are searched instead (しょうゆこと, then しょうゆ). Still nothing: it is left out. */
+  if (!threads.length) {
+    const tries = await Promise.all(looser(text, lang).map(w => find(w, true).catch(() => [])));
+    threads = tries.find(t => t.length) || [];
   }
   return threads.map(t => toRow(t, short));
 }
@@ -4941,16 +4982,35 @@ async function collect() {
   const perFree = freeSlots.length ? Math.max(2, Math.ceil(left0 / (others ? slots.length : freeSlots.length))) : 0;
   /* Accounts: their posts with the replies, about three cards each. */
   const threadNeed = xAccounts().length ? Math.ceil(left0 / 3) + 1 : 0;
-  const [found, couples, trips, topics, threadRows] = await Promise.all([
+  const cap = fast() ? 8000 : 20000;
+  let [found, couples, trips, topics, threadRows] = await Promise.all([
     collectJokes(topicWords, onlySpecial ? 0 : left0, {
       headlines, only: freeSlots.length > 0, anyDay: mode === 'x',
       must: freeSlots.length && topicSlots.every(s => s.free) ? [...new Set(freeSlots.flatMap(s => termsOf(s.label, jokeLang())).map(w => w.toLowerCase()))] : [],
     }),
-    collectRomance(romanceNeed, romancePlace).catch(e => { console.warn(e); return []; }),
-    collectTravel(travelNeed, travelPlace).catch(e => { console.warn(e); return []; }),
-    Promise.all(freeSlots.map(s => sourceOn('x') ? collectAsk(s.label, Math.max(perFree, Math.ceil(left0 / freeSlots.length))).catch(e => { console.warn(e); return []; }) : [])),
-    collectAccounts(threadNeed).catch(e => { console.warn(e); return []; }),
+    within(collectRomance(romanceNeed, romancePlace), cap, []),
+    within(collectTravel(travelNeed, travelPlace), cap, []),
+    Promise.all(freeSlots.map(s => sourceOn('x') ? within(collectAsk(s.label, Math.max(perFree, Math.ceil(left0 / freeSlots.length))), cap, []) : [])),
+    within(collectAccounts(threadNeed), cap, []),
   ]);
+  /* A typed word that finds little does not stop the video: jokes about words like it
+     (しょうゆこと, then しょうゆ) and about the genres fill the rest. */
+  if (freeSlots.length && !onlySpecial && !S.again) {
+    const got = found.length * 2 + topics.flat().reduce((k, r) => k + (r.thread ? 1 + r.story.replies.length : 2), 0);
+    if (got < left0) {
+      const like = fast() ? [] : freeSlots.flatMap(s => looser(s.label, jokeLang())).slice(0, 3);
+      const fill = [];
+      shuffle(genreChoices().filter(g => g.on && GENRE_WORDS[g.id])).slice(0, 5).forEach(g => {
+        const w = pickFresh(genreWords(g), 'g:' + g.id);
+        fill.push(w);
+        topicPlace[w] = g.place;
+      });
+      const have = new Set(found.flatMap(j => jokeKeys({ text: j.text, link: j.url })));
+      const more = await within(collectJokes(like.concat(fill), Math.ceil((left0 - got) / 2), { headlines, only: true, anyDay: mode === 'x' }), cap, []);
+      found = found.concat(more.filter(j => !jokeKeys({ text: j.text, link: j.url }).some(k => have.has(k))));
+    }
+  }
+
   const topicRows = topics.flat();
   /* Each typed line first gets its share; what it found beyond that fills the video after the genres. */
   const topicFirst = [];
@@ -5875,6 +5935,8 @@ function initUI() {
   themeBox.addEventListener('change', () => { store.set('theme', themeBox.value); paintTheme(); });
   $('endMode').value = store.get('endMode', 'update') === 'loop' ? 'loop' : 'update';
   $('endMode').onchange = () => store.set('endMode', $('endMode').value);
+  $('speed').value = store.get('speed', 'normal') === 'fast' ? 'fast' : 'normal';
+  $('speed').onchange = () => store.set('speed', $('speed').value);
   const savedPace = Number(Q.get('pace') || store.get('pace', '3.2'));
   usePace(PACES.some(p => p.sec === savedPace) ? savedPace : 3.2);
   const countryBox = $('country');
@@ -6085,7 +6147,7 @@ E.setMusicCredit(TRACKS[0].credit);
 /* A newer copy on the site: load it, so a copy the browser kept from before is not shown.
    version.json names the latest build of each page; it is read past the browser's cache. */
 function watchVersion(key, url) {
-  const BUILD = '7b151b6fd5be';
+  const BUILD = '7ab4e4094a24';
   if (location.protocol === 'file:' || BUILD.indexOf('BUILD_ID') >= 0) return;
   /* At the start it may reload at once; later it waits while a video is being made or saved. */
   const check = first => {
