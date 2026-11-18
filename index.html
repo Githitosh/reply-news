@@ -247,20 +247,20 @@ pre#sources { white-space: pre-wrap; font: 12px/1.5 ui-monospace,Menlo,monospace
       <label for="date">Date</label>
       <input type="date" id="date">
       <label class="check"><input type="checkbox" id="autoExport"> Export MP4 files after the stories are ready</label>
+      <div hidden>
       <label>Formats to export</label>
       <label class="check"><input type="checkbox" class="fx" value="x" checked> Phone and X (portrait 1080×1920)</label>
       <label class="check"><input type="checkbox" class="fx" value="youtube" checked> YouTube (portrait 1080×1920, room for buttons)</label>
       <label class="check"><input type="checkbox" class="fx" value="pc" checked> PC (landscape 1920×1080)</label>
       <button id="go" class="primary">Collect and play</button>
+      </div>
       <div id="status">Opening Reply News…</div>
       <div id="sprog"><i></i></div>
       <div id="out" class="row"></div>
       <p class="note site-link">Public page: <a href="https://githitosh.github.io/reply-news/" target="_blank" rel="noopener">https://githitosh.github.io/reply-news/</a></p>
-      <p class="note site-link"><a class="terms" href="terms.html" target="_blank" rel="noopener">Terms of use</a></p>
-      <p class="note site-link">Program repository: <a href="https://github.com/Githitosh/reply-news" target="_blank" rel="noopener">https://github.com/Githitosh/reply-news</a></p>
     </section>
 
-    <details>
+    <details hidden>
       <summary>Script (JSON)</summary>
       <textarea id="json" spellcheck="false"></textarea>
       <div class="row" style="margin-top:8px">
@@ -269,7 +269,7 @@ pre#sources { white-space: pre-wrap; font: 12px/1.5 ui-monospace,Menlo,monospace
       </div>
     </details>
 
-    <details>
+    <details hidden>
       <summary>Sources</summary>
       <pre id="sources"></pre>
       <button id="copySrc">Copy sources</button>
@@ -6145,7 +6145,7 @@ E.setMusicCredit(TRACKS[0].credit);
 /* A newer copy on the site: load it, so a copy the browser kept from before is not shown.
    version.json names the latest build of each page; it is read past the browser's cache. */
 function watchVersion(key, url) {
-  const BUILD = '820551176e1d';
+  const BUILD = '34f5650054f4';
   if (location.protocol === 'file:' || BUILD.indexOf('BUILD_ID') >= 0) return;
   /* At the start it may reload at once; later it waits while a video is being made or saved. */
   const check = first => {
