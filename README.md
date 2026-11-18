@@ -2,43 +2,32 @@
 
 https://githitosh.github.io/reply-news/
 
-A short video of a post on X and a reply to it, made in the browser from what you paste.
-Each talk plays as four cards: the post's first word, the whole post, the whole reply,
-then the post and the reply together. Download saves the video as an MP4.
+A short video of a post on X and a reply to it, made in the browser. Each talk plays as four cards:
+the post's first word, the whole post, the whole reply, then the post and the reply together.
+Download saves the video as an MP4.
 
-## What the page connects to
+## Where the talks come from
 
-Its own files (this repository, served by GitHub Pages), and one thing outside: X's official embed
-API (`publish.x.com/oembed`, no key), only when a post's link is pasted, to read that post's words.
-No third-party search API, no news API, no translation, no font service. The fonts
-(Noto Serif JP, Noto Sans JP, Tinos; SIL Open Font License) are in `assets/fonts/`.
+- **The day's talks**, from Reply News' own search data:
+  [githito.xapi](https://github.com/Githitosh/githito.xapi). A program there collects talks three
+  times a day (6:00, 12:00, 18:00 in Japan) and publishes them as one file, about 500 talks. The page
+  reads that file and searches inside it, so no search is made when a video is wanted. The last file
+  read is kept in the browser: the next visit plays at once and reads the new file meanwhile, and the
+  file is read again every ten minutes while the page is open.
+- **Pasted talks**: the link (or the words) of a post and of a reply, pasted under "Add a talk".
+  A link is read through X's official embed API (`publish.x.com/oembed`, no key).
 
-## Its own data service (`api/`)
-
-`api/collect.mjs` asks X's official API for people's posts about the genres' words and the replies
-under them, keeps the pairs that make a good talk, and saves them in `api/v1/talks-ja.json` (and
-`-en`). Those files are the service: the page reads them from its own site and plays them by itself.
-It needs one thing, an X API key (`X_BEARER_TOKEN`); without it nothing is collected and only pasted
-talks play. `api/collect-talks.workflow.yml` is a GitHub Action that runs it twice a day; it is kept
-there switched off. `api/README.md` (Japanese) has the steps, the usage it costs on X, and the file format.
-
-With talks saved, a genre button chooses that genre (lit) and Update makes another video;
-Items in Settings sets how many cards they fill.
+The page connects to nothing else: no search service, no news service, no translation, no font
+service. The fonts (Noto Serif JP, Noto Sans JP, Tinos; SIL Open Font License) are in `assets/fonts/`.
 
 ## How it is used
 
-1. Press a genre (or type words or an @account and press Enter). X's own search opens in a
-   new tab, for one of the genre's words, drawn at random each time. Only posts that someone
-   replied to are searched (`min_replies:1 -filter:replies`).
-2. Copy the link of a post and the link of a reply there (Share, Copy link). Their words work too.
-3. Paste them into Post and Reply (the Paste buttons read what was copied) and press
-   Add to the video. More than one reply: one link on each line, or a blank line between their words.
+The page makes a video by itself. A genre button chooses that genre (lit) and makes a new video;
+words typed in the box find the day's talks that say them. Update makes another video, and so does
+the end of a video; the next one is chosen and its fonts are fetched while the current one plays.
+Items in Settings sets how many cards the day's talks fill (5, 10 or 20).
 
-A pasted link gives the post's words, the writer's name and the link shown in the video. In pasted
-words, a post's address or an `@name` line gives the name and the link. The talks are kept in the browser only; the buttons under
-"In the video" remove them. A video holds up to 40 cards.
-
-Settings: layout, color, story length, wallpaper, music and language.
+Settings: layout, color, items, story length, wallpaper, music and language.
 
 ## Files
 
@@ -46,5 +35,3 @@ Settings: layout, color, story length, wallpaper, music and language.
 - `lib/mp4-muxer.js`: MP4 writing (MIT License).
 - `assets/`: wallpapers, music and fonts.
 - `python3 build.py` writes `index.html` and `version.json`.
-
-The version that searched X through a search API is the commit `9c0432e` in this repository's history.

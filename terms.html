@@ -48,16 +48,15 @@ li { margin: 4px 0; }
     <ul>
       <li>本サービスに会員登録はありません。運営者は、利用者の個人情報を集めたり保存したりしません。アクセス解析や広告の仕組みも使っていません。</li>
       <li>本サービスのページがつなぐ外部のサービスは、Xが公式に公開している埋め込み用API（publish.x.com）だけです。利用者が投稿のリンクを貼り付けたときに、その投稿の文を読むために使います。その際、IPアドレスなどの通信情報がXに送られ、Xの規約とプライバシーポリシーに従って扱われます。リンクを貼り付けなければ、つなぎません。</li>
-      <li>それ以外の他社のサービス（API）にはつなぎません。文字（フォント）、背景の写真、音楽、保存した会話のデータは、すべて本サービスのサイト内のファイルから読み込みます。</li>
-      <li>利用者が貼り付けた投稿・リプライと、設定（色、1話の長さ、壁紙、音楽、言語など）は、利用者のブラウザの中だけに保存されます。運営者には送られません。ブラウザのデータを消すと消えます。</li>
-      <li>ジャンルのボタンや入力欄から検索すると、X（x.com）のページが新しいタブで開きます。開いた先でのやりとりは、Xの規約とプライバシーポリシーに従います。</li>
+      <li>その日の会話のデータは、運営者のGitHub（https://github.com/Githitosh/githito.xapi ）に置いたファイルから読み込みます。それ以外の他社のサービス（API）にはつなぎません。文字（フォント）、背景の写真、音楽は、本サービスのサイト内のファイルから読み込みます。</li>
+      <li>読み込んだその日の会話と、利用者が貼り付けた投稿・リプライ、設定は、次に開いたときにすぐ表示できるよう、利用者のブラウザの中に保存されます。運営者には送られません。</li>
       <li>本サービスは GitHub Pages で公開しています。ページの配信にあたり、GitHub が通信情報を扱います。</li>
     </ul>
 
     <h2>3. 表示される内容</h2>
     <ul>
-      <li>動画に表示されるのは、次の2つです。(1) 利用者が自分で貼り付けた投稿とリプライ。(2) 運営者が、X公式のAPIを使って集め、本サービスのサイト内（api/v1）に保存した投稿とリプライ（保存したものがあるときだけ）。</li>
-      <li>(2) は、個人の投稿と、それに付いたリプライを組にしたものです。企業・報道機関などの投稿は最初の投稿に選びません。暴力、性的な内容、重い話題、けんか腰の言葉、広告は選びません。保存から3日で消し、Xで削除・非公開になった投稿も消します。ただし完全ではなく、不快なものが表示されることがあります。</li>
+      <li>動画に表示されるのは、次の2つです。(1) 運営者のプログラムが1日3回（6時・12時・18時ごろ）集め、運営者のGitHub（githito.xapi）に保存した、その日の投稿とリプライ（保存したものがあるときだけ）。(2) 利用者が自分で貼り付けた投稿とリプライ。</li>
+      <li>(1) は、個人の投稿と、それに付いたリプライを組にしたものです。企業・報道機関などの投稿は最初の投稿に選びません。暴力、性的な内容、重い話題、けんか腰の言葉、広告は選びません。保存から48時間で消します。ただし完全ではなく、不快なものが表示されることがあります。</li>
       <li>ご自身の投稿を表示しないでほしい場合や、権利の侵害を見つけた場合は、下記のお問い合わせ先までお知らせください。確認のうえ対応します。</li>
       <li>表示される投稿・リプライの権利は、それぞれの投稿者にあります。運営者が内容を書いたり、書き換えたりすることはありません（一部を抜き出しての表示を除きます）。</li>
       <li>投稿のリンクを貼り付けたときは、投稿者の名前とリンクを動画に表示します。文を貼り付けたときも、投稿のアドレスや「@名前」が含まれていれば表示します。</li>
@@ -68,7 +67,7 @@ li { margin: 4px 0; }
     <h2>4. 本サービスの利用</h2>
     <ul>
       <li>本サービスは無料で利用できます。</li>
-      <li>使い方：保存した会話があるジャンルは、押すとそのジャンルの会話で動画を作ります。保存した会話がないジャンルは、押すとそのジャンルの言葉でXの検索が開きます（言葉は毎回ランダムに選びます）。そこで投稿とリプライのリンク（または文）をコピーし、本サービスの「投稿」「リプライ」に貼り付けて「動画に追加」を押します。1つの会話は、最初の言葉 → 投稿の全文 → リプライの全文 → 投稿とリプライ、の順に表示されます。リプライは、リンクなら1行に1つ、文なら空行で区切ると、複数入れられます。</li>
+      <li>使い方：ページを開くと、その日の会話から自動で動画を作ります。ジャンルを押すとそのジャンルの会話で作り直し、入力欄に言葉を入れるとその言葉が入った会話を探します。最後まで流れると次の動画に進みます。自分で会話を足すときは、投稿とリプライのリンク（または文）を「投稿」「リプライ」に貼り付けて「動画に追加」を押します。1つの会話は、最初の言葉 → 投稿の全文 → リプライの全文 → 投稿とリプライ、の順に表示されます。リプライは、リンクなら1行に1つ、文なら空行で区切ると、複数入れられます。</li>
       <li>ダウンロードした動画に含まれる投稿の権利は、投稿者にあります。動画を共有・公開するときは、法令、Xの利用規約、投稿者の権利を守ってください。その責任は利用者が負います。</li>
       <li>次のことをしてはいけません。
         <ul>
@@ -85,7 +84,7 @@ li { margin: 4px 0; }
     <h2>5. 免責と責任の制限</h2>
     <ul>
       <li>本サービスは現状のまま提供されます。正確さ、特定の目的への適合、途切れずに使えることを保証しません。</li>
-      <li>Xの検索画面の変更などにより、検索を開くボタンが期待どおりに動かなくなることがあります。</li>
+      <li>その日の会話は自動で集めるため、数が少ない日や、届くのが遅れる日があります。</li>
       <li>本サービスの利用やコンテンツによって生じた損害について、運営者は責任を負いません。ただし、運営者の故意または重大な過失による場合を除きます。</li>
       <li>法令により運営者が責任を負う場合でも、運営者の故意または重大な過失による場合を除き、その範囲は通常生じる直接の損害に限ります。</li>
     </ul>
@@ -114,16 +113,15 @@ li { margin: 4px 0; }
     <ul>
       <li>There are no accounts. The Operator does not collect or store personal information, and uses no analytics or ads.</li>
       <li>The only outside service the page connects to is the embed API that X officially publishes (publish.x.com). It is used when you paste a post's link, to read that post's words. Connection data such as your IP address then goes to X, under X's terms and privacy policy. Without a pasted link, it is not contacted.</li>
-      <li>No other company's service (API) is used. Fonts, background photos, music and saved talks are all loaded from files on the Service's own site.</li>
-      <li>The posts and replies you paste, and your settings (color, story length, wallpaper, music, language), are kept only in your browser. They are not sent to the Operator, and are gone when you clear the browser's data.</li>
-      <li>A genre button or the search box opens a page of X (x.com) in a new tab. What happens there is under X's own terms and privacy policy.</li>
+      <li>The day's talks are loaded from files on the Operator's GitHub (https://github.com/Githitosh/githito.xapi ). No other company's service (API) is used. Fonts, background photos and music are loaded from files on the Service's own site.</li>
+      <li>The day's talks that were loaded, the posts and replies you paste, and your settings are kept in your browser, so the next visit can show them at once. They are not sent to the Operator.</li>
       <li>The Service is published on GitHub Pages; GitHub handles connection data to deliver the page.</li>
     </ul>
 
     <h2>3. Content on the Service</h2>
     <ul>
-      <li>A video shows two things: (1) the posts and replies that you paste; (2) posts and replies that the Operator collected through X's official API and saved on the Service's own site (api/v1), when any are saved.</li>
-      <li>(2) are a person's post together with a reply to it. Posts by companies and news media are not chosen as the first post. Violence, sexual content, hard news, fighting words and ads are not chosen. A saved talk is removed after three days, and so are posts deleted or hidden on X. This is not perfect, and something unpleasant may still appear.</li>
+      <li>A video shows two things: (1) the day's posts and replies that the Operator's program collects three times a day (about 6:00, 12:00 and 18:00 in Japan) and saves on the Operator's GitHub (githito.xapi), when any are saved; (2) the posts and replies that you paste.</li>
+      <li>(1) are a person's post together with a reply to it. Posts by companies and news media are not chosen as the first post. Violence, sexual content, hard news, fighting words and ads are not chosen. A saved talk is removed after 48 hours. This is not perfect, and something unpleasant may still appear.</li>
       <li>If you do not want your post shown, or you find an infringement, tell us at the contact below and we will look into it.</li>
       <li>The rights in the posts and replies shown belong to their writers. The Operator does not write or change them, except to show a part of one.</li>
       <li>When you paste a post's link, the writer's name and the link are shown in the video. When you paste its words, they are shown if the text has the post's address or an "@name".</li>
@@ -134,7 +132,7 @@ li { margin: 4px 0; }
     <h2>4. Using the Service</h2>
     <ul>
       <li>The Service is free.</li>
-      <li>How it works: a genre that has saved talks makes a video from them when pressed. A genre without any opens a search on X for one of the genre's words (drawn at random each time). Copy the links (or the words) of a post and a reply there, paste them into "Post" and "Reply" on the Service, and press "Add to the video". A talk plays as its first word, the whole post, the whole reply, then the post and the reply together. More than one reply: one link on each line, or a blank line between their words.</li>
+      <li>How it works: the page makes a video by itself from the day's talks. A genre button makes it again from that genre's talks, and words typed in the box find the talks that say them. At the end, the next video plays. To add a talk yourself, paste the links (or the words) of a post and a reply into "Post" and "Reply" and press "Add to the video". A talk plays as its first word, the whole post, the whole reply, then the post and the reply together. More than one reply: one link on each line, or a blank line between their words.</li>
       <li>The rights in posts shown in a downloaded video belong to their writers. When you share or publish a video, follow the law, X's terms and the writers' rights. That is your responsibility.</li>
       <li>You must not:
         <ul>
@@ -151,7 +149,7 @@ li { margin: 4px 0; }
     <h2>5. Disclaimers and limitation of liability</h2>
     <ul>
       <li>The Service is provided as is, without any guarantee that it is accurate, fit for a purpose, or always available.</li>
-      <li>The buttons that open a search on X may stop working as expected when X changes its search page.</li>
+      <li>The day's talks are collected automatically, so some days have few, and some arrive late.</li>
       <li>The Operator is not liable for damage arising from the Service or its Content, except in cases of the Operator's intent or gross negligence. Where the law makes the Operator liable, that liability is limited to ordinary, direct damage, except in cases of intent or gross negligence.</li>
     </ul>
 

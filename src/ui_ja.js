@@ -7,7 +7,12 @@
 'use strict';
 
 const JA = {
-  // Finding posts on X and pasting them
+  // The day's talks
+  "Search today's talks": '今日の会話から探す',
+  "Today's talks have not arrived yet. Paste the link of a post and of a reply below, or come back later.": '今日の会話データがまだ届いていません。下に投稿とリプライのリンクを貼るか、あとでもう一度開いてください。',
+  "No talks of this genre in today's data yet.": 'このジャンルの会話は、今日のデータにまだありません。',
+  "No talks say that in today's data.": 'その言葉が入った会話は、今日のデータにありません。',
+  // Pasting posts
   'Find on X': 'Xで探す', 'Words or @account': '言葉・@アカウント', 'Add a talk': '会話を追加', 'In the video': '動画に入っている会話（押すと消えます）',
   'Post': '投稿', 'Reply': 'リプライ', 'Paste': '貼り付け', 'Add to the video': '動画に追加',
   'Paste the post or its link': '投稿のリンクか、投稿の文を貼り付け', 'Paste the reply or its link': 'リプライのリンクか、リプライの文を貼り付け',

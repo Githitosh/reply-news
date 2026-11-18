@@ -33,12 +33,12 @@ main { padding: 0 16px calc(24px + env(safe-area-inset-bottom)); max-width: 1100
 /* The portrait video is as tall as the screen allows, leaving room for the title and the buttons. */
 .frame { width: min(100%, max(280px, calc((100vh - 150px) * 9 / 16))); width: min(100%, max(280px, calc((100dvh - 150px) * 9 / 16))); }
 .ctl, .seekrow, .caption, .music, .music-label, .ask { max-width: 560px; margin-left: auto; margin-right: auto; }
-/* The box under the video: what is typed is searched on X, in a new tab. */
+/* The box under the genres: what is typed is searched in the day's talks. */
 .ask { display: flex; gap: 8px; align-items: center; margin-top: 14px; }
 .ask input[type=text] { flex: 1 1 auto; width: auto; min-width: 0; font-size: 16px; padding: 10px 12px; }
 .ask button { flex: none; padding: 10px 12px; font-size: 14px; white-space: nowrap; }
 .ask #askGo { background: var(--acc); border-color: var(--acc); color: var(--on); }
-/* Genres on the main screen: a press opens the search on X, or chooses the genre (lit) when the site's own data has talks of it. */
+/* Genres on the main screen: a press chooses the genre (lit); the words typed in the box follow as a lit button. */
 #genreChips { justify-content: center; margin-top: 8px; }
 /* The post and the reply are pasted here; the talks in the video follow as buttons (a press removes one). */
 .compose, #talkList { max-width: 560px; margin-left: auto; margin-right: auto; }
@@ -47,6 +47,7 @@ main { padding: 0 16px calc(24px + env(safe-area-inset-bottom)); max-width: 1100
 .paste-row button { flex: none; padding: 10px 12px; font-size: 14px; white-space: nowrap; }
 #addTalk { margin-top: 12px; }
 #talkList { justify-content: center; }
+#genreChips button.mine { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
 #talkList button { flex: 0 1 auto; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 /* Settings: the rows of buttons that were under the video. */
 .studio .music { margin-top: 2px; }
@@ -169,11 +170,11 @@ pre#sources { white-space: pre-wrap; font: 12px/1.5 ui-monospace,Menlo,monospace
     </div>
   </div>
   <p id="caption" class="caption">Opening Reply News…</p>
-  <p class="music-label">Find on X</p>
-  <form id="ask" class="ask" autocomplete="off">
-    <input type="text" id="askText" enterkeyhint="search" placeholder="Words or @account">
-  </form>
+  <p class="music-label">Genres</p>
   <div id="genreChips" class="music"></div>
+  <form id="ask" class="ask" autocomplete="off">
+    <input type="text" id="askText" enterkeyhint="search" placeholder="Search today's talks">
+  </form>
   <p class="music-label">Add a talk</p>
   <div class="compose">
     <label for="postIn">Post</label>
@@ -2147,7 +2148,12 @@ if (typeof module === "object" && typeof module.exports === "object") Object.ass
 'use strict';
 
 const JA = {
-  // Finding posts on X and pasting them
+  // The day's talks
+  "Search today's talks": '今日の会話から探す',
+  "Today's talks have not arrived yet. Paste the link of a post and of a reply below, or come back later.": '今日の会話データがまだ届いていません。下に投稿とリプライのリンクを貼るか、あとでもう一度開いてください。',
+  "No talks of this genre in today's data yet.": 'このジャンルの会話は、今日のデータにまだありません。',
+  "No talks say that in today's data.": 'その言葉が入った会話は、今日のデータにありません。',
+  // Pasting posts
   'Find on X': 'Xで探す', 'Words or @account': '言葉・@アカウント', 'Add a talk': '会話を追加', 'In the video': '動画に入っている会話（押すと消えます）',
   'Post': '投稿', 'Reply': 'リプライ', 'Paste': '貼り付け', 'Add to the video': '動画に追加',
   'Paste the post or its link': '投稿のリンクか、投稿の文を貼り付け', 'Paste the reply or its link': 'リプライのリンクか、リプライの文を貼り付け',
@@ -3085,47 +3091,7 @@ const GENRES = [
   { id: 'romance', name: 'Romance', place: 'middle', q: { JP: '恋愛', US: 'dating relationship' } },
   { id: 'travel', name: 'Travel', place: 'middle', q: { JP: '観光', US: 'travel sightseeing' } },
 ];
-/* Sources: X (on at the start) and Web (open reports, off at the start). Other media are typed in. */
-/* Words for each genre, in each country. One or two are drawn at random each time, so no single word leads. */
-const GENRE_WORDS = {
-  space: { JP: ['宇宙', 'ロケット', '人工衛星', 'JAXA', '天体', '満月', '火星', '星空', '流れ星', '天文台', 'プラネタリウム', '宇宙飛行士', 'ISS', '望遠鏡', '銀河', '日食', '月食', '惑星', 'オーロラ', '宇宙食'],
-    US: ['space', 'NASA', 'rocket', 'satellite', 'astronomy', 'moon', 'Mars', 'telescope', 'astronaut', 'ISS', 'galaxy', 'eclipse', 'planet', 'meteor shower', 'stargazing', 'aurora', 'comet', 'black hole'] },
-  politics: { JP: ['政治', '国会', '選挙', '首相', '政府', '議員', '知事', '市長', '投票', '政策', '予算', '税金', '法案', '記者会見', '内閣', '都議会', '市議会', '公約', '演説', '世論調査'],
-    US: ['politics', 'Congress', 'election', 'senate', 'governor', 'mayor', 'vote', 'policy', 'budget', 'taxes', 'bill', 'press conference', 'White House', 'campaign', 'debate', 'poll', 'city hall', 'ballot'] },
-  science: { JP: ['科学', '研究', '発見', '実験', '論文', '化学', '物理', '生物', '恐竜', '化石', 'ロボット', 'AI', '数学', '深海', '細胞', '遺伝子', '気象', '昆虫', '植物', 'ノーベル賞'],
-    US: ['science', 'research', 'scientists', 'discovery', 'study', 'chemistry', 'physics', 'biology', 'dinosaur', 'fossil', 'robot', 'AI', 'math', 'deep sea', 'genetics', 'weather', 'insects', 'Nobel'] },
-  culture: { JP: ['文化', '美術', '展覧会', '伝統', '博物館', '美術館', '祭り', '書道', '茶道', '着物', '歌舞伎', '落語', '俳句', '読書', '図書館', '建築', '写真展', '陶芸', '神社', 'お寺'],
-    US: ['culture', 'museum', 'art', 'exhibition', 'heritage', 'gallery', 'festival', 'theater', 'poetry', 'books', 'library', 'architecture', 'photography', 'pottery', 'opera', 'ballet', 'sculpture', 'history'] },
-  local: { JP: ['地域', '下町', '田舎暮らし', '市役所', '商店街', '地元', '駅前', '公園', '図書館', '朝市', '道の駅', '町内会', '夏祭り', '回覧板', '銭湯', '田舎', '方言', 'ご当地', '路線バス', '近所'],
-    US: ['local', 'town', 'city council', 'community', 'neighborhood', 'small town', 'main street', 'farmers market', 'park', 'library', 'county fair', 'hometown', 'downtown', 'neighbors', 'town hall', 'parade', 'block party', 'local bus'] },
-  entertainment: { JP: ['芸能', '映画', 'ドラマ', 'アニメ', '音楽', 'ライブ', '漫画', 'ゲーム', 'お笑い', 'アイドル', '声優', '紅白', '舞台', 'ミュージカル', 'バラエティ', 'ラジオ', '特撮', '主題歌', '最終回', '推し'],
-    US: ['movie', 'TV show', 'music', 'celebrity', 'concert', 'anime', 'video game', 'comedy', 'album', 'sitcom', 'musical', 'podcast', 'trailer', 'finale', 'sequel', 'box office', 'award show', 'streaming'] },
-  safety: { JP: ['警察', '防犯', '交通安全', '消防', '防災', '避難訓練', '消防団', '交番', '白バイ', 'パトカー', '救急車', '見守り', '横断歩道', '自転車', 'ヘルメット', 'シートベルト', '落とし物', '迷子'],
-    US: ['police', 'public safety', 'fire department', 'traffic safety', 'firefighters', 'crosswalk', 'seat belt', 'helmet', 'lost and found', 'lifeguard', 'fire drill', 'bike lane', 'speed limit', 'park ranger', 'crossing guard'] },
-  sports: { JP: ['スポーツ', '野球', 'サッカー', '大相撲', 'バスケ', 'テニス', 'ゴルフ', 'マラソン', '駅伝', '卓球', 'バレーボール', 'ラグビー', '水泳', '柔道', 'フィギュアスケート', '甲子園', 'Jリーグ', '陸上', 'バドミントン', 'ボクシング', 'スケボー', '筋トレ'],
-    US: ['sports', 'NFL', 'NBA', 'baseball', 'soccer', 'tennis', 'golf', 'marathon', 'hockey', 'college football', 'MLB', 'swimming', 'gymnastics', 'boxing', 'track and field', 'volleyball', 'skateboarding', 'fantasy football', 'playoffs', 'gym'] },
-  food: { JP: ['食べ物', 'グルメ', 'スイーツ', 'ラーメン', '料理', 'カレー', '寿司', 'おにぎり', '弁当', 'パン', 'ケーキ', 'アイス', '焼肉', 'うどん', 'そば', '餃子', '唐揚げ', 'コンビニ', '自炊', '朝ごはん', 'おやつ', '鍋料理'],
-    US: ['food', 'recipe', 'snack', 'dessert', 'cooking', 'pizza', 'burger', 'tacos', 'pasta', 'barbecue', 'breakfast', 'sandwich', 'ice cream', 'baking', 'coffee', 'fries', 'leftovers', 'meal prep', 'cookies', 'ramen'] },
-  restaurant: { JP: ['レストラン', 'カフェ', '飲食店', '新店舗', '居酒屋', '定食屋', '喫茶店', '食堂', 'ファミレス', '回転寿司', '焼肉屋', 'ラーメン屋', 'パン屋', 'ケーキ屋', '食べ放題', 'ランチ', 'モーニング', '行列', '常連', '店員さん'],
-    US: ['restaurant', 'cafe', 'diner', 'chef', 'brunch', 'bakery', 'food truck', 'drive thru', 'buffet', 'waiter', 'menu', 'takeout', 'steakhouse', 'pizzeria', 'coffee shop', 'happy hour', 'reservation', 'tip'] },
-};
-function genreWords(g) {
-  const c = uiLang() === 'en' ? 'US' : 'JP';
-  const w = GENRE_WORDS[g.id];
-  return w ? (w[c] || w.US) : [g.q[c] || g.q.US];
-}
-const pick = list => list[Math.floor(Math.random() * list.length)];
-/* A word from a list that was not used lately (a genre's words take turns). */
-const USED_W = new Map();
-function pickFresh(list, key) {
-  const used = USED_W.get(key) || [];
-  let pool = list.filter(w => !used.includes(w));
-  if (!pool.length) pool = list.filter(w => w !== used[used.length - 1]);
-  if (!pool.length) pool = list;
-  const w = pick(pool);
-  USED_W.set(key, used.concat(w).slice(-Math.max(1, list.length - 1)));
-  return w;
-}
+/* The genre buttons under the video. */
 const CHIPS = [
   { label: 'Space', line: 'Space' },
   { label: 'Politics', line: 'Politics' },
@@ -3139,9 +3105,6 @@ const CHIPS = [
   { label: 'Restaurant', line: 'Restaurant' },
   { label: 'Romance', line: 'Romance' },
   { label: 'Travel', line: 'Travel' },
-  { label: 'Musk X', line: 'Musk X' },
-  { label: 'SpaceX', line: 'SpaceX' },
-  { label: 'Jokes', line: 'Jokes' },
 ];
 const SMALL = new Set(['to', 'and', 'of', 'on', 'for', 'from', 'in', 'at', 'by', 'with', 'the', 'a', 'an', 'into', 'vs']);
 const STOP = new Set(['NEWS','REPORT','LATEST','SAYS','SAID','AFTER','AMID','OVER','INTO','ITS','HIS','HER','ONE','TWO','NEW','WORLD','UPDATE','LIVE','VIDEO','TODAY','YEAR','JAPAN','OFFICIALS','GOVERNMENT','PEOPLE','ABOUT','THEIR','THEY','BEEN','WERE','WAS','ARE','HAS','HAD','NOT','BUT','YOU','WHO','WHAT','WHEN','WHERE','WHICH','ALSO','MORE','THAN','JUST','MAY','CAN','NOW','WILL','HAVE','FROM','WITH','THAT','THIS','AND','THE','FOR','HEADLINE','BREAKING','HOW','VIEW','SEE','LOOK','HERE','COMING','SOON','LIKE','GET','GOT','OUT','OUR','YOUR','BACK','NEXT','FIRST','EVER','WATCH']);
@@ -3184,9 +3147,8 @@ async function loadAssets() {
 }
 
 /* ---------- the talks: what was pasted ---------- */
-/* This page uses no other company's service: no search service, no news service, no translation.
-   A genre opens X's own search in a new tab. A post and a reply are copied there (their links, or their
-   words) and pasted here, and the video is made from them. They are kept in this browser only. */
+/* Beside the day's talks, a post and a reply can be pasted (their links, or their words), and they play
+   first. Pasted talks are kept in this browser only. */
 const charLen = t => [...String(t || '')].length;
 function uiLang() { const el = $('lang'); return el && el.value === 'en' ? 'en' : 'ja'; }
 let TALKS = [];
@@ -3269,112 +3231,91 @@ async function addTalk(postRaw, replyRaw) {
   saveTalks();
   return true;
 }
-/* ---------- the site's own data service ---------- */
-/* api/v1/talks-<language>.json, on this same site: talks collected by api/collect.mjs through X's official
-   API. The page reads that file and nothing else; with the file empty, only pasted talks play. */
+/* ---------- the talks' source: githito.xapi ---------- */
+/* Reply News' own search data (github.com/Githitosh/githito.xapi): a program there collects talks three
+   times a day and publishes them as one file. The page reads that file and searches inside it, so no
+   search is made while a video is wanted: the day's talks are already here.
+   The last file read is kept in this browser, so the next visit starts at once and reads the new file meanwhile. */
+const XAPI = 'https://raw.githubusercontent.com/Githitosh/githito.xapi/api/v1/';
 let FEED = [];
 let AUTO = [];
+let NEXT = null;
+let QUERY = '';
 let feedAt = 0;
 const SHOWN = new Set();
+const goodTalks = list => (Array.isArray(list) ? list : []).filter(t => t && t.id && t.post && t.post.text && Array.isArray(t.replies) && t.replies.some(r => r && r.text));
+function cachedFeed() {
+  try { FEED = goodTalks(JSON.parse(store.get('feed.' + uiLang(), '[]'))); } catch (e) { FEED = []; }
+}
 async function loadFeed() {
   feedAt = Date.now();
   try {
-    const res = await fetch('api/v1/talks-' + uiLang() + '.json?t=' + Math.floor(Date.now() / 300000), { cache: 'no-store' });
-    const data = res.ok ? await res.json() : null;
-    FEED = ((data && data.talks) || []).filter(t => t && t.id && t.post && t.post.text && Array.isArray(t.replies) && t.replies.some(r => r && r.text));
-  } catch (e) { FEED = []; }
+    const res = await fetch(XAPI + 'talks-' + uiLang() + '.json?t=' + Math.floor(Date.now() / 300000), { cache: 'no-store' });
+    if (!res.ok) return false;
+    const talks = goodTalks((await res.json()).talks);
+    /* An empty answer does not wipe the talks already here. */
+    if (!talks.length && FEED.length) return false;
+    FEED = talks;
+    store.set('feed.' + uiLang(), JSON.stringify(talks));
+    return true;
+  } catch (e) { return false; }
 }
 function pickedGenres() { try { const v = JSON.parse(store.get('genres', '[]')); return Array.isArray(v) ? v : []; } catch (e) { return []; } }
 function genreOfChip(chip) { const g = GENRES.find(x => x.name.toLowerCase() === chip.label.toLowerCase()); return g ? g.id : ''; }
-/* Talks for a new video: from the chosen genres (all of them when none is chosen), the ones not played in
-   this visit first, drawn at random, as many as Items has room for beside the pasted talks. */
-function chooseAuto() {
-  AUTO = [];
-  if (!FEED.length) return;
+/* Searching the day's talks: every word typed must be in the post, a reply, or the word it was found by. */
+function says(t, q) {
+  const hay = (t.post.text + ' ' + t.replies.map(r => r.text).join(' ') + ' ' + (t.word || '')).toLowerCase();
+  return String(q || '').toLowerCase().split(/\s+/).filter(Boolean).every(w => hay.includes(w));
+}
+/* The talks a video may draw from: those that say the words typed, or else those of the chosen genres
+   (every genre when none is chosen). */
+function talkPool() {
+  if (QUERY) return FEED.filter(t => says(t, QUERY));
   const picked = pickedGenres().filter(id => FEED.some(t => t.genre === id));
-  const pool = FEED.filter(t => !picked.length || picked.includes(t.genre));
-  let fresh = pool.filter(t => !SHOWN.has(t.id));
-  if (!fresh.length) { pool.forEach(t => SHOWN.delete(t.id)); fresh = pool; }
+  return FEED.filter(t => !picked.length || picked.includes(t.genre));
+}
+/* Talks for a video: the ones not played in this visit first, drawn at random, as many as Items has
+   room for beside the pasted talks. */
+function pickAuto(skip) {
+  const pool = talkPool();
+  if (!pool.length) return [];
+  let fresh = pool.filter(t => !SHOWN.has(t.id) && !(skip && skip.has(t.id)));
+  if (!fresh.length) { pool.forEach(t => SHOWN.delete(t.id)); fresh = pool.filter(t => !(skip && skip.has(t.id))); }
+  if (!fresh.length) fresh = pool;
   const langId = uiLang();
   const room = total() - TALKS.reduce((k, t) => k + talkCards(t, langId).length, 0);
+  const out = [];
   let n = 0;
   for (const t of fresh.map(x => [Math.random(), x]).sort((a, b) => a[0] - b[0]).map(x => x[1])) {
     const c = talkCards(t, langId).length;
-    if (n + c > room && (AUTO.length || TALKS.length)) continue;
-    AUTO.push(t);
+    if (n + c > room && (out.length || TALKS.length)) continue;
+    out.push(t);
     n += c;
     if (n >= room) break;
   }
+  return out;
+}
+/* The video that is about to play: the one prepared while the last one played, when it still fits. */
+function chooseAuto(prepared) {
+  AUTO = prepared && NEXT && NEXT.length ? NEXT : pickAuto();
+  NEXT = null;
   AUTO.forEach(t => SHOWN.add(t.id));
+}
+/* While a video plays, the next one is chosen and its letters' fonts are fetched, so it starts without a wait. */
+function prepareNext() {
+  NEXT = null;
+  if (!FEED.length) return;
+  const next = pickAuto(new Set(AUTO.map(t => t.id)));
+  if (!next.length) return;
+  NEXT = next;
+  const langId = uiLang();
+  try { loadFonts(normalize({ date: todayJST(), items: TALKS.concat(next).flatMap(t => talkCards(t, langId)).slice(0, MAX_ITEMS) })).catch(() => {}); } catch (e) {}
 }
 function makeScript() {
   const langId = uiLang();
   const items = TALKS.concat(AUTO).flatMap(t => talkCards(t, langId)).slice(0, MAX_ITEMS);
   return items.length ? { date: todayJST(), items } : null;
 }
-/* ---------- finding posts: X's own search, opened in a new tab ---------- */
-const ROMANCE_WORDS = { ja: ['彼氏', '彼女', '旦那', '嫁', 'デート', '記念日', '同棲', 'カップル'], en: ['boyfriend', 'girlfriend', 'husband', 'wife', 'date night', 'anniversary'] };
-const LAUGH_Q = { ja: '(笑 OR 草 OR ワロタ)', en: '(lol OR lmao OR haha)' };
-/* Famous places, by prefecture and state: the Travel button draws one. */
-const SPOTS = {
-  ja: [
-    ['北海道', ['小樽運河', '旭山動物園', '函館山', '青い池']], ['青森', ['奥入瀬渓流', '弘前城', '十和田湖']], ['岩手', ['中尊寺', '浄土ヶ浜', '龍泉洞']],
-    ['宮城', ['松島', '鳴子峡', '蔵王の御釜']], ['秋田', ['角館', '田沢湖', '乳頭温泉']], ['山形', ['銀山温泉', '山寺', '樹氷']],
-    ['福島', ['鶴ヶ城', '大内宿', '五色沼']], ['茨城', ['偕楽園', '袋田の滝', 'ひたち海浜公園']], ['栃木', ['日光東照宮', '華厳の滝', '足利フラワーパーク']],
-    ['群馬', ['草津温泉', '伊香保温泉', '尾瀬']], ['埼玉', ['川越', '長瀞', '秩父']], ['千葉', ['鴨川シーワールド', '成田山', '鋸山']],
-    ['東京', ['浅草寺', '東京タワー', 'スカイツリー']], ['神奈川', ['鎌倉大仏', '箱根', '江の島']], ['新潟', ['佐渡', '越後湯沢', '清津峡']],
-    ['富山', ['立山黒部', '五箇山', '雨晴海岸']], ['石川', ['兼六園', 'ひがし茶屋街', '白米千枚田']], ['福井', ['東尋坊', '恐竜博物館', '永平寺']],
-    ['山梨', ['富士山', '河口湖', '忍野八海']], ['長野', ['上高地', '松本城', '善光寺']], ['岐阜', ['白川郷', '飛騨高山', '下呂温泉']],
-    ['静岡', ['三保の松原', '熱海', '浜名湖']], ['愛知', ['名古屋城', '熱田神宮', 'ジブリパーク']], ['三重', ['伊勢神宮', '鳥羽水族館', 'ナガシマスパーランド']],
-    ['滋賀', ['琵琶湖', '彦根城', '白鬚神社']], ['京都', ['清水寺', '金閣寺', '伏見稲荷', '嵐山']], ['大阪', ['大阪城', '道頓堀', '通天閣']],
-    ['兵庫', ['姫路城', '有馬温泉', '城崎温泉']], ['奈良', ['東大寺', '奈良公園', '法隆寺']], ['和歌山', ['熊野古道', '那智の滝', '白浜']],
-    ['鳥取', ['鳥取砂丘', '水木しげるロード', '白兎海岸']], ['島根', ['出雲大社', '松江城', '石見銀山']], ['岡山', ['倉敷美観地区', '岡山後楽園', '岡山城']],
-    ['広島', ['厳島神社', '尾道', 'しまなみ海道']], ['山口', ['角島大橋', '秋芳洞', '錦帯橋']], ['徳島', ['鳴門の渦潮', 'かずら橋', '大歩危']],
-    ['香川', ['金刀比羅宮', '栗林公園', '父母ヶ浜']], ['愛媛', ['道後温泉', '松山城', '下灘駅']], ['高知', ['桂浜', '四万十川', '仁淀川']],
-    ['福岡', ['太宰府天満宮', '柳川', '門司港レトロ']], ['佐賀', ['唐津城', '吉野ヶ里', '武雄温泉']], ['長崎', ['ハウステンボス', 'グラバー園', '軍艦島']],
-    ['熊本', ['熊本城', '阿蘇', '黒川温泉']], ['大分', ['別府温泉', '由布院', '高崎山']], ['宮崎', ['高千穂峡', '青島神社', '日南海岸']],
-    ['鹿児島', ['屋久島', '桜島', '指宿']], ['沖縄', ['美ら海水族館', '首里城', '古宇利島']],
-  ],
-  en: [
-    ['Arizona', ['Grand Canyon', 'Sedona']], ['California', ['Yosemite', 'Golden Gate Bridge', 'Big Sur']], ['New York', ['Times Square', 'Central Park', 'Niagara Falls']],
-    ['Wyoming', ['Yellowstone', 'Grand Teton']], ['Utah', ['Zion', 'Arches National Park']], ['Florida', ['Everglades', 'Key West']],
-    ['Hawaii', ['Waikiki', 'Haleakala']], ['Washington', ['Mount Rainier', 'Pike Place Market']], ['Colorado', ['Rocky Mountain National Park', 'Garden of the Gods']],
-    ['Nevada', ['Las Vegas Strip', 'Lake Tahoe']], ['Tennessee', ['Smoky Mountains', 'Graceland']], ['Louisiana', ['French Quarter']],
-    ['Illinois', ['Millennium Park', 'Chicago Riverwalk']], ['Massachusetts', ['Freedom Trail', 'Cape Cod']], ['Alaska', ['Denali']],
-    ['Montana', ['Glacier National Park']], ['South Dakota', ['Mount Rushmore']], ['Texas', ['San Antonio River Walk', 'Big Bend']],
-    ['Oregon', ['Crater Lake']], ['Maine', ['Acadia National Park']], ['Washington, D.C.', ['Lincoln Memorial', 'National Mall']],
-  ],
-};
-/* Posts that someone replied to (min_replies), not replies themselves, in the page's language. */
-function xSearch(words, lang) {
-  return 'https://x.com/search?q=' + encodeURIComponent(`${words} min_replies:1 -filter:replies lang:${lang}`) + '&src=typed_query';
-}
-function chipUrl(chip) {
-  const lang = uiLang();
-  const key = chip.label.toLowerCase();
-  if (key === 'musk x') return 'https://x.com/elonmusk';
-  if (key === 'spacex') return 'https://x.com/SpaceX';
-  if (key === 'jokes') return xSearch(LAUGH_Q[lang], lang);
-  if (key === 'romance') return xSearch(pickFresh(ROMANCE_WORDS[lang], 'romance:' + lang), lang);
-  if (key === 'travel') {
-    const spot = pick(pick(SPOTS[lang] || SPOTS.ja)[1]);
-    return xSearch(lang === 'en' ? '"' + spot + '"' : spot, lang);
-  }
-  /* A genre: one of its words, drawn each time, so the search is never the same twice in a row. */
-  const g = GENRES.find(x => x.name.toLowerCase() === key);
-  return xSearch(g ? pickFresh(genreWords(g), 'g:' + g.id) : chip.label, lang);
-}
-function askUrl(v) {
-  const h = v.match(/^@([A-Za-z0-9_]{1,15})$/);
-  if (h) return 'https://x.com/' + h[1];
-  if (/^https?:\/\/(?:mobile\.|www\.)?(?:x|twitter)\.com\//i.test(v)) return v;
-  return xSearch(v, uiLang());
-}
-function openOnX(url) {
-  window.open(url, '_blank', 'noopener');
-  say('Opened X. Copy the links of a post and a reply there, then paste them here.');
-}
-
 const HOOK_SKIP = /^(?:今日|昨日|明日|最近|今夜|今朝|本日|今年|去年|来年|今週|先週|来週|自分|みんな|皆さん|皆様|さっき|なんか|ちょっと|やっぱり|ところで|そういえば|ちなみに|とりあえず|ほんとに|本当に|それで|だから|しかし|ただ|まじで|マジで|おはよう|こんにちは|こんばんは)/;
 function hookOf(text, lang, word) {
   const whole = String(text || '').trim();
@@ -3660,7 +3601,8 @@ function tick() {
   if (!S.playing || !S.show) return;
   let T = currentT();
   if (S.show.duration > 0 && T >= S.show.duration) {
-    /* At the end the video plays again. */
+    /* At the end: the next video, already prepared, when the day's data has other talks; else the same one again. */
+    if (!S.busy && NEXT && NEXT.length && Date.now() - (S.endAt || 0) > 3000) { S.endAt = Date.now(); nextVideo(true); return; }
     const over = T % S.show.duration;
     S.origin = over;
     S.t0perf = performance.now();
@@ -3703,21 +3645,32 @@ function setBusy(b) {
   $('update').disabled = !!b;
   $('dl').disabled = !S.ready && (!!b || !S.show);
 }
-/* Update: other talks from the data service (read again when it was read more than five minutes ago). */
-async function nextVideo() {
+/* Another video from the day's talks. After the end of a video or a press on Update, the prepared one plays;
+   after a change of genre, words or Items, a new one is chosen. */
+async function nextVideo(prepared) {
   if (S.busy) return;
-  if (Date.now() - feedAt > 300000) await loadFeed();
-  chooseAuto();
+  chooseAuto(!!prepared);
   paintFeed();
   await rebuild(true);
 }
-/* The parts that belong to the data service show only while it has talks. */
+/* The parts that belong to the day's data show only while it has talks. */
 function paintFeed() {
   const on = FEED.length > 0;
   $('update').hidden = !on;
   $('countRow').hidden = !on;
   const picked = pickedGenres();
-  document.querySelectorAll('#genreChips button').forEach(b => b.classList.toggle('on', on && !!b.dataset.genre && picked.includes(b.dataset.genre) && FEED.some(t => t.genre === b.dataset.genre)));
+  document.querySelectorAll('#genreChips button:not(.mine)').forEach(b => b.classList.toggle('on', on && !QUERY && picked.includes(b.dataset.genre) && FEED.some(t => t.genre === b.dataset.genre)));
+  document.querySelectorAll('#genreChips button.mine').forEach(b => b.remove());
+  if (QUERY) {
+    /* The words typed show as a lit button; a press takes them away. */
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'mine on';
+    b.dataset.noi18n = '';
+    b.textContent = QUERY + ' ×';
+    b.onclick = () => { QUERY = ''; nextVideo(false); };
+    $('genreChips').appendChild(b);
+  }
 }
 /* The video is made again from the talks. With none, the picture is empty and the page says what to do. */
 async function rebuild(autoplay) {
@@ -3733,10 +3686,10 @@ async function rebuild(autoplay) {
     $('seek').value = '0';
     $('storyLink').hidden = true;
     resetDownload();
-    say('Press a genre to open the search on X. Copy the links of a post and a reply there, then paste them here.');
+    say("Today's talks have not arrived yet. Paste the link of a post and of a reply below, or come back later.");
     return;
   }
-  try { await setScript(script, autoplay !== false); }
+  try { await setScript(script, autoplay !== false); setTimeout(prepareNext, 1200); }
   catch (e) { console.error(e); say(e.message || String(e), true); }
 }
 function toggle() {
@@ -4318,7 +4271,7 @@ function initUI() {
   /* The terms open in the chosen language. */
   const paintTerms = () => document.querySelectorAll('a.terms').forEach(a => { a.href = 'terms.html' + (langBox.value === 'en' ? '#en' : ''); });
   paintTerms();
-  langBox.onchange = () => { store.set('lang', langBox.value); paintTerms(); loadFeed().then(() => { chooseAuto(); paintFeed(); return rebuild(true); }); };
+  langBox.onchange = () => { store.set('lang', langBox.value); paintTerms(); QUERY = ''; cachedFeed(); loadFeed().then(() => nextVideo(false)); };
 
   /* Genres: a press opens X's own search for one of the genre's words. Nothing is fetched by this page. */
   CHIPS.forEach(chip => {
@@ -4326,18 +4279,18 @@ function initUI() {
     b.type = 'button';
     b.textContent = chip.label;
     b.dataset.genre = genreOfChip(chip);
-    /* With talks of this genre in the data service, a press chooses the genre (lit) and makes a new video.
-       Otherwise it opens the search on X. */
+    /* A press chooses the genre (lit) and makes a new video from the day's talks of it. Nothing is opened. */
     b.onclick = () => {
       const id = b.dataset.genre;
-      if (!id || !FEED.some(t => t.genre === id)) { openOnX(chipUrl(chip)); return; }
+      if (!FEED.some(t => t.genre === id)) { say("No talks of this genre in today's data yet.", true); return; }
+      QUERY = '';
       const picked = pickedGenres();
       store.set('genres', JSON.stringify(picked.includes(id) ? picked.filter(x => x !== id) : picked.concat(id)));
-      nextVideo();
+      nextVideo(false);
     };
     $('genreChips').appendChild(b);
   });
-  $('update').onclick = () => { closeStudio(); nextVideo(); };
+  $('update').onclick = () => { closeStudio(); nextVideo(true); };
   COUNTS.forEach(n => {
     const b = document.createElement('button');
     b.type = 'button';
@@ -4346,17 +4299,21 @@ function initUI() {
     b.onclick = () => {
       store.set('count', String(n));
       document.querySelectorAll('#counts button').forEach(x => x.classList.toggle('on', Number(x.dataset.n) === total()));
-      nextVideo();
+      nextVideo(false);
     };
     $('counts').appendChild(b);
   });
   document.querySelectorAll('#counts button').forEach(x => x.classList.toggle('on', Number(x.dataset.n) === total()));
-  /* The box: words are searched on X, an @name opens that account, a post's address opens the post. */
+  /* The box: the words typed are searched in the day's talks, and the video is made from the ones that say them. */
   $('ask').onsubmit = e => {
     e.preventDefault();
     const v = $('askText').value.replace(/\s+/g, ' ').trim();
     $('askText').blur();
-    if (v) openOnX(askUrl(v));
+    if (!v) return;
+    if (!FEED.some(t => says(t, v))) { say("No talks say that in today's data.", true); return; }
+    QUERY = v;
+    $('askText').value = '';
+    nextVideo(false);
   };
   /* The talks that were pasted: each is a button; a press takes it out of the video. */
   const paintTalks = () => {
@@ -4374,7 +4331,7 @@ function initUI() {
         TALKS = TALKS.filter(x => x !== t);
         saveTalks();
         paintTalks();
-        chooseAuto();
+        chooseAuto(false);
         rebuild(true).then(() => { if (TALKS.length) say('Removed.'); });
       };
       box.appendChild(b);
@@ -4409,7 +4366,7 @@ function initUI() {
     $('replyIn').value = '';
     paintTalks();
     window.scrollTo(0, 0);
-    chooseAuto();
+    chooseAuto(false);
     rebuild(true);
   };
   loadTalks();
@@ -4449,7 +4406,7 @@ E.setMusicCredit(TRACKS[0].credit);
 /* A newer copy on the site: load it, so a copy the browser kept from before is not shown.
    version.json names the latest build of each page; it is read past the browser's cache. */
 function watchVersion(key, url) {
-  const BUILD = 'cca2e27096b1';
+  const BUILD = '58e92ab23e82';
   if (location.protocol === 'file:' || BUILD.indexOf('BUILD_ID') >= 0) return;
   /* At the start it may reload at once; later it waits while a video is being made or saved. */
   const check = first => {
@@ -4482,7 +4439,17 @@ loadAssets().then(() => {
   const requested = Q.get('music') || store.get('music', 'jupiter');
   if (requested !== 'jupiter') useTrack(requested);
   else document.querySelectorAll('#music button').forEach(b => b.classList.toggle('on', b.dataset.m === 'jupiter'));
-  return loadFeed().then(() => { chooseAuto(); paintFeed(); return rebuild(true); });
+  /* The talks kept from the last visit play at once; the new file is read meanwhile and used from the next video on.
+     With nothing kept, the first video waits for the file. */
+  cachedFeed();
+  const first = FEED.length ? nextVideo(false) : null;
+  const fresh = loadFeed().then(ok => { paintFeed(); if (!S.script) return nextVideo(false); if (ok) prepareNext(); });
+  /* While the page is open, the file is read again every ten minutes, so the 6:00, 12:00 and 18:00 talks come in. */
+  setInterval(() => {
+    if (document.visibilityState !== 'visible' || Date.now() - feedAt < 600000) return;
+    loadFeed().then(ok => { paintFeed(); if (!S.script) nextVideo(false); else if (ok) prepareNext(); });
+  }, 60000);
+  return first || fresh;
 }).catch(e => { window.NS.ready = true; say(e.message || String(e), true); });
 })();
 </script>
