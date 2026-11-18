@@ -23,6 +23,8 @@ const JA = {
   'Full screen': '全画面', 'Exit': '全画面を終了', 'Sound': '音', 'Tap for sound': 'タップで音が出ます',
   'Story length': '1話の長さ', 'Wallpaper': '壁紙', 'Music': '音楽', 'Items': '表示数',
   'Download': 'ダウンロード', 'Saving…': '保存中…', 'Could not save the video.': '動画を保存できませんでした。', 'Making MP4…': '作成中…', 'Save': '保存',
+  'The search on X is busy. This video keeps playing; a new one comes in a minute or two.': 'Xの検索が混み合っています。この動画を流し続け、1〜2分後に新しい動画を作ります。',
+  'The search on X is busy. Press Update in a minute or two.': 'Xの検索が混み合っています。1〜2分後に「更新」を押してください。',
   'The MP4 is ready. Press Save to keep it.': 'MP4ができました。「保存」を押すと保存できます。',
   'Choose Save Video to keep it.': '「ビデオを保存」を選ぶと保存できます。', 'Not saved yet. Press Save again.': 'まだ保存されていません。もう一度「保存」を押してください。',
   'If the video was not saved, open this page in Safari or Chrome and try again.': '保存されないときは、このページを Safari か Chrome で開いて、もう一度お試しください。',

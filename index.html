@@ -2209,6 +2209,8 @@ const JA = {
   'Full screen': '全画面', 'Exit': '全画面を終了', 'Sound': '音', 'Tap for sound': 'タップで音が出ます',
   'Story length': '1話の長さ', 'Wallpaper': '壁紙', 'Music': '音楽', 'Items': '表示数',
   'Download': 'ダウンロード', 'Saving…': '保存中…', 'Could not save the video.': '動画を保存できませんでした。', 'Making MP4…': '作成中…', 'Save': '保存',
+  'The search on X is busy. This video keeps playing; a new one comes in a minute or two.': 'Xの検索が混み合っています。この動画を流し続け、1〜2分後に新しい動画を作ります。',
+  'The search on X is busy. Press Update in a minute or two.': 'Xの検索が混み合っています。1〜2分後に「更新」を押してください。',
   'The MP4 is ready. Press Save to keep it.': 'MP4ができました。「保存」を押すと保存できます。',
   'Choose Save Video to keep it.': '「ビデオを保存」を選ぶと保存できます。', 'Not saved yet. Press Save again.': 'まだ保存されていません。もう一度「保存」を押してください。',
   'If the video was not saved, open this page in Safari or Chrome and try again.': '保存されないときは、このページを Safari か Chrome で開いて、もう一度お試しください。',
@@ -3145,7 +3147,7 @@ const SOURCES = [
 ];
 /* Words for each genre, in each country. One or two are drawn at random each time, so no single word leads. */
 const GENRE_WORDS = {
-  space: { JP: ['宇宙', 'ロケット', '人工衛星', 'JAXA', '天体', '月', '火星', '星空', '流れ星', '天文台', 'プラネタリウム', '宇宙飛行士', 'ISS', '望遠鏡', '銀河', '日食', '月食', '惑星', 'オーロラ', '宇宙食'],
+  space: { JP: ['宇宙', 'ロケット', '人工衛星', 'JAXA', '天体', '満月', '火星', '星空', '流れ星', '天文台', 'プラネタリウム', '宇宙飛行士', 'ISS', '望遠鏡', '銀河', '日食', '月食', '惑星', 'オーロラ', '宇宙食'],
     US: ['space', 'NASA', 'rocket', 'satellite', 'astronomy', 'moon', 'Mars', 'telescope', 'astronaut', 'ISS', 'galaxy', 'eclipse', 'planet', 'meteor shower', 'stargazing', 'aurora', 'comet', 'black hole'] },
   politics: { JP: ['政治', '国会', '選挙', '首相', '政府', '議員', '知事', '市長', '投票', '政策', '予算', '税金', '法案', '記者会見', '内閣', '都議会', '市議会', '公約', '演説', '世論調査'],
     US: ['politics', 'Congress', 'election', 'senate', 'governor', 'mayor', 'vote', 'policy', 'budget', 'taxes', 'bill', 'press conference', 'White House', 'campaign', 'debate', 'poll', 'city hall', 'ballot'] },
@@ -3153,7 +3155,7 @@ const GENRE_WORDS = {
     US: ['science', 'research', 'scientists', 'discovery', 'study', 'chemistry', 'physics', 'biology', 'dinosaur', 'fossil', 'robot', 'AI', 'math', 'deep sea', 'genetics', 'weather', 'insects', 'Nobel'] },
   culture: { JP: ['文化', '美術', '展覧会', '伝統', '博物館', '美術館', '祭り', '書道', '茶道', '着物', '歌舞伎', '落語', '俳句', '読書', '図書館', '建築', '写真展', '陶芸', '神社', 'お寺'],
     US: ['culture', 'museum', 'art', 'exhibition', 'heritage', 'gallery', 'festival', 'theater', 'poetry', 'books', 'library', 'architecture', 'photography', 'pottery', 'opera', 'ballet', 'sculpture', 'history'] },
-  local: { JP: ['地域', '町', '村', '市役所', '商店街', '地元', '駅前', '公園', '図書館', '朝市', '道の駅', '町内会', '夏祭り', '回覧板', '銭湯', '田舎', '方言', 'ご当地', '路線バス', '近所'],
+  local: { JP: ['地域', '下町', '田舎暮らし', '市役所', '商店街', '地元', '駅前', '公園', '図書館', '朝市', '道の駅', '町内会', '夏祭り', '回覧板', '銭湯', '田舎', '方言', 'ご当地', '路線バス', '近所'],
     US: ['local', 'town', 'city council', 'community', 'neighborhood', 'small town', 'main street', 'farmers market', 'park', 'library', 'county fair', 'hometown', 'downtown', 'neighbors', 'town hall', 'parade', 'block party', 'local bus'] },
   entertainment: { JP: ['芸能', '映画', 'ドラマ', 'アニメ', '音楽', 'ライブ', '漫画', 'ゲーム', 'お笑い', 'アイドル', '声優', '紅白', '舞台', 'ミュージカル', 'バラエティ', 'ラジオ', '特撮', '主題歌', '最終回', '推し'],
     US: ['movie', 'TV show', 'music', 'celebrity', 'concert', 'anime', 'video game', 'comedy', 'album', 'sitcom', 'musical', 'podcast', 'trailer', 'finale', 'sequel', 'box office', 'award show', 'streaming'] },
@@ -3161,7 +3163,7 @@ const GENRE_WORDS = {
     US: ['police', 'public safety', 'fire department', 'traffic safety', 'firefighters', 'crosswalk', 'seat belt', 'helmet', 'lost and found', 'lifeguard', 'fire drill', 'bike lane', 'speed limit', 'park ranger', 'crossing guard'] },
   sports: { JP: ['スポーツ', '野球', 'サッカー', '大相撲', 'バスケ', 'テニス', 'ゴルフ', 'マラソン', '駅伝', '卓球', 'バレーボール', 'ラグビー', '水泳', '柔道', 'フィギュアスケート', '甲子園', 'Jリーグ', '陸上', 'バドミントン', 'ボクシング', 'スケボー', '筋トレ'],
     US: ['sports', 'NFL', 'NBA', 'baseball', 'soccer', 'tennis', 'golf', 'marathon', 'hockey', 'college football', 'MLB', 'swimming', 'gymnastics', 'boxing', 'track and field', 'volleyball', 'skateboarding', 'fantasy football', 'playoffs', 'gym'] },
-  food: { JP: ['食べ物', 'グルメ', 'スイーツ', 'ラーメン', '料理', 'カレー', '寿司', 'おにぎり', '弁当', 'パン', 'ケーキ', 'アイス', '焼肉', 'うどん', 'そば', '餃子', '唐揚げ', 'コンビニ', '自炊', '朝ごはん', 'おやつ', '鍋'],
+  food: { JP: ['食べ物', 'グルメ', 'スイーツ', 'ラーメン', '料理', 'カレー', '寿司', 'おにぎり', '弁当', 'パン', 'ケーキ', 'アイス', '焼肉', 'うどん', 'そば', '餃子', '唐揚げ', 'コンビニ', '自炊', '朝ごはん', 'おやつ', '鍋料理'],
     US: ['food', 'recipe', 'snack', 'dessert', 'cooking', 'pizza', 'burger', 'tacos', 'pasta', 'barbecue', 'breakfast', 'sandwich', 'ice cream', 'baking', 'coffee', 'fries', 'leftovers', 'meal prep', 'cookies', 'ramen'] },
   restaurant: { JP: ['レストラン', 'カフェ', '飲食店', '新店舗', '居酒屋', '定食屋', '喫茶店', '食堂', 'ファミレス', '回転寿司', '焼肉屋', 'ラーメン屋', 'パン屋', 'ケーキ屋', '食べ放題', 'ランチ', 'モーニング', '行列', '常連', '店員さん'],
     US: ['restaurant', 'cafe', 'diner', 'chef', 'brunch', 'bakery', 'food truck', 'drive thru', 'buffet', 'waiter', 'menu', 'takeout', 'steakhouse', 'pizzeria', 'coffee shop', 'happy hour', 'reservation', 'tip'] },
@@ -3842,10 +3844,28 @@ function looser(text, lang) {
   if (ch.length >= 4) { add(ch.slice(0, Math.ceil(ch.length * 2 / 3)).join('')); add(ch.slice(0, Math.ceil(ch.length / 2)).join('')); }
   return out.slice(0, 2);
 }
+/* The search service refuses for a while when it is asked too much (it answers 404; a search that simply
+   finds nothing answers 200). Three refusals in a row: searches rest for a minute and a half instead of
+   asking again and again, which only makes the wait longer. */
+const QUIET = { streak: 0, until: 0 };
+function searchResting() { return Date.now() < QUIET.until; }
 async function fxJson(url) {
-  const res = await withTimeout(fetch(url), fast() ? 5000 : 9000);
-  if (!res.ok) return null;
-  return res.json();
+  const search = url.indexOf('/2/search') >= 0;
+  if (search && searchResting()) return null;
+  let data = null;
+  let status = 0;
+  try {
+    const res = await withTimeout(fetch(url), fast() ? 5000 : 9000);
+    status = res.status;
+    if (res.ok) data = await res.json();
+  } catch (e) {
+    if (!search) throw e;
+  }
+  if (search) {
+    if (status === 200 && (!data || data.code === undefined || data.code === 200)) QUIET.streak = 0;
+    else if (++QUIET.streak >= 3) { QUIET.streak = 0; QUIET.until = Date.now() + 90000; }
+  }
+  return data;
 }
 function rowFromStatus(st) {
   if (!st || (st.type && st.type !== 'status')) return null;
@@ -4017,7 +4037,7 @@ function replyOf(st, lang) {
     }
     if ([...text].length < 8 || /ご冥福|追悼|亡くな|お悔やみ|ご逝去|死去/.test(text)) return null;
   }
-  if (!isFunny(text, lang)) return null;
+  if (!isFunny(text, lang) || TOXIC.test(text)) return null;
   /* The whole comment always plays; one too long to read on a card is left out instead of cut. */
   if (charLen(text) > (lang === 'en' ? 200 : 70)) return null;
   const url = (st && st.url) || '';
@@ -4152,6 +4172,238 @@ async function collectJokes(topics, need, opts) {
     });
   }
   return pickFunny(rows, need);
+}
+
+/* ---------- talk: a person's post about the genre, then what someone replied ---------- */
+/* Fighting words: neither the post nor the reply may have them. */
+const TOXIC = /バカ|ばか(?!り)|馬鹿|アホ|あほ(?!う)|阿呆|クズ|カス(?![タテ])|キモ[いイッ]|きも[いっ]|気持ち悪|気色[わ悪]|ウザ|うざ[いっ]|消えろ|黙れ|だまれ|お前|おまえ|てめ[えぇー]|貴様|低脳|低能|無能|老害|痴呆|キチガイ|ガイジ|チー牛|ブス|デブ|ババア|ジジイ|嘘つき|ウソつき|うそつき|捏造|売国|反日|左翼|右翼|パヨク|ネトウヨ|恥を知|頭悪|頭おかし|\b(?:idiot|stupid|moron|dumb|loser|trash|shut up|stfu|libtard|clown)\b/i;
+/* Greetings say little; a post that is one is left out, and a reply that is only one too. */
+const GREET = /^[\s\p{Extended_Pictographic}️]*(?:おは|オハ|こんにち|こんばん|おやす|おつ|お疲れ|おめで|ありがと|はじめまして|初めまして|good morning|gm\b|good night|congrat|thank)|良い一日|よい一日|良い1日|素敵な(?:一日|1日|週末)|今日も(?:一日|1日)?(?:頑張|がんば|よろしく)|よろしくお願い|フォロー(?:ありがとう|失礼|させて)|have a (?:great|good|nice) day/iu;
+/* Injuries and losses are not for jokes. */
+const GLOOM = /骨折|折って|怪我|ケガ|手術|通院|発熱|インフル|コロナ|訃報|葬儀|お葬式|遺影|倒産|解雇|失業|借金|離婚|亡き|\b(?:injur|surgery|funeral|divorce|laid off|fired)\w*/i;
+/* Media, companies and offices: the first post is a person's own words. */
+const OFFICIAL = /公式|official|ニュース|新聞|news|報道|速報|通信社|放送|テレビ|編集部|広報|株式会社|\bbot\b|情報局|まとめ|運営|事務局|shop|store/i;
+function personal(st) {
+  const a = (st && st.author) || {};
+  const v = (a.verification && a.verification.type) || '';
+  if (v === 'organization' || v === 'government') return false;
+  return !OFFICIAL.test(String(a.name || '') + ' ' + String(a.screen_name || ''));
+}
+/* A post that can open a talk: a person's own post (not a reply or a quote), short enough to read whole. */
+function talkPost(st, lang) {
+  if (!st || (st.type && st.type !== 'status') || st.replying_to || st.quote || !personal(st)) return null;
+  if (/^\s*[>＞]|\n\s*[>＞]/.test(String(st.text || ''))) return null;
+  const text = postText(st);
+  const n = charLen(text);
+  const handle = handleOf(st);
+  const id = statusId(st);
+  if (!handle || !id || n < (lang === 'en' ? 20 : 10) || n > (lang === 'en' ? 220 : 110)) return null;
+  if (lang === 'en' ? !/[A-Za-z]{3,}/.test(text) : (text.match(/[぀-ヿ]/g) || []).length < 4) return null;
+  if (!askOk(st, text) || heavy(text) || TOXIC.test(text) || GREET.test(text) || GLOOM.test(text) || minorAccount(st)) return null;
+  /* A few words beside a picture say little without it. */
+  if (st.media && Object.keys(st.media).length && n < 20) return null;
+  return { handle, text, url: st.url || ('https://x.com/' + handle + '/status/' + id), id };
+}
+/* How lively a post is: a little trouble, a question or a laugh draws funny replies. */
+const ZEST = {
+  ja: /なんよ|なんだが|してしまっ|しまった|のに|なぜ|なんで|まさか|結局|気になる|わからん|分からん|無理|やばい|ヤバ|つら|詰んだ|終わった|泣|忘れ|寝坊|間違え|気づいた|気付いた|って何|[？?]|💦|😱|😇|🫠|🥲/,
+  en: /\b(?:why|somehow|accidentally|forgot|again|help|can't|cannot|never|nobody|apparently|turns out)\b|[?]/i,
+};
+function postZest(text, st, lang) {
+  let s = 0;
+  if (isFunny(text, lang)) s += 2;
+  if (ZEST[lang].test(text)) s += 3;
+  const rep = typeof st.replies === 'number' ? st.replies : 2;
+  s += Math.min(3, Math.log2(1 + rep));
+  if (rep > 60) s -= 3;
+  if (charLen(text) <= (lang === 'en' ? 120 : 60)) s += 2;
+  if (((st.author && st.author.followers) || 0) > 200000) s -= 3;
+  return s + Math.random() * 3;
+}
+/* A reply with a punch: a retort, a question back, a laugh. Polite small talk scores low. */
+const QUIP = {
+  ja: /かい[！!ｗw笑]*$|やん|やろ|やねん|じゃん|すぎ|なんで|なぜ|それな|まさか|だったんだ|じゃないの|のでは|ってこと|[？?]+[\s\p{Extended_Pictographic}️]*$|[wｗ]+$/u,
+  en: /\b(?:wait|bro|nah|same|literally|imagine|plot twist|so you|not the)\b|[?]+\s*$/i,
+};
+const POLITE = /素敵|楽しみ|頑張って|がんばって|お気をつけ|気をつけて|大変です|お疲れ|おつかれ|お大事|ゆっくり|楽しんで|いってらっしゃい|行ってらっしゃい|大丈夫[？?]|ですね[…。！!✨😊☺️🥰]*$|いいですね|良いですね|羨まし|うらやまし|\b(?:lovely|beautiful|so nice|well done|great job)\b/i;
+async function talkReplies(post, lang, seen, sameText) {
+  const list = await searchX(`conversation_id:${post.id} filter:replies`);
+  const picks = [];
+  list.forEach(st => {
+    const who = handleOf(st);
+    const text = postText(st);
+    const rid = statusId(st);
+    const n = charLen(text);
+    if (!who || !rid || rid === post.id || who.toLowerCase() === post.handle.toLowerCase()) return;
+    /* Only what was said to the post itself, not to another reply. */
+    const par = parentOf(st);
+    if (par.id && par.id !== post.id) return;
+    if (n < 3 || n > (lang === 'en' ? 140 : 50) || charLen(post.text) + n > (lang === 'en' ? 280 : 140)) return;
+    if (lang === 'en' ? !/[A-Za-z]{2,}/.test(text) : !/[぀-ヿ一-鿿]/.test(text)) return;
+    if (/^\s*[>＞]/.test(String(st.text || '')) || !askOk(st, text) || heavy(text) || TOXIC.test(text) || minorAccount(st)) return;
+    const greet = GREET.test(text);
+    if (greet && n <= 14) return;
+    const tk = squash(text).slice(0, 50);
+    if (!tk || sameText.has(tk) || picks.some(x => x.tk === tk) || jokeKeys({ text, link: st.url || '' }).some(seen)) return;
+    let score = 0;
+    const funny = isFunny(text, lang);
+    const quip = QUIP[lang].test(text);
+    const trail = /…+$|\.{3}$/.test(text);
+    if (funny) score += 5;
+    if (quip) score += 3;
+    else if (trail) score += 2;
+    if (n <= (lang === 'en' ? 70 : 25)) score += 2;
+    if (greet) score -= 3;
+    if (POLITE.test(text)) score -= 2;
+    score += Math.min(2, Math.log2(1 + (typeof st.likes === 'number' ? st.likes : 0)));
+    /* punch: a laugh, a retort or a trailing thought, and not small talk. A talk in the genres needs one. */
+    picks.push({ handle: who, text, url: st.url || ('https://x.com/' + who + '/status/' + rid), id: rid, tk, punch: (funny || quip || trail) && score >= 4, score: score + Math.random() * 2 });
+  });
+  return picks.sort((a, b) => b.score - a.score);
+}
+/* How many cards a talk makes: the post's first words, the post, then two for each reply. */
+function talkSize(story, lang, word) { return (hookOf(story.post.text, lang, word) ? 1 : 0) + 1 + story.replies.length * 2; }
+/* Posts by people about the words, each with the liveliest reply under it. The words are searched in a
+   random order, half of them on a day drawn from the last few days; one word gives at most two talks. */
+/* Talks found but not played yet wait here for the next videos, so a new video often needs no search at all
+   (the search service answers nothing for a while when it is asked too much). Kept for this visit, half an hour at most. */
+const TALK_POOL = [];
+function poolKey() { return jokeLang() + '|' + market().country.id + '|' + pastDay() + '|' + (sensitiveHidden() ? 1 : 0); }
+function poolTalks(rows) {
+  const key = poolKey();
+  rows.forEach(r => { if (r && r.talk && !TALK_POOL.some(x => x.row.story.post.id === r.story.post.id)) TALK_POOL.push({ key, at: Date.now(), row: r }); });
+  while (TALK_POOL.length > 40) TALK_POOL.shift();
+}
+function genreOfWord(w) {
+  const c = market().country.id;
+  return GENRES.find(g => GENRE_WORDS[g.id] && (GENRE_WORDS[g.id][c] || GENRE_WORDS[g.id].US).indexOf(w) >= 0) || null;
+}
+/* Couples and places wait the same way: one search finds three, and the next two videos need none. */
+const SIDE_POOL = { romance: [], travel: [] };
+function sideKeys(r) { return r.romance ? [r.story.a, r.story.b].flatMap(m => ['id:' + m.id, 't:' + squash(m.text).slice(0, 50)]) : jokeKeys(r); }
+async function sideRows(kind, need, place, collect) {
+  if (!need) return [];
+  const key = poolKey();
+  const past = seenSet(SEEN_JOKES);
+  const now = playingKeys();
+  const pool = SIDE_POOL[kind];
+  for (let i = pool.length - 1; i >= 0; i--) {
+    const x = pool[i];
+    if (x.key !== key || Date.now() - x.at > 30 * 60000 || sideKeys(x.row).some(k => past.has(k) || now.has(k))) pool.splice(i, 1);
+  }
+  const out = [];
+  while (out.length < need && pool.length) out.push({ ...pool.shift().row, place: place || 'middle' });
+  if (out.length >= need) return out;
+  const rows = await collect(Math.max(3, need - out.length), place);
+  rows.forEach(r => { if (out.length < need) out.push(r); else pool.push({ key, at: Date.now(), row: r }); });
+  while (pool.length > 12) pool.shift();
+  return out;
+}
+async function collectTalk(words, need, fits) {
+  words = [...new Set((words || []).map(w => String(w).trim()).filter(w => w && !/^to:/.test(w)))];
+  if (!need || !sourceOn('x') || !words.length) return [];
+  const lang = jokeLang();
+  const past = seenSet(SEEN_JOKES);
+  const now = playingKeys();
+  const seen = k => past.has(k) || now.has(k);
+  /* First the talks that wait: those about the words asked for (or their genres), not played since. */
+  const key = poolKey();
+  for (let i = TALK_POOL.length - 1; i >= 0; i--) {
+    const x = TALK_POOL[i];
+    if (x.key !== key || Date.now() - x.at > 30 * 60000 || (x.row.keys || []).some(seen)) TALK_POOL.splice(i, 1);
+  }
+  const ok = fits || (w => words.indexOf(w) >= 0);
+  const waiting = shuffle(TALK_POOL.filter(x => ok(x.row.topic)));
+  const ready = [];
+  let have = 0;
+  waiting.forEach(x => {
+    if (have >= need) return;
+    ready.push(x.row);
+    have += talkSize(x.row.story, lang, x.row.topic);
+    TALK_POOL.splice(TALK_POOL.indexOf(x), 1);
+  });
+  if (have >= need) return ready;
+  const fresh = await searchTalk(words, lang, seen);
+  const out = ready.slice();
+  fresh.forEach(r => { if (have < need) { out.push(r); have += talkSize(r.story, lang, r.topic); } else poolTalks([r]); });
+  /* Too few talks for the cards asked: the ones found show a second reply. */
+  const sameText = new Set(out.flatMap(r => r.story.replies.map(m => m.tk)));
+  for (const r of out) {
+    if (have >= need) break;
+    const m = (r.spare || []).find(x => !sameText.has(x.tk));
+    if (!m) continue;
+    sameText.add(m.tk);
+    r.spare = r.spare.filter(x => x !== m);
+    r.story.replies.push(m);
+    r.keys = threadKeys(r.story);
+    have += 2;
+  }
+  return out;
+}
+async function searchTalk(words, lang, seen) {
+  /* Each word is searched one of three ways, drawn each time: on a day from the last few days,
+     with an everyday word beside it (ラーメン 初めて), or as it is. A search is never narrowed twice. */
+  const ask = w => {
+    const r = Math.random();
+    if (xRange()) return (r < 0.4 ? variantsFor(w, [], lang, 1, 'talk')[0] : w) + ' -filter:replies -filter:retweets min_replies:2 lang:' + lang + xRange();
+    if (r < 0.5) {
+      const d = addDays(todayJST(), -(1 + Math.floor(Math.random() * 5)));
+      return `${w} -filter:replies -filter:retweets min_replies:2 lang:${lang} since:${d} until:${addDays(d, 1)}`;
+    }
+    return `${r < 0.75 ? variantsFor(w, [], lang, 1, 'talk')[0] : w} -filter:replies -filter:retweets min_replies:2 lang:${lang}`;
+  };
+  const lists = await Promise.all(shuffle(words).slice(0, fast() ? 4 : 6).map(w => searchX(ask(w)).then(rs => ({ w, rs }))));
+  if (S.again) return [];
+  const byWord = lists.map(({ w, rs }) => {
+    const mine = [];
+    rs.forEach(st => {
+      const post = talkPost(st, lang);
+      if (!post || st.replies === 0 || jokeKeys({ text: post.text, link: post.url }).some(seen)) return;
+      mine.push({ w, post, zest: postZest(post.text, st, lang) });
+    });
+    return mine.sort((a, b) => b.zest - a.zest);
+  });
+  /* The liveliest posts, one from each word in turn, each from a different person. */
+  const cands = [];
+  const authors = new Set();
+  const most = fast() ? 6 : 12;
+  while (cands.length < most && byWord.some(l => l.length)) {
+    byWord.forEach(l => {
+      while (l.length && cands.length < most) {
+        const c = l.shift();
+        const who = c.post.handle.toLowerCase();
+        if (authors.has(who) || cands.some(x => x.post.id === c.post.id)) continue;
+        authors.add(who);
+        cands.push(c);
+        break;
+      }
+    });
+  }
+  const sameText = new Set();
+  const found = await Promise.all(cands.map(c => talkReplies(c.post, lang, seen, sameText).catch(() => [])));
+  const talks = [];
+  cands.forEach((c, i) => {
+    const best = found[i].find(m => m.punch);
+    if (!best) return;
+    talks.push({ ...c, spare: found[i].filter(m => m !== best && m.punch), first: best, quality: c.zest + best.score });
+  });
+  if (Q.get('debug')) console.log('talk', JSON.stringify({ found: lists.map(l => l.w + ':' + l.rs.length), cands: cands.length, replies: found.map(f => f.length + '/' + (f[0] ? f[0].score.toFixed(1) : '-')), talks: talks.length }));
+  talks.sort((a, b) => b.quality - a.quality);
+  /* Best first, but two talks about the same word do not follow each other. */
+  const groups = new Map();
+  talks.forEach(t => { if (!groups.has(t.w)) groups.set(t.w, []); if (groups.get(t.w).length < 2) groups.get(t.w).push(t); });
+  const order = [];
+  const gl = [...groups.values()];
+  while (gl.some(l => l.length)) gl.forEach(l => { if (l.length) order.push(l.shift()); });
+  const rows = [];
+  order.forEach(t => {
+    if (sameText.has(t.first.tk)) return;
+    sameText.add(t.first.tk);
+    const story = { post: t.post, replies: [t.first] };
+    rows.push({ thread: true, joke: true, talk: true, story, headline: t.post.text, cat: 'REPLY', topic: t.w, corner: t.w, keys: threadKeys(story), spare: t.spare });
+  });
+  rows.forEach(r => { r.spare = (r.spare || []).filter(m => !sameText.has(m.tk)); });
+  return rows;
 }
 
 /* ---------- romance: short, loving exchanges between two people, then what others said ---------- */
@@ -4580,7 +4832,7 @@ async function collectAsk(raw, need) {
   const seen = k => past.has(k) || now.has(k);
   const sameText = new Set();
   const short = charLen(label) <= 12 ? label : [...label].slice(0, 11).join('') + '…';
-  const toRow = (t, corner) => ({ thread: true, joke: true, story: t, headline: t.post.text, cat: 'REPLY', corner, place: 'top', keys: threadKeys(t) });
+  const toRow = (t, corner) => ({ thread: true, joke: true, story: t, headline: t.post.text, cat: 'REPLY', corner, hook: t.hook || '', place: 'top', keys: threadKeys(t) });
   const asPost = st => ({ handle: handleOf(st), text: postText(st), url: st.url || '', id: statusId(st) });
   /* A post's address: that post, then as many of its replies as the video holds. */
   const m = label.match(ASK_POST);
@@ -4633,13 +4885,13 @@ async function collectAsk(raw, need) {
       found.forEach(st => {
         const post = asPost(st);
         const n = charLen(post.text);
-        if (!post.handle || !post.id || !askOk(st, post.text) || st.replies === 0) return;
-        if (n < 4 || n > (lang === 'en' ? 280 : 140) || jokeKeys({ text: post.text, link: post.url }).some(seen)) return;
+        if (!post.handle || !post.id || !askOk(st, post.text) || TOXIC.test(post.text) || st.replies === 0) return;
+        if (n < 4 || n > (lang === 'en' ? 240 : 120) || jokeKeys({ text: post.text, link: post.url }).some(seen)) return;
         const body = low(String(st.text || '') + ' ' + post.text);
         const hits = words.filter(w => body.includes(w)).length;
         if (words.length && !hits) return;
         const many = typeof st.replies === 'number' ? Math.min(4, Math.log2(1 + st.replies)) : 1;
-        mine.push({ ...post, score: (hits === words.length ? 5 : hits) + many + (n <= 70 ? 2 : 0) + Math.random() * 6 });
+        mine.push({ ...post, score: (hits === words.length ? 5 : hits) + many + (n <= (lang === 'en' ? 180 : 90) ? 3 : 0) + Math.random() * 6 });
       });
       return mine.sort((a, b) => b.score - a.score);
     });
@@ -4655,9 +4907,26 @@ async function collectAsk(raw, need) {
         }
       });
     }
-    const threads = await askThreads(posts.slice(0, Math.min(12, Math.ceil(need / 2) + 3)), need, lang, seen, sameText);
+    /* Each post with the liveliest reply to it (a retort or a laugh first); a second reply only when cards are short. */
+    const cands = posts.slice(0, Math.min(12, Math.ceil(need / 3) + 3));
+    const under = await Promise.all(cands.map(p => talkReplies(p, lang, seen, sameText).catch(() => [])));
+    const threads = [];
+    let cards = 0;
+    cands.map((post, i) => ({ post, list: under[i] })).filter(x => x.list.length).sort((a, b) => b.list[0].score - a.list[0].score).forEach(x => {
+      if (cards >= need || sameText.has(x.list[0].tk)) return;
+      sameText.add(x.list[0].tk);
+      threads.push({ post: x.post, replies: [x.list[0]], spare: x.list.slice(1), hook: terms[0] || '' });
+      cards += 4;
+    });
+    for (const t of threads) {
+      if (cards >= need) break;
+      const m = t.spare.find(x => !sameText.has(x.tk) && x.score >= 4);
+      if (!m) continue;
+      sameText.add(m.tk);
+      t.replies.push(m);
+      cards += 2;
+    }
     /* Not enough: replies that themselves speak of the words, each shown under the post it answers. */
-    let cards = threads.reduce((k, t) => k + 1 + t.replies.length, 0);
     if (cards < need) {
       const extra = [];
       answers.forEach(st => {
@@ -4739,22 +5008,45 @@ async function collectAccounts(need) {
   return threads.map(t => ({ thread: true, joke: true, story: t, headline: t.post.text, cat: 'REPLY', corner: '@' + t.post.handle, place: 'top', keys: threadKeys(t) }));
 }
 /* One card for the post, then one for each reply. */
-/* A post and the replies to it. The post: its opening words alone, then the whole post.
+/* A post and the replies to it. The post: its first words alone, then the whole post.
    Each reply: the whole reply alone, then the post and the reply together (when both fit on a card). */
-function openingOf(text, lang) {
-  const t = String(text || '').trim();
-  const n = charLen(t);
-  const max = lang === 'en' ? 40 : 14;
-  const parts = (lang === 'en' ? t.split(/(?<=[,.!?])\s+/) : t.split(/(?<=[、。！？!?])|\s+/)).map(x => x.trim()).filter(Boolean);
-  let out = '';
-  for (const part of parts) {
-    const next = lang === 'en' && out ? out + ' ' + part : out + part;
-    if (charLen(next) > max) break;
-    out = next;
-    if (charLen(out) >= (lang === 'en' ? 12 : 5)) break;
+const HOOK_SKIP = /^(?:今日|昨日|明日|最近|今夜|今朝|本日|今年|去年|来年|今週|先週|来週|自分|みんな|皆さん|皆様|さっき|なんか|ちょっと|やっぱり|ところで|そういえば|ちなみに|とりあえず|ほんとに|本当に|それで|だから|しかし|ただ|まじで|マジで|おはよう|こんにちは|こんばんは)/;
+function hookOf(text, lang, word) {
+  const whole = String(text || '').trim();
+  const n = charLen(whole);
+  const t = whole.replace(/\p{Extended_Pictographic}/gu, ' ').trim();
+  const fits = x => charLen(x) >= 2 && charLen(x) <= n - 3;
+  /* The word the talk was found by, when the post says it. */
+  const w = String(word || '').trim();
+  if (w && charLen(w) <= 12 && t.toLowerCase().includes(w.toLowerCase()) && fits(w)) return w;
+  if (lang === 'en' || !CJK.test(t)) {
+    let out = '';
+    for (const x of t.split(/\s+/).filter(Boolean)) {
+      const next = out ? out + ' ' + x : x;
+      if (out && charLen(next) > 18) break;
+      out = next;
+      if (charLen(out) >= 8) break;
+    }
+    out = out.replace(/[,.;:!?]+$/, '');
+    return fits(out) ? out : '';
   }
-  out = out.replace(/[、。,.\s]+$/, '');
-  return charLen(out) >= 2 && charLen(out) <= n - 3 ? out : '';
+  /* The first word that says something (私、どちゃくそ一途なので gives どちゃくそ): a word in katakana,
+     in kanji, or in hiragana at the start of a phrase. Words like 今日 and 最近 are passed over. */
+  const clauses = t.split(/[、。！？!?\s「」『』（）()…,.~〜]+/).filter(Boolean).slice(0, 4);
+  for (const clause of clauses) {
+    const runs = clause.match(/[ァ-ヴー]+|[ぁ-ゖ]+|[一-龯々〆ヶ]+|[A-Za-z0-9０-９]+|./gu) || [];
+    for (let i = 0; i < runs.length; i++) {
+      let r = runs[i];
+      for (let m = r.match(HOOK_SKIP); m && m[0]; m = r.match(HOOK_SKIP)) r = r.slice(m[0].length);
+      const k = charLen(r);
+      const out = /^[ァ-ヴー]+$/.test(r) && k >= 3 ? [...r].slice(0, 8).join('')
+        : /^[一-龯々〆ヶ]+$/.test(r) && k >= 2 ? [...r].slice(0, 6).join('')
+        : /^[A-Za-z][A-Za-z0-9]+$/.test(r) && k >= 3 ? r.slice(0, 12)
+        : /^[ぁ-ゖ]+$/.test(r) && i === 0 && k >= 4 && k <= 6 ? r : '';
+      if (out && fits(out)) return out;
+    }
+  }
+  return '';
 }
 function threadCards(r, langId) {
   const one = (m, src) => {
@@ -4769,7 +5061,7 @@ function threadCards(r, langId) {
   const post = one(st.post, 'X @' + st.post.handle);
   const lang = CJK.test(post._shown) ? 'ja' : 'en';
   const cards = [];
-  const open = openingOf(post._shown, lang);
+  const open = hookOf(post._shown, lang, r.hook || (r.talk ? r.topic : ''));
   if (open) {
     const bare = open.replace(/[\p{Extended_Pictographic}\u200d\ufe0f!！?？〜~…✨♪\s\d、。,.]/gu, '');
     const kw = bare && charLen(bare) <= 6 ? bare : (lang === 'ja' ? jaWord(open) : storyWord(open, ''));
@@ -4779,7 +5071,7 @@ function threadCards(r, langId) {
   st.replies.forEach(m => {
     const reply = one(m, 'X @' + m.handle + ' → @' + st.post.handle);
     cards.push(reply);
-    if (charLen(post._shown) + charLen(reply._shown) <= (lang === 'en' ? 260 : 130)) {
+    if (charLen(post._shown) + charLen(reply._shown) <= (lang === 'en' ? 280 : 140)) {
       cards.push({ ...post, jp: post.jp.concat('→ ' + reply._shown), src: reply.src, url: m.url, _main: false, _both: true });
     }
   });
@@ -4938,6 +5230,8 @@ async function collect() {
   let sequence = [];
   let jokeAt = -1;
   let topicWords = [];
+  /* The genres' words: people's posts about them, each with a reply, make most of the video. */
+  const talkWords = [];
   const topicPlace = {};
   /* Items (5, 10 or 20) is the number of cards. News, then comments gives about 40% to the reports.
      Each comment is two cards: the short part, then the whole comment.
@@ -4953,10 +5247,13 @@ async function collect() {
   const kinds = (romanceSlot ? 1 : 0) + (travelSlot ? 1 : 0);
   const share = onlySpecial ? Math.ceil((N - newsNeed) / kinds) : 0;
   const byGenre = !topicSlots.length;
+  /* X comments only, by genre: couples and places together get one card in five. A short video has
+     neither, ten cards have one of them (drawn each time), twenty have both. */
+  const side = N < 10 ? 'none' : N < 20 ? (Math.random() < 0.5 ? 'romance' : 'travel') : 'both';
   const romanceNeed = onlySpecial ? (romanceSlot ? Math.min(7, Math.ceil(share / 3)) : 0)
-    : romanceSlot ? Math.max(1, Math.round(N / 6)) : (byGenre && romanceGenre) ? Math.max(1, Math.round(N / 10)) : 0;
+    : romanceSlot ? Math.max(1, Math.round(N / 6)) : (byGenre && romanceGenre) ? (mode === 'x' ? (side === 'both' || side === 'romance' ? 1 : 0) : Math.max(1, Math.round(N / 10))) : 0;
   const travelNeed = onlySpecial ? (travelSlot ? Math.min(10, Math.ceil(share / 2)) : 0)
-    : travelSlot ? Math.max(1, Math.round(N / 5)) : (byGenre && travelGenre) ? Math.max(1, Math.round(N / 10)) : 0;
+    : travelSlot ? Math.max(1, Math.round(N / 5)) : (byGenre && travelGenre) ? (mode === 'x' ? (side === 'both' || side === 'travel' ? 1 : 0) : Math.max(1, Math.round(N / 10))) : 0;
   const romancePlace = romanceGenre ? romanceGenre.place : 'middle';
   const travelPlace = travelGenre ? travelGenre.place : 'middle';
   if (mode === 'x') {
@@ -4970,7 +5267,20 @@ async function collect() {
       const w = s.who ? 'to:' + s.who : g ? pickFresh(genreWords(g), 'g:' + g.id) : (s.topic || s.q || s.label);
       topicWords.push(w);
       if (g) topicPlace[w] = g.place;
+      if (!s.who) talkWords.push(w);
     });
+    /* A few chosen genres: each gives more of its own words, so the talks stay on them. */
+    const chosen = topicSlots.filter(s => !s.free && s.genre && GENRE_WORDS[s.genre]);
+    if (chosen.length && chosen.length < 6) {
+      const extra = Math.min(3, Math.ceil(6 / chosen.length)) - 1;
+      chosen.forEach(s => {
+        const g = GENRES.find(x => x.id === s.genre);
+        for (let k = 0; g && k < extra; k++) {
+          const w = pickFresh(genreWords(g), 'g:' + g.id);
+          if (talkWords.indexOf(w) < 0) { talkWords.push(w); topicPlace[w] = g.place; }
+        }
+      });
+    }
     /* A free request: jokes about the same thing, and nothing else is added. */
     freeSlots.forEach(s => topicWords.push(termsOf(s.label, jokeLang()).join(' ')));
     if (topicWords.length < 3 && !onlySpecial && !freeSlots.length) {
@@ -4978,6 +5288,7 @@ async function collect() {
       shuffle(genreChoices().filter(g => g.on && GENRE_WORDS[g.id])).slice(0, 6).forEach(g => {
         const w = pickFresh(genreWords(g), 'g:' + g.id);
         topicWords.push(w);
+        if (!chosen.length) talkWords.push(w);
         topicPlace[w] = g.place;
       });
     }
@@ -5016,33 +5327,66 @@ async function collect() {
   /* Accounts: their posts with the replies, about three cards each. */
   const threadNeed = xAccounts().length ? Math.ceil(left0 / 3) + 1 : 0;
   const cap = fast() ? 8000 : 20000;
-  let [found, couples, trips, topics, threadRows] = await Promise.all([
-    collectJokes(topicWords, onlySpecial ? 0 : left0, {
-      headlines, only: freeSlots.length > 0, anyDay: mode === 'x',
-      must: freeSlots.length && topicSlots.every(s => s.free) ? [...new Set(freeSlots.flatMap(s => termsOf(s.label, jokeLang())).map(w => w.toLowerCase()))] : [],
-    }),
-    within(collectRomance(romanceNeed, romancePlace), cap, []),
-    within(collectTravel(travelNeed, travelPlace), cap, []),
+  /* X comments only: four cards in five are talks (a person's post, then a reply to it). Jokes found
+     on their own are searched only when the talks leave room. */
+  const useTalk = mode === 'x' && !onlySpecial && talkWords.length > 0;
+  /* Talks that wait from an earlier search fit when they are about a chosen genre (any genre, when none is chosen). */
+  const chosenIds = topicSlots.filter(s => !s.free && s.genre).map(s => s.genre);
+  const talkFits = w => { const g = genreOfWord(w); return talkWords.indexOf(w) >= 0 || (!!g && (!chosenIds.length || chosenIds.indexOf(g.id) >= 0)); };
+  const jokeOpts = {
+    headlines, only: freeSlots.length > 0, anyDay: mode === 'x',
+    must: freeSlots.length && topicSlots.every(s => s.free) ? [...new Set(freeSlots.flatMap(s => termsOf(s.label, jokeLang())).map(w => w.toLowerCase()))] : [],
+  };
+  let [found, couples, trips, topics, threadRows, talks] = await Promise.all([
+    useTalk ? [] : collectJokes(topicWords, onlySpecial ? 0 : left0, jokeOpts),
+    within(sideRows('romance', romanceNeed, romancePlace, collectRomance), cap, []),
+    within(sideRows('travel', travelNeed, travelPlace, collectTravel), cap, []),
     Promise.all(freeSlots.map(s => sourceOn('x') ? within(collectAsk(s.label, Math.max(perFree, Math.ceil(left0 / freeSlots.length))), cap, []) : [])),
     within(collectAccounts(threadNeed), cap, []),
+    useTalk ? within(collectTalk(talkWords, left0, talkFits), cap, []) : [],
   ]);
-  /* A typed word that finds little does not stop the video: jokes about words like it
-     (しょうゆこと, then しょうゆ) and about the genres fill the rest. */
-  if (freeSlots.length && !onlySpecial && !S.again) {
-    const got = found.length * 2 + topics.flat().reduce((k, r) => k + (r.thread ? 1 + r.story.replies.length : 2), 0);
-    if (got < left0) {
-      const like = fast() ? [] : freeSlots.flatMap(s => looser(s.label, jokeLang())).slice(0, 3);
-      const fill = [];
-      shuffle(genreChoices().filter(g => g.on && GENRE_WORDS[g.id])).slice(0, 5).forEach(g => {
-        const w = pickFresh(genreWords(g), 'g:' + g.id);
-        fill.push(w);
-        topicPlace[w] = g.place;
-      });
-      const have = new Set(found.flatMap(j => jokeKeys({ text: j.text, link: j.url })));
-      const more = await within(collectJokes(like.concat(fill), Math.ceil((left0 - got) / 2), { headlines, only: true, anyDay: mode === 'x' }), cap, []);
-      found = found.concat(more.filter(j => !jokeKeys({ text: j.text, link: j.url }).some(k => have.has(k))));
-    }
+  if (S.again) { poolTalks(talks); return null; }
+  const sizeOf = r => (r.thread ? talkSize(r.story, jokeLang(), r.hook || (r.talk ? r.topic : '')) : 2);
+  const gotCards = () => found.length * 2 + [threadRows, talks, topics.flat()].flat().reduce((k, r) => k + sizeOf(r), 0)
+    + couples.reduce((k, r) => k + 2 + r.story.cheers.length, 0) + trips.length * 2;
+  if (useTalk && gotCards() < left0) {
+    /* A joke on its own is often one card, so as many jokes as cards are asked for; what does not fit is left out. */
+    found = await within(collectJokes(topicWords, left0 - gotCards(), jokeOpts), cap, []);
+    if (S.again) { poolTalks(talks); return null; }
   }
+  /* A typed word that finds little does not stop the video: jokes about words like it
+     (しょうゆこと, then しょうゆ) and talks about the genres fill the rest. */
+  if (freeSlots.length && !onlySpecial && gotCards() < left0) {
+    const like = fast() ? [] : freeSlots.flatMap(s => looser(s.label, jokeLang())).slice(0, 3);
+    const fill = [];
+    shuffle(genreChoices().filter(g => g.on && GENRE_WORDS[g.id])).slice(0, 5).forEach(g => {
+      const w = pickFresh(genreWords(g), 'g:' + g.id);
+      fill.push(w);
+      topicPlace[w] = g.place;
+    });
+    const short = left0 - gotCards();
+    const have = new Set(found.flatMap(j => jokeKeys({ text: j.text, link: j.url })));
+    const [more, moreTalks] = await Promise.all([
+      like.length ? within(collectJokes(like, Math.ceil(short / 2), { headlines, only: true, anyDay: mode === 'x' }), cap, []) : [],
+      within(collectTalk(fill, short, w => !!genreOfWord(w)), cap, []),
+    ]);
+    found = found.concat(more.filter(j => !jokeKeys({ text: j.text, link: j.url }).some(k => have.has(k))));
+    talks = talks.concat(moreTalks);
+    if (gotCards() < left0) {
+      const last = await within(collectJokes(fill, Math.ceil((left0 - gotCards()) / 2), { headlines, only: true, anyDay: mode === 'x' }), cap, []);
+      found = found.concat(last.filter(j => !jokeKeys({ text: j.text, link: j.url }).some(k => have.has(k))));
+    }
+    if (S.again) { poolTalks(talks); return null; }
+  }
+  const talkRows = talks.map(r => ({ ...r, place: topicPlace[r.topic] || (genreOfWord(r.topic) || {}).place || 'middle' }));
+  /* Beside the talks, a couple shows the post and the reply; onlookers only when a place does not need the room. */
+  if (useTalk && byGenre && !romanceSlot) couples.forEach(r => { r.story.cheers = r.story.cheers.slice(0, Math.max(0, Math.round(left0 * 0.2) - 2 - trips.length * 2)); });
+  /* The talks that make four cards in five come first; the others wait and fill what is left. */
+  const talkFirst = [];
+  const talkRest = [];
+  const talkShare = Math.round(left0 * 0.8);
+  let talkCards = 0;
+  talkRows.forEach(r => { if (talkCards < talkShare) { talkFirst.push(r); talkCards += sizeOf(r); } else talkRest.push(r); });
 
   const topicRows = topics.flat();
   /* Each typed line first gets its share; what it found beyond that fills the video after the genres. */
@@ -5051,7 +5395,7 @@ async function collect() {
   topics.forEach(list => {
     let n = 0;
     list.forEach(r => {
-      const size = r.thread ? 1 + r.story.replies.length : 2;
+      const size = sizeOf(r);
       if (n < perFree) { topicFirst.push(r); n += size; } else topicRest.push(r);
     });
   });
@@ -5069,13 +5413,12 @@ async function collect() {
   withPost.forEach((j, i) => {
     const st = parents[i];
     if (!st) return;
-    const post = { handle: handleOf(st) || j.parent.who, text: postText(st), url: st.url || '', id: j.parent.id };
-    const n = charLen(post.text);
-    if (!post.handle || n < 4 || n > (j.lang === 'en' ? 280 : 140) || !askOk(st, post.text) || heavy(post.text) || post.handle.toLowerCase() === j.handle.toLowerCase()) return;
-    if (!post.url) post.url = 'https://x.com/' + post.handle + '/status/' + post.id;
+    const lang = j.lang === 'en' ? 'en' : 'ja';
+    const post = talkPost(st, lang);
+    if (!post || post.handle.toLowerCase() === j.handle.toLowerCase() || charLen(post.text) + charLen(j.text) > (lang === 'en' ? 280 : 140)) return;
     j.post = post;
   });
-  if (S.again) return null;
+  if (S.again) { poolTalks(talks); return null; }
   const jokeRows = found.map(j => {
     const place = topicPlace[j.topic] || 'middle';
     if (!j.post) return { headline: j.text, text: j.text, link: j.url, source: 'X @' + j.handle, x: true, cat: 'REPLY', joke: true, topic: j.topic, place };
@@ -5083,15 +5426,15 @@ async function collect() {
     return { thread: true, joke: true, story, headline: j.post.text, text: j.text, link: j.url, cat: 'REPLY', topic: j.topic, place, keys: threadKeys(story).concat(jokeKeys({ text: j.text, link: j.url })) };
   });
   const coupleRows = couples.map(r => ({ ...r, headline: r.story.a.text, joke: true }));
-  if (S.again) return null;
-  if (!sequence.length && !jokeRows.length && !coupleRows.length && !trips.length && !topicRows.length && !threadRows.length) return { empty: true };
+  if (S.again) { poolTalks(talks); return null; }
+  if (!sequence.length && !jokeRows.length && !coupleRows.length && !trips.length && !topicRows.length && !threadRows.length && !talkRows.length) return { empty: true };
   say('Reading the text');
   progress(0.75);
   /* Fit the cards to Items: reports, couples and places first, then jokes fill the rest.
      A comment without room for two cards keeps only the whole comment. */
-  const all = sequence.concat(threadRows, coupleRows, trips, topicFirst, jokeRows, topicRest);
+  const all = sequence.concat(threadRows, talkFirst, coupleRows, trips, topicFirst, talkRest, jokeRows, topicRest);
   const cards = await cardsFrom(all, lang.id);
-  if (S.again) return null;
+  if (S.again) { poolTalks(talks); return null; }
   let left = N;
   all.forEach((r, i) => {
     let c = cards[i];
@@ -5106,10 +5449,16 @@ async function collect() {
         c.forEach(card => { card.key = r.keys; });
       } else if (r.thread) {
         /* Too many cards: the opening words go first, then the cards that show post and reply together. */
-        if (c.length > left) c = c.filter(card => !card._tease);
-        if (c.length > left) c = c.filter(card => !card._both);
-        c = c.slice(0, left);
-        if (c.length < 2) return;
+        if (left === 1) {
+          /* Room for one card: the one that shows the post and the reply together. */
+          c = c.filter(card => card._both).slice(0, 1);
+          if (!c.length) return;
+        } else {
+          if (c.length > left) c = c.filter(card => !card._tease);
+          if (c.length > left) c = c.filter(card => !card._both);
+          c = c.slice(0, left);
+          if (c.length < 2) return;
+        }
         const kept = new Set(c.map(card => card.url));
         r.story.replies = r.story.replies.filter(m => kept.has(m.url));
         r.keys = threadKeys(r.story).concat(r.text ? jokeKeys({ text: r.text, link: r.link }) : []);
@@ -5120,11 +5469,26 @@ async function collect() {
     r._cards = c;
     left -= c.length;
   });
+  /* Cards left over: a talk already in the video shows one more reply. */
+  for (const r of all) {
+    if (left <= 0) break;
+    if (!r._cards || !r.talk || !(r.spare && r.spare.length)) continue;
+    const m = r.spare.shift();
+    const more = threadCards({ ...r, story: { post: r.story.post, replies: [m] } }, lang.id).filter(c => c.url === m.url).slice(0, left);
+    if (!more.length) continue;
+    r.story.replies.push(m);
+    r.keys = threadKeys(r.story);
+    r._cards = r._cards.concat(more);
+    r._cards.forEach(c => { c.key = r.keys; });
+    left -= more.length;
+  }
+  /* Talks that found no room wait for the next video. */
+  poolTalks(talks.filter(t => !talkRows.some(r => r._cards && r.story.post.id === t.story.post.id)));
   /* Jokes, couples and places take turns within each band (Top, Middle, Bottom). */
   const band = { top: 0, middle: 1, bottom: 2 };
   const extra = [];
   ['top', 'middle', 'bottom'].forEach(b => {
-    const lists = [threadRows, topicRows, jokeRows, coupleRows, trips].map(list => list.filter(r => r._cards && (band[r.place] === undefined ? 'middle' : r.place) === b));
+    const lists = [threadRows, talkRows, topicRows, jokeRows, coupleRows, trips].map(list => list.filter(r => r._cards && (band[r.place] === undefined ? 'middle' : r.place) === b));
     for (let k = 0; lists.some(l => l.length); k++) {
       const l = lists[k % lists.length];
       if (l.length) extra.push(l.shift());
@@ -5363,7 +5727,8 @@ async function runAll(opts) {
   if (!script) return;
   if (script.empty) {
     progress(0);
-    say(S.show ? 'No new stories or jokes yet. This video keeps playing. Press Update again later.' : 'No new stories or jokes yet. Press Update again later.', !S.show);
+    if (searchResting()) say(S.show ? 'The search on X is busy. This video keeps playing; a new one comes in a minute or two.' : 'The search on X is busy. Press Update in a minute or two.', !S.show);
+    else say(S.show ? 'No new stories or jokes yet. This video keeps playing. Press Update again later.' : 'No new stories or jokes yet. Press Update again later.', !S.show);
     return;
   }
   try {
@@ -6204,7 +6569,7 @@ E.setMusicCredit(TRACKS[0].credit);
 /* A newer copy on the site: load it, so a copy the browser kept from before is not shown.
    version.json names the latest build of each page; it is read past the browser's cache. */
 function watchVersion(key, url) {
-  const BUILD = 'c3a8fe7ba09c';
+  const BUILD = '3b12d20ad1da';
   if (location.protocol === 'file:' || BUILD.indexOf('BUILD_ID') >= 0) return;
   /* At the start it may reload at once; later it waits while a video is being made or saved. */
   const check = first => {
