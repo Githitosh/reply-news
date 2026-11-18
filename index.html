@@ -100,6 +100,11 @@ button#sound.on { background: var(--acc); border-color: var(--acc); color: var(-
 .linkbox.two { flex-direction: column; height: calc(2 * 1.3 * 26px + 22px); }
 .linkbox.two .source-url { -webkit-line-clamp: 1; padding: 4px 10px; flex: none; }
 .match-note { text-align: center; margin: 0 0 10px; }
+/* Matching News: the match on screen, sent to its two people by the viewer. */
+.sendrow { margin-top: 8px; text-align: center; }
+.sendrow button { min-width: 60%; }
+.sendrow button[data-ready] { background: var(--acc); color: var(--bg); border-color: var(--acc); }
+.sendrow .note { text-align: center; margin: 4px 0 0; }
 .mode { justify-content: center; margin-bottom: 4px; }
 button, .btn { appearance: none; border: 1px solid var(--line); background: var(--card); color: var(--ink); font: 700 15px "Noto Sans JP",sans-serif; padding: 11px 14px; border-radius: 10px; cursor: pointer; text-decoration: none; display: inline-block; text-align: center; }
 button:disabled { opacity: .45; cursor: default; }
@@ -169,6 +174,10 @@ pre#sources { white-space: pre-wrap; font: 12px/1.5 ui-monospace,Menlo,monospace
       <button id="full" type="button">Full screen</button>
       <button id="update" type="button" hidden>Update</button>
       <button id="dl" type="button" disabled>Download</button>
+    </div>
+    <div id="sendRow" class="sendrow" hidden>
+      <button id="send" type="button" disabled>Send to the two</button>
+      <p class="note">Nothing is sent by itself. You check the post and send it.</p>
     </div>
     <div class="seekrow">
       <input type="range" id="seek" min="0" max="1000" value="0" disabled>
@@ -2180,6 +2189,12 @@ const JA = {
   'Web': 'ウェブ', 'Media': 'メディア', 'Public page:': '公開ページ：', 'Replies': 'リプライ', 'Clear': '消す', 'Reading the post': '投稿を読み込んでいます',
   'Words, @account or post URL': '言葉・@アカウント・URL', 'Program repository:': 'プログラムの保存先：', 'Terms of use': '利用規約', 'Searching the web': 'ウェブを探しています',
   'Matching News': 'マッチングニュース', 'Matching': 'マッチング',
+  'match': 'マッチの動画',
+  'Send to the two': '二人に送る', 'Send on X': 'Xで送る',
+  'Nothing is sent by itself. You check the post and send it.': '自動では送信しません。内容を確認して、自分で送信します。',
+  'Choose X, read the post and send it. The words were copied: paste them if they are missing.': '共有メニューでXを選び、内容を確認して送信してください。文面はコピー済みです。入っていなければ貼り付けてください。',
+  'Not sent yet. Press Send on X again.': 'まだ送っていません。もう一度「Xで送る」を押してください。',
+  'The video was downloaded. Attach it to the post that opened, read it and send it.': '動画をダウンロードしました。開いた投稿画面に添付し、内容を確認して送信してください。',
   'A post about love and a reply are put together at random. The reply was written to another post.': '恋愛の投稿と、別の投稿に書かれたリプライを、ランダムに組み合わせています。二人が実際にやりとりしたものではありません。',
   'Reply News': 'リプライニュース', 'Reply News settings': 'リプライニュースの設定', 'Opening Reply News…': 'リプライニュースを開いています…',
   'Humor': 'ユーモア', 'News': 'ニュース', 'Pull down to refresh': '引っ張って更新', 'Release to refresh': '離すと更新',
@@ -2283,6 +2298,7 @@ const PATTERNS = [
   [/^Exporting (.+)… (\d+)%$/, m => `${tr(m[1])}を書き出し中… ${m[2]}%`],
   [/^Recording… (\d+)%$/, m => `録画中… ${m[1]}%`],
   [/^Exported: (.*)$/, m => `書き出しました：${m[1]}`],
+  [/^The video of (@\w+) and (@\w+) is ready\. Press Send on X, read the post and send it yourself\.$/, m => `${m[1]} と ${m[2]} の動画ができました。「Xで送る」を押し、内容を確認してから自分で送信してください。`],
   [/^Downloaded (.+)$/, m => `${m[1]}をダウンロードしました`],
   [/^Saved to Downloads: (.+)$/, m => `「ダウンロード」フォルダに保存しました：${m[1]}`],
   [/^Saved to (.+)$/, m => `${m[1]}に保存しました`],
@@ -3410,6 +3426,7 @@ function paintMode() {
   document.querySelectorAll('#modeChips button').forEach(b => b.classList.toggle('on', b.dataset.mode === mode()));
   $('modeChips').hidden = !(MATCH.posts.length && MATCH.lines.length);
   $('matchNote').hidden = !on;
+  $('sendRow').hidden = !on;
   document.querySelector('.linkbox').classList.toggle('two', on);
 }
 const hasGenre = id => (matchOn() ? MATCH.posts.some(p => p.genre === id) : FEED.some(t => t.genre === id));
@@ -3694,6 +3711,7 @@ function draw(T) {
   $('time').textContent = `${T.toFixed(1)} / ${S.show.duration.toFixed(1)}`;
   const i = Math.min(S.show.items.length - 1, Math.max(0, Math.floor(shown / (E.DUR || 3.2))));
   const it = S.show.items[i];
+  paintSend(it);
   /* A match has two links, one for each person. */
   [['storyLink', it && it.url], ['storyLink2', it && it.url2]].forEach(([id, u]) => {
     const a = $(id);
@@ -3834,6 +3852,7 @@ function setBusy(b) {
   $('addTalk').disabled = !!b;
   $('update').disabled = !!b;
   $('dl').disabled = !S.ready && (!!b || !S.show);
+  $('send').disabled = !S.sendReady && (!!b || !S.sendNo);
 }
 /* Another video from the day's talks. After the end of a video or a press on Update, the prepared one plays;
    after a change of genre, words or Items, a new one is chosen. */
@@ -4279,6 +4298,99 @@ async function download() {
   } else saveOut(out);
 }
 
+/* ---------- a match, sent to its two people ---------- */
+/* The match on screen can be sent to the two people it puts together: a video of that one set is made,
+   and a post is prepared that names both and links their two posts. Nothing is sent by this page: the
+   viewer's own X opens with the video and the words, and the viewer reads it and sends it. (A program
+   that mentions people by itself is spam by X's rules, and nobody asked to be matched.)
+   Phones: the share sheet, with the video and the words. Computers: the video is downloaded and X's
+   post window opens with the words; the video is attached by hand. */
+const handleOf = url => (String(url || '').match(/(?:x|twitter)\.com\/([A-Za-z0-9_]{1,15})\/status\//i) || [])[1] || '';
+/* The Send button shows under a match and belongs to the set on screen. */
+function paintSend(it) {
+  const no = it && it.url2 && handleOf(it.url) && handleOf(it.url2) ? it.no : 0;
+  if (S.sendNo === no && S.sendPainted) return;
+  S.sendNo = no;
+  S.sendPainted = true;
+  resetSend();
+}
+function resetSend() {
+  const b = $('send');
+  if (!b) return;
+  b.textContent = S.sendReady ? 'Send on X' : 'Send to the two';
+  if (S.sendReady) b.dataset.ready = '1'; else delete b.dataset.ready;
+  b.disabled = !S.sendReady && (!!S.busy || !S.sendNo);
+}
+function sendText(a, b, url, url2) {
+  const ja = uiLang() !== 'en';
+  return [`@${a} @${b}`, ja ? 'お二人の投稿をランダムに組み合わせた動画です（マッチングニュース）' : 'Your two posts, put together at random (Matching News)', url, url2].join('\n');
+}
+/* The second press: the viewer's X, with the video and the words. */
+function sendOut(m) {
+  const done = () => { S.sendReady = null; resetSend(); };
+  /* The words are also copied, for an app that takes the video and leaves the words out. */
+  try { if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(m.text).catch(() => {}); } catch (e) {}
+  const file = shareable(m.out);
+  if (file) {
+    say('Choose X, read the post and send it. The words were copied: paste them if they are missing.');
+    navigator.share({ files: [file], text: m.text }).then(done).catch(e => {
+      if (e && e.name === 'AbortError') { say('Not sent yet. Press Send on X again.'); return; }
+      console.warn(e);
+      anchorSave(m.out);
+      window.open('https://x.com/intent/post?text=' + encodeURIComponent(m.text), '_blank', 'noopener');
+      say('The video was downloaded. Attach it to the post that opened, read it and send it.');
+      done();
+    });
+    return;
+  }
+  anchorSave(m.out);
+  window.open('https://x.com/intent/post?text=' + encodeURIComponent(m.text), '_blank', 'noopener');
+  say('The video was downloaded. Attach it to the post that opened, read it and send it.');
+  done();
+}
+/* The first press: the video of the set on screen is made. */
+async function sendMatch() {
+  if (S.sendReady) { sendOut(S.sendReady); return; }
+  if (S.busy || !S.script || !S.show || !S.sendNo) return;
+  const cards = S.script.items.filter(c => c.no === S.sendNo && c.url2);
+  const a = handleOf(cards[0] && cards[0].url);
+  const b = handleOf(cards[0] && cards[0].url2);
+  if (!cards.length || !a || !b) return;
+  const text = sendText(a, b, cards[0].url, cards[0].url2);
+  const script = { date: S.script.date, items: cards.map(c => ({ ...c, no: 1, of: 1 })), market: '' };
+  const T0 = currentT();
+  const was = S.playing;
+  stop();
+  setBusy(true);
+  $('send').textContent = 'Making MP4…';
+  let blob = null;
+  try {
+    let aac = null;
+    if (!S.mute) { try { aac = parseM4A(S.music); } catch (e) { console.warn('m4a', e); } }
+    const show = E.prepare(script, PRESET[S.format], LOOK);
+    blob = await encodeShow(show, 'match', 0.3, 0.98, aac);
+    if (!blob) blob = await recordRealtime(show);
+    progress(1);
+  } catch (e) {
+    console.error(e);
+    say(e.message || String(e), true);
+  } finally {
+    S.show = E.prepare(S.script, preset(), LOOK);
+    sizeCanvas();
+    const T = Math.min(T0, Math.max(0, S.show.duration - 1 / E.FPS));
+    $('seek').value = String(Math.round(T / S.show.duration * 1000));
+    S.sendPainted = false;
+    draw(T);
+    setBusy(false);
+  }
+  if (!blob) { resetSend(); return; }
+  const name = `MatchingNews_${a}_${b}.${blob.type.includes('webm') ? 'webm' : 'mp4'}`;
+  S.sendReady = { out: { blob, name, url: URL.createObjectURL(blob) }, text, a, b };
+  resetSend();
+  if (was && !S.playing) toggle();
+  say(`The video of @${a} and @${b} is ready. Press Send on X, read the post and send it yourself.`);
+}
+
 /* ---------- full screen ---------- */
 function realFull() { return document.fullscreenElement || document.webkitFullscreenElement || null; }
 function fullOn() { return !!(realFull() || S.pseudo || S.vfull); }
@@ -4588,6 +4700,7 @@ function initUI() {
   /* A tap or click on the picture pauses and plays. */
   $('cv').addEventListener('click', () => toggle());
   $('dl').onclick = () => download();
+  $('send').onclick = () => sendMatch();
   $('full').onclick = () => toggleFull().catch(e => say(e.message || String(e), true));
   $('sound').onclick = () => toggleSound();
   $('seek').addEventListener('input', () => {
@@ -4618,7 +4731,7 @@ E.setMusicCredit(TRACKS[0].credit);
 /* A newer copy on the site: load it, so a copy the browser kept from before is not shown.
    version.json names the latest build of each page; it is read past the browser's cache. */
 function watchVersion(key, url) {
-  const BUILD = 'be6124d743a3';
+  const BUILD = '85beefed8994';
   if (location.protocol === 'file:' || BUILD.indexOf('BUILD_ID') >= 0) return;
   /* At the start it may reload at once; later it waits while a video is being made or saved. */
   const check = first => {

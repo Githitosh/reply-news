@@ -38,6 +38,11 @@ wrote to some other post, drawn at random, the way a matching app puts two peopl
 - Every card that shows a post or a reply says ランダムマッチング (Random match), the last card of a match names both people
   (`X @a × @b`), and under the video there are two links, one to each person's own post.
 - The **Replies** button goes back to Reply News: the replies really written to each post.
+- **Send to the two** (under a match): a first press makes a video of that one set; a second press opens
+  the viewer's own X with the video and with words that name both people and link their two posts
+  (the share sheet on a phone; on a computer the video is downloaded and X's post window opens). The
+  page sends nothing by itself: the viewer reads the post and sends it. An automatic sender is not
+  built on purpose: unasked mentions by a program are spam by X's rules.
 
 ## How it is used
 
