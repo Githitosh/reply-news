@@ -56,7 +56,8 @@ li { margin: 4px 0; }
     <h2>3. 表示される内容</h2>
     <ul>
       <li>動画に表示されるのは、次の2つです。(1) 運営者のプログラムが1日3回（6時・12時・18時ごろ）集め、運営者のGitHub（githito.xapi）に保存した、その日の投稿とリプライ（保存したものがあるときだけ）。(2) 利用者が自分で貼り付けた投稿とリプライ。</li>
-      <li>(1) は、個人の投稿と、それに付いたリプライを組にしたものです。企業・報道機関などの投稿は最初の投稿に選びません。暴力、性的な内容、重い話題、けんか腰の言葉、広告は選びません。保存から48時間で消します。ただし完全ではなく、不快なものが表示されることがあります。</li>
+      <li>(1) は、個人の投稿と、それに付いたリプライを組にしたものです。運営者のプログラムは、投稿を探すためだけに FxTwitter（api.fxtwitter.com）を使い、選んだ投稿とリプライの本文と投稿者を、X公式の埋め込みAPIで読み直して保存します。Xで表示されなくなった投稿や、本文が食い違う投稿は保存しません。利用者のブラウザが FxTwitter につながることはありません。</li>
+      <li>企業・報道機関などの投稿は最初の投稿に選びません。暴力、性的な内容、重い話題、けんか腰の言葉、広告は選びません。自動で集めた会話は48時間、運営者が手で選んだ会話は14日で消します。ただし完全ではなく、不快なものが表示されることがあります。</li>
       <li>ご自身の投稿を表示しないでほしい場合や、権利の侵害を見つけた場合は、下記のお問い合わせ先までお知らせください。確認のうえ対応します。</li>
       <li>表示される投稿・リプライの権利は、それぞれの投稿者にあります。運営者が内容を書いたり、書き換えたりすることはありません（一部を抜き出しての表示を除きます）。</li>
       <li>投稿のリンクを貼り付けたときは、投稿者の名前とリンクを動画に表示します。文を貼り付けたときも、投稿のアドレスや「@名前」が含まれていれば表示します。</li>
@@ -121,7 +122,8 @@ li { margin: 4px 0; }
     <h2>3. Content on the Service</h2>
     <ul>
       <li>A video shows two things: (1) the day's posts and replies that the Operator's program collects three times a day (about 6:00, 12:00 and 18:00 in Japan) and saves on the Operator's GitHub (githito.xapi), when any are saved; (2) the posts and replies that you paste.</li>
-      <li>(1) are a person's post together with a reply to it. Posts by companies and news media are not chosen as the first post. Violence, sexual content, hard news, fighting words and ads are not chosen. A saved talk is removed after 48 hours. This is not perfect, and something unpleasant may still appear.</li>
+      <li>(1) are a person's post together with a reply to it. The Operator's program uses FxTwitter (api.fxtwitter.com) only to find posts; the words and the writer of each post and reply chosen are read again through X's official embed API and saved from there. A post that X no longer shows, or whose words differ, is not saved. Your browser never connects to FxTwitter.</li>
+      <li>Posts by companies and news media are not chosen as the first post. Violence, sexual content, hard news, fighting words and ads are not chosen. Talks collected automatically are removed after 48 hours, and talks the Operator picked by hand after 14 days. This is not perfect, and something unpleasant may still appear.</li>
       <li>If you do not want your post shown, or you find an infringement, tell us at the contact below and we will look into it.</li>
       <li>The rights in the posts and replies shown belong to their writers. The Operator does not write or change them, except to show a part of one.</li>
       <li>When you paste a post's link, the writer's name and the link are shown in the video. When you paste its words, they are shown if the text has the post's address or an "@name".</li>

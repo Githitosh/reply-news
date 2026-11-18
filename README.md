@@ -10,7 +10,9 @@ Download saves the video as an MP4.
 
 - **The day's talks**, from Reply News' own search data:
   [githito.xapi](https://github.com/Githitosh/githito.xapi). A program there collects talks three
-  times a day (6:00, 12:00, 18:00 in Japan) and publishes them as one file, about 500 talks. The page
+  times a day (6:00, 12:00, 18:00 in Japan) and publishes them as one file, about 500 talks: it
+  finds posts with its own words, chooses the talks itself, and saves the words that X's official
+  embed API returns for each. The owner can also send talks by hand. The page
   reads that file and searches inside it, so no search is made when a video is wanted. The last file
   read is kept in the browser: the next visit plays at once and reads the new file meanwhile, and the
   file is read again every ten minutes while the page is open.
