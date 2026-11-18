@@ -7,6 +7,18 @@ posts from famous places (観光), made in the browser. Settings, the item count
 (5 / 10 / 20), story length, wallpaper and music are chosen on the page, and
 Download saves the video as an MP4.
 
+## The box above the video
+
+Type something in the box above the video and press リプライ (Replies):
+
+- words (渋谷, 新しいiPhone): posts on X about them that people replied to, each followed by the replies under it
+- @account: that account's newest posts, each followed by its replies
+- a post's address (https://x.com/…/status/…): that post, then its replies
+
+Only posts and replies that people wrote are shown; the page writes nothing itself.
+The same safety rules apply (no violence, no hard news, no ads). Update and the end
+of the video keep to the same words until ✕ clears the box.
+
 ## How posts and reports are chosen
 
 No search engine, news aggregator or ad ranking decides what plays. The page uses

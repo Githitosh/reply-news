@@ -33,12 +33,20 @@ a.jump { color: var(--acc); font: 700 14px/1 "Noto Sans JP",sans-serif; text-dec
 #gear.on { background: var(--acc); border-color: var(--acc); color: var(--on); }
 main { padding: 0 16px calc(24px + env(safe-area-inset-bottom)); max-width: 1100px; margin: 0 auto; }
 /* The portrait video is as tall as the screen allows, leaving room for the title and the buttons. */
-.frame { width: min(100%, max(280px, calc((100vh - 150px) * 9 / 16))); width: min(100%, max(280px, calc((100dvh - 150px) * 9 / 16))); }
-.ctl, .seekrow, .caption, .music, .music-label { max-width: 560px; margin-left: auto; margin-right: auto; }
+.frame { width: min(100%, max(280px, calc((100vh - 205px) * 9 / 16))); width: min(100%, max(280px, calc((100dvh - 205px) * 9 / 16))); }
+.ctl, .seekrow, .caption, .music, .music-label, .ask { max-width: 560px; margin-left: auto; margin-right: auto; }
+/* The box on the main screen: words, @account or a post's address; the replies to it play. */
+.ask { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
+.ask input[type=text] { flex: 1 1 auto; width: auto; min-width: 0; font-size: 16px; padding: 10px 12px; }
+.ask input[type=text].live { border-color: var(--acc); }
+.ask button { flex: none; padding: 10px 12px; font-size: 14px; white-space: nowrap; }
+.ask #askGo { background: var(--acc); border-color: var(--acc); color: var(--on); }
+.ask #askClear { width: 42px; padding: 10px 0; }
+.watch.is-full .ask { display: none; }
 .frame { position: relative; max-width: 100%; margin: 0 auto; transition: transform .18s ease; }
 .frame.pulling { transition: none; }
 /* PC layout: landscape, as wide as the page and the screen height allow. */
-.land .frame { width: min(100%, max(320px, calc((100vh - 150px) * 16 / 9))); width: min(100%, max(320px, calc((100dvh - 150px) * 16 / 9))); }
+.land .frame { width: min(100%, max(320px, calc((100vh - 205px) * 16 / 9))); width: min(100%, max(320px, calc((100dvh - 205px) * 16 / 9))); }
 .land canvas#cv { aspect-ratio: 16 / 9; }
 canvas#cv { position: relative; z-index: 1; display: block; width: 100%; aspect-ratio: 9 / 16; height: auto; background: var(--frame); border-radius: 12px; }
 /* iPhone: a copy of the picture as a video, behind the canvas, for the system full-screen player. */
@@ -139,6 +147,11 @@ pre#sources { white-space: pre-wrap; font: 12px/1.5 ui-monospace,Menlo,monospace
 <button type="button" id="backDock" class="back-dock" hidden>Back to video</button>
 <main>
   <div id="watch" class="watch">
+    <form id="ask" class="ask" autocomplete="off">
+      <input type="text" id="askText" enterkeyhint="search" placeholder="Words, @account or post URL">
+      <button type="submit" id="askGo">Replies</button>
+      <button type="button" id="askClear" aria-label="Clear" hidden>✕</button>
+    </form>
     <div class="frame">
       <canvas id="cv" width="1080" height="1920"></canvas>
     </div>
@@ -2177,7 +2190,8 @@ const JA = {
   'Shibuya': '渋谷', '2002 World Cup final': '2002年のワールドカップ決勝',
   'At the end': '最後まで再生したら', 'Repeat': '繰り返す',
   'Add an account to load its posts and the replies to them.': 'アカウントを追加すると、そのアカウントの投稿と、返信を読み込みます。',
-  'Web': 'ウェブ', 'Media': 'メディア', 'Public page:': '公開ページ：', 'Program repository:': 'プログラムの保存先：', 'Searching the web': 'ウェブを探しています',
+  'Web': 'ウェブ', 'Media': 'メディア', 'Public page:': '公開ページ：', 'Replies': 'リプライ', 'Clear': '消す', 'Reading the post': '投稿を読み込んでいます',
+  'Words, @account or post URL': '言葉・@アカウント・URL', 'Program repository:': 'プログラムの保存先：', 'Searching the web': 'ウェブを探しています',
   "Type a site's address or a homepage (asahi.com, https://www.example.co.jp/) to add its newest posts. Press a name to remove it.": 'サイトのアドレスや企業などのホームページ（asahi.com、https://www.example.co.jp/）を入れて「追加」を押すと、そのサイトの新着を読み込みます。名前を押すと外せます。',
   "Reports are chosen by this page's own rules, not by a search engine or ads: newest first from open sources (GDELT and Wikipedia's current events), the same share for every genre, at most two from one site, and drawn at random.":
     '記事は、検索エンジンや広告の順位ではなく、このページ独自のルールで選びます。公開されている情報源（GDELT とウィキペディアの「最近の出来事」）から新しい順に集め、どのジャンルも同じ数ずつ、1つのサイトから2件まで、その中からランダムに選びます。',
@@ -2266,6 +2280,7 @@ const PATTERNS = [
   [/^Save (.+)$/, m => `${tr(m[1])}を保存`],
   [/^Share (.+)$/, m => `${tr(m[1])}を共有`],
   [/^Searching (.+)$/, m => `${tr(m[1])}を探しています`],
+  [/^No replies found for “(.+)”\. Try other words\.$/, m => `「${m[1]}」へのリプライは見つかりませんでした。別の言葉で試してください。`],
   [/^Adding (.+)$/, m => `${tr(m[1])}を追加しています`],
   [/^Reading (.+)$/, m => `${m[1].split(', ').map(tr).join('、')}を読み込んでいます`],
   [/^Loading (@\w+)$/, m => `${m[1]}を読み込んでいます`],
@@ -3160,7 +3175,7 @@ const CJK = /[぀-ヿ一-鿿]/;
 const S = {
   bgs: {}, music: null, show: null, script: null, format: 'x', playing: false, raf: 0, origin: 0, t0perf: 0,
   audioOn: false, el: null, musicUrl: '', busy: false, again: null, pseudo: false, mute: true,
-  vfull: false, fv: null, lastDraw: 0, tracks: {}, track: TRACKS[0], outs: [], jsonClean: '',
+  vfull: false, fv: null, lastDraw: 0, tracks: {}, track: TRACKS[0], outs: [], jsonClean: '', ask: '',
 };
 const TAP = ' Press Sound for music.';
 
@@ -4399,6 +4414,183 @@ async function collectTopic(slot, need) {
     .map(t => ({ headline: t.text, text: t.text, link: t.url, source: 'X @' + t.handle, x: true, cat: 'REPLY', joke: true, corner, place: 'middle' }));
 }
 
+/* ---------- the box on the main screen: the replies to what was typed ---------- */
+/* Words: posts on X about them, each followed by the replies under it.
+   @account: that account's posts and their replies. A post's address: that post and its replies.
+   Only replies people posted are shown; nothing is written by this page. */
+const ASK_POST = /(?:x|twitter)\.com\/(?:i\/web\/|([A-Za-z0-9_]{1,15})\/)status(?:es)?\/(\d+)/i;
+const ASK_HANDLE = /^@([A-Za-z0-9_]{1,15})$/;
+function askOk(st, text) {
+  return !!text && !UNSAFE.test(text) && !VIOLENT.test(text) && !sensitive(text, st) && !AD.test(String((st && st.text) || ''));
+}
+/* The replies under one post, liveliest and shortest first. */
+async function repliesUnder(id, author, lang, seen, sameText) {
+  const list = await searchX(`conversation_id:${id} filter:replies`);
+  const picks = [];
+  list.forEach(st => {
+    const who = handleOf(st);
+    const text = postText(st);
+    const rid = statusId(st);
+    if (!who || !rid || rid === id || who.toLowerCase() === String(author || '').toLowerCase() || picks.some(x => x.id === rid)) return;
+    if (!askOk(st, text) || charLen(text) < 2 || charLen(text) > (lang === 'en' ? 220 : 110) || jokeKeys({ text, link: st.url || '' }).some(seen)) return;
+    const tk = squash(text).slice(0, 50);
+    if (sameText.has(tk) || picks.some(x => x.tk === tk)) return;
+    const lively = isFunny(text, lang) || (WOW[lang] && WOW[lang].test(text));
+    picks.push({ handle: who, text, url: st.url || '', id: rid, tk, score: (lively ? 3 : 0) + (charLen(text) <= 40 ? 2 : 0) + Math.random() * 2 });
+  });
+  return picks.sort((a, b) => b.score - a.score);
+}
+/* Threads from candidate posts: three replies each at first, then more until the video is full. */
+async function askThreads(posts, need, lang, seen, sameText) {
+  const lists = await Promise.all(posts.map(p => repliesUnder(p.id, p.handle, lang, seen, sameText).catch(() => [])));
+  const threads = [];
+  let cards = 0;
+  posts.forEach((post, i) => {
+    if (cards >= need) return;
+    const fresh = lists[i].filter(m => !sameText.has(m.tk));
+    if (!fresh.length) return;
+    const replies = fresh.slice(0, Math.min(3, need - cards - 1));
+    if (!replies.length) return;
+    replies.forEach(m => sameText.add(m.tk));
+    threads.push({ post, replies, spare: fresh.slice(replies.length) });
+    cards += 1 + replies.length;
+  });
+  for (let more = true; cards < need && more;) {
+    more = false;
+    threads.forEach(t => {
+      if (cards >= need) return;
+      const m = t.spare.shift();
+      if (!m || sameText.has(m.tk)) return;
+      sameText.add(m.tk);
+      t.replies.push(m);
+      cards++;
+      more = true;
+    });
+  }
+  return threads.map(t => ({ post: t.post, replies: t.replies }));
+}
+async function collectAsk(raw, need) {
+  const label = String(raw || '').trim();
+  if (!label || !need) return [];
+  const lang = jokeLang();
+  const past = seenSet(SEEN_JOKES);
+  const now = playingKeys();
+  const seen = k => past.has(k) || now.has(k);
+  const sameText = new Set();
+  const short = charLen(label) <= 12 ? label : [...label].slice(0, 11).join('') + '…';
+  const toRow = (t, corner) => ({ thread: true, joke: true, story: t, headline: t.post.text, cat: 'REPLY', corner, place: 'top', keys: threadKeys(t) });
+  const asPost = st => ({ handle: handleOf(st), text: postText(st), url: st.url || '', id: statusId(st) });
+  /* A post's address: that post, then as many of its replies as the video holds. */
+  const m = label.match(ASK_POST);
+  if (m) {
+    say('Reading the post');
+    const st = await fetchStatus(m[2]);
+    const post = st ? asPost(st) : null;
+    if (!post || !askOk(st, post.text)) return [];
+    post.id = m[2];
+    if (!post.handle) post.handle = m[1] || '';
+    if (!post.url) post.url = 'https://x.com/' + (post.handle || 'i/web') + '/status/' + m[2];
+    const replies = (await repliesUnder(m[2], post.handle, lang, () => false, sameText)).slice(0, Math.max(1, need - 1));
+    return replies.length ? [toRow({ post, replies }, '@' + post.handle)] : [];
+  }
+  /* @account: its newest posts that have replies. */
+  const h = label.match(ASK_HANDLE);
+  if (h) {
+    say('Reading @' + h[1]);
+    const list = await searchX(`from:${h[1]} -filter:replies -filter:retweets${xRange()}`);
+    const posts = list.filter(st => handleOf(st).toLowerCase() === h[1].toLowerCase() && statusId(st) && askOk(st, postText(st)) && st.replies !== 0)
+      .map(asPost).filter(p => !jokeKeys({ text: p.text, link: p.url }).some(seen)).slice(0, 8);
+    return (await askThreads(posts, need, lang, seen, sameText)).map(t => toRow(t, '@' + h[1]));
+  }
+  /* Words: posts about them that people replied to. The words are read in the language of the posts. */
+  let text = label;
+  try {
+    if (lang === 'en' && CJK.test(text)) text = (await translateMany([text], 'en'))[0] || text;
+    else if (lang === 'ja' && !CJK.test(text) && /[A-Za-z]/.test(text)) { const t = (await translateMany([text], 'ja'))[0]; if (t && CJK.test(t)) text = t; }
+  } catch (e) { console.warn(e); }
+  say('Searching ' + label);
+  const terms = termsOf(text, lang);
+  const query = terms.join(' ') || text;
+  const [found, answers] = await Promise.all([
+    searchX(`${query} -filter:replies -filter:retweets lang:${lang}${xRange()}`),
+    searchX(`${query} filter:replies lang:${lang}${xRange()}`),
+  ]);
+  const low = t => String(t || '').toLowerCase();
+  const words = terms.map(low);
+  const authors = new Set();
+  const posts = [];
+  found.forEach(st => {
+    const post = asPost(st);
+    const n = charLen(post.text);
+    if (!post.handle || !post.id || authors.has(low(post.handle)) || !askOk(st, post.text) || st.replies === 0) return;
+    if (n < 4 || n > (lang === 'en' ? 280 : 140) || jokeKeys({ text: post.text, link: post.url }).some(seen)) return;
+    const body = low(String(st.text || '') + ' ' + post.text);
+    const hits = words.filter(w => body.includes(w)).length;
+    if (words.length && !hits) return;
+    authors.add(low(post.handle));
+    const many = typeof st.replies === 'number' ? Math.min(4, Math.log2(1 + st.replies)) : 1;
+    posts.push({ ...post, score: (hits === words.length ? 5 : hits) + many + (n <= 70 ? 2 : 0) + Math.random() * 2 });
+  });
+  posts.sort((a, b) => b.score - a.score);
+  const threads = await askThreads(posts.slice(0, Math.min(12, Math.ceil(need / 2) + 3)), need, lang, seen, sameText);
+  /* Not enough: replies that themselves speak of the words, each shown under the post it answers. */
+  let cards = threads.reduce((k, t) => k + 1 + t.replies.length, 0);
+  if (cards < need) {
+    const extra = [];
+    answers.forEach(st => {
+      const r = asPost(st);
+      const parent = parentOf(st);
+      const tk = squash(r.text).slice(0, 50);
+      if (!r.handle || !r.id || !parent.id || extra.length >= 5 || threads.some(t => t.post.id === parent.id) || extra.some(x => x.parent === parent.id)) return;
+      if (!askOk(st, r.text) || charLen(r.text) > (lang === 'en' ? 220 : 110) || sameText.has(tk) || jokeKeys({ text: r.text, link: r.url }).some(seen)) return;
+      if (words.length && !words.some(w => low(r.text).includes(w))) return;
+      extra.push({ parent: parent.id, who: parent.who, reply: { ...r, tk } });
+    });
+    const parents = await Promise.all(extra.map(x => fetchStatus(x.parent).catch(() => null)));
+    extra.forEach((x, i) => {
+      const st = parents[i];
+      if (cards + 2 > need || !st) return;
+      const post = asPost(st);
+      post.id = x.parent;
+      if (!post.handle) post.handle = x.who;
+      if (!post.text || !askOk(st, post.text) || charLen(post.text) > (lang === 'en' ? 280 : 140) || low(post.handle) === low(x.reply.handle)) return;
+      sameText.add(x.reply.tk);
+      threads.push({ post, replies: [x.reply] });
+      cards += 2;
+    });
+  }
+  return threads.map(t => toRow(t, short));
+}
+/* The video for the box: only the replies to what was typed. */
+async function askScript() {
+  const { country, lang } = market();
+  const N = total();
+  progress(0.1);
+  const rows = await collectAsk(S.ask, N);
+  if (S.again) return null;
+  if (!rows.length) return { empty: true, ask: true };
+  say('Reading the text');
+  progress(0.75);
+  const cards = await cardsFrom(rows, lang.id);
+  if (S.again) return null;
+  let left = N;
+  const items = [];
+  rows.forEach((r, i) => {
+    let c = cards[i];
+    if (!c.length || left < 2) return;
+    if (c.length > left) {
+      c = c.slice(0, left);
+      r.story.replies = r.story.replies.slice(0, left - 1);
+      r.keys = threadKeys(r.story);
+      c.forEach(card => { card.key = r.keys; });
+    }
+    items.push(...c);
+    left -= c.length;
+  });
+  if (!items.length) return { empty: true, ask: true };
+  return { date: chosenDate(), items, market: country.name + ' · ' + lang.name, played: { news: [], jokes: rows.flatMap(r => r.keys || []) } };
+}
+
 /* ---------- accounts: their posts, each with the replies to it ---------- */
 function threadKeys(t) { return [t.post, ...t.replies].flatMap(m => jokeKeys({ text: m.text, link: m.url })); }
 async function collectAccounts(need) {
@@ -4603,6 +4795,7 @@ async function cardsFrom(rows, langId) {
 /* ---------- making the video ---------- */
 async function collect() {
   beginCollect();
+  if (S.ask) return askScript();
   const { country, lang } = market();
   const mode = feedMode();
   const N = total();
@@ -4982,6 +5175,11 @@ async function runAll(opts) {
   /* A newer request came in while collecting: collect again instead of showing the older result. */
   if (again) return runAll(again);
   if (!script) return;
+  if (script.empty && script.ask) {
+    progress(0);
+    say('No replies found for “' + S.ask + '”. Try other words.', !S.show);
+    return;
+  }
   if (script.empty) {
     progress(0);
     say(S.show ? 'No new stories or jokes yet. This video keeps playing. Press Update again later.' : 'No new stories or jokes yet. Press Update again later.', !S.show);
@@ -5505,6 +5703,28 @@ function initUI() {
   $('backVideo').onclick = closeStudio;
   $('backDock').onclick = closeStudio;
   $('home').onclick = () => { closeStudio(); window.scrollTo(0, 0); refreshMarket(); };
+  /* The box: Replies plays the replies to what was typed; Update keeps to it until ✕ clears it. */
+  const askPaint = () => {
+    $('askClear').hidden = !$('askText').value && !S.ask;
+    $('askText').classList.toggle('live', !!S.ask);
+  };
+  $('askText').oninput = askPaint;
+  $('ask').onsubmit = e => {
+    e.preventDefault();
+    const v = $('askText').value.trim();
+    $('askText').blur();
+    if (!v && !S.ask) return;
+    S.ask = v;
+    askPaint();
+    refreshMarket();
+  };
+  $('askClear').onclick = () => {
+    const had = !!S.ask;
+    $('askText').value = '';
+    S.ask = '';
+    askPaint();
+    if (had) refreshMarket();
+  };
   if (Q.get('edit') === '1') openStudio();
   /* Reply News starts on Auto: portrait on phones, landscape on computers, until another layout is chosen. */
   const forced = Q.get('format');
@@ -5760,7 +5980,7 @@ E.setMusicCredit(TRACKS[0].credit);
 /* A newer copy on the site: load it, so a copy the browser kept from before is not shown.
    version.json names the latest build of each page; it is read past the browser's cache. */
 function watchVersion(key, url) {
-  const BUILD = '0ead995c8ff6';
+  const BUILD = 'f416e7c8ad1f';
   if (location.protocol === 'file:' || BUILD.indexOf('BUILD_ID') >= 0) return;
   /* At the start it may reload at once; later it waits while a video is being made or saved. */
   const check = first => {
