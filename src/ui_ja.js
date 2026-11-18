@@ -10,6 +10,7 @@ const JA = {
   // Header and buttons
   'Shibuya': '渋谷', '2002 World Cup final': '2002年のワールドカップ決勝',
   'At the end': '最後まで再生したら', 'Repeat': '繰り返す',
+  'Add an account to load its posts and the replies to them.': 'アカウントを追加すると、そのアカウントの投稿と、返信を読み込みます。',
   'Reply News': 'リプライニュース', 'Reply News settings': 'リプライニュースの設定', 'Opening Reply News…': 'リプライニュースを開いています…',
   'Humor': 'ユーモア', 'News': 'ニュース', 'Pull down to refresh': '引っ張って更新', 'Release to refresh': '離すと更新',
   'Back to video': '動画に戻る', 'Play': '再生', 'Pause': '一時停止', 'Update': '更新', 'Creating…': '作成中…',

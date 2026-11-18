@@ -217,7 +217,7 @@ pre#sources { white-space: pre-wrap; font: 12px/1.5 ui-monospace,Menlo,monospace
         <button type="button" id="addX">Add</button>
       </div>
       <div id="xAccounts" class="music"></div>
-      <p class="note">Add an account to load funny replies to its posts. Press Add again for another account. Press a name to remove it.</p>
+      <p class="note">Add an account to load its posts and the replies to them.</p>
       <label for="date">Date</label>
       <input type="date" id="date">
       <label class="check"><input type="checkbox" id="autoExport"> Export MP4 files after the stories are ready</label>
@@ -2166,6 +2166,7 @@ const JA = {
   // Header and buttons
   'Shibuya': '渋谷', '2002 World Cup final': '2002年のワールドカップ決勝',
   'At the end': '最後まで再生したら', 'Repeat': '繰り返す',
+  'Add an account to load its posts and the replies to them.': 'アカウントを追加すると、そのアカウントの投稿と、返信を読み込みます。',
   'Reply News': 'リプライニュース', 'Reply News settings': 'リプライニュースの設定', 'Opening Reply News…': 'リプライニュースを開いています…',
   'Humor': 'ユーモア', 'News': 'ニュース', 'Pull down to refresh': '引っ張って更新', 'Release to refresh': '離すと更新',
   'Back to video': '動画に戻る', 'Play': '再生', 'Pause': '一時停止', 'Update': '更新', 'Creating…': '作成中…',
@@ -3797,7 +3798,6 @@ async function collectJokes(topics, need, opts) {
   const queries = [];
   const addQ = q => { if (q && queries.indexOf(q) < 0) queries.push(q); };
   topics.forEach(t => addQ(String(t).trim()));
-  xAccounts().forEach(h => addQ('to:' + h));
   if (!(opts && opts.only)) (lang === 'en' ? ['news', 'today', 'trending', 'weird'] : ['ニュース', '今日', '話題', 'トレンド']).forEach(addQ);
   const build = q => `${q} ${FUNNY_Q[lang]} ${replies && !/^to:/.test(q) ? 'filter:replies ' : ''}lang:${lang}${xRange()}`;
   const headlines = (opts && opts.headlines) || [];
@@ -4194,6 +4194,65 @@ async function collectTopic(slot, need) {
     .map(t => ({ headline: t.text, text: t.text, link: t.url, source: 'X @' + t.handle, x: true, cat: 'REPLY', joke: true, corner, place: 'middle' }));
 }
 
+/* ---------- accounts: their posts, each with the replies to it ---------- */
+function threadKeys(t) { return [t.post, ...t.replies].flatMap(m => jokeKeys({ text: m.text, link: m.url })); }
+async function collectAccounts(need) {
+  const names = xAccounts().slice(0, 4);
+  if (!need || !names.length || !sourceOn('x')) return [];
+  const lang = jokeLang();
+  const past = seenSet(SEEN_JOKES);
+  const now = playingKeys();
+  const seen = k => past.has(k) || now.has(k);
+  const ok = (st, text) => !!text && !UNSAFE.test(text) && !VIOLENT.test(text) && !sensitive(text, st) && !AD.test(String((st && st.text) || ''));
+  say('Reading @' + names[0]);
+  const per = Math.max(1, Math.ceil(need / names.length));
+  const lists = await Promise.all(names.map(h => searchX(`from:${h} -filter:replies -filter:retweets${xRange()}`)));
+  const threads = [];
+  names.forEach((h, i) => {
+    let n = 0;
+    (lists[i] || []).forEach(st => {
+      if (n >= per || handleOf(st).toLowerCase() !== h.toLowerCase()) return;
+      const text = postText(st);
+      const id = statusId(st);
+      if (!id || !ok(st, text) || charLen(text) < 4 || jokeKeys({ text, link: st.url || '' }).some(seen)) return;
+      threads.push({ post: { handle: handleOf(st), text, url: st.url || '', id }, replies: [] });
+      n++;
+    });
+  });
+  /* The replies under each post: short ones and lively ones first, up to two. */
+  const replyLists = await Promise.all(threads.map(t => searchX(`conversation_id:${t.post.id} filter:replies`)));
+  const sameText = new Set();
+  threads.forEach((t, i) => {
+    const picks = [];
+    (replyLists[i] || []).forEach(st => {
+      const who = handleOf(st);
+      const text = postText(st);
+      const id = statusId(st);
+      if (!who || !id || who.toLowerCase() === t.post.handle.toLowerCase() || picks.some(x => x.id === id)) return;
+      if (!ok(st, text) || charLen(text) < 2 || charLen(text) > (lang === 'en' ? 200 : 100) || jokeKeys({ text, link: st.url || '' }).some(seen)) return;
+      const tk = squash(text).slice(0, 50);
+      if (sameText.has(tk)) return;
+      const lively = isFunny(text, lang) || (WOW[lang] && WOW[lang].test(text));
+      picks.push({ handle: who, text, url: st.url || '', id, score: (lively ? 3 : 0) + (charLen(text) <= 40 ? 2 : 0) + Math.random() });
+    });
+    t.replies = picks.sort((a, b) => b.score - a.score).slice(0, 2);
+    t.replies.forEach(m => sameText.add(squash(m.text).slice(0, 50)));
+  });
+  return threads.map(t => ({ thread: true, joke: true, story: t, headline: t.post.text, cat: 'REPLY', corner: '@' + t.post.handle, place: 'top', keys: threadKeys(t) }));
+}
+/* One card for the post, then one for each reply. */
+function threadCards(r, langId) {
+  const one = (m, src) => {
+    const cjk = CJK.test(m.text);
+    const en = cjk ? (m._en || '') : m.text;
+    const ja = cjk ? m.text : (m._ja || '');
+    const card = storyFrom({ headline: m.text, link: m.url, source: m.handle, x: true, cat: 'REPLY' }, en || m.text, ja, langId);
+    return { ...card, topic: r.corner, cat: 'REPLY', src, url: m.url, key: r.keys };
+  };
+  const st = r.story;
+  return [one(st.post, 'X @' + st.post.handle), ...st.replies.map(m => one(m, 'X @' + m.handle + ' → @' + st.post.handle))];
+}
+
 /* ---------- two cards for each comment ---------- */
 /* The first card shows the short part (すごーい), the second the whole comment
    (兼六園の雪吊りすごーい). Only the posted words are shown, with no added explanation. */
@@ -4312,13 +4371,19 @@ function storyFrom(raw, english, local, langId) {
 /* Translate each row into the chosen language, then make the cards. */
 /* The cards for each row, in the same order as the rows. Comments get two cards (see beats). */
 async function cardsFrom(rows, langId) {
-  const plain = rows.filter(r => !r.romance);
+  const msgs = rows.filter(r => r.thread).flatMap(r => [r.story.post, ...r.story.replies]);
+  const mJa = langId !== 'en' ? msgs.filter(m => !CJK.test(m.text)) : [];
+  const mEn = langId !== 'ja' ? msgs.filter(m => CJK.test(m.text)) : [];
+  if (mJa.length) (await translateMany(mJa.map(m => m.text), 'ja')).forEach((t, i) => { mJa[i]._ja = t; });
+  if (mEn.length) (await translateMany(mEn.map(m => m.text), 'en')).forEach((t, i) => { mEn[i]._en = t; });
+  const plain = rows.filter(r => !r.romance && !r.thread);
   const toJa = langId !== 'en' ? plain.filter(r => !CJK.test(r.headline)) : [];
   const toEn = langId !== 'ja' ? plain.filter(r => CJK.test(r.headline)) : [];
   if (toJa.length) (await translateMany(toJa.map(r => r.headline), 'ja')).forEach((t, i) => { toJa[i]._ja = t; });
   if (toEn.length) (await translateMany(toEn.map(r => r.headline), 'en')).forEach((t, i) => { toEn[i]._en = t; });
   return rows.map(r => {
     if (r.romance) return romanceCards(r, langId);
+    if (r.thread) return threadCards(r, langId);
     const cjk = CJK.test(r.headline);
     const en = cjk ? (r._en || '') : r.headline;
     const ja = cjk ? r.headline : (r._ja || '');
@@ -4412,7 +4477,9 @@ async function collect() {
   const left0 = Math.max(0, N - sequence.length);
   /* Free requests: posts about each, about two cards a post, with a few spare. */
   const perFree = freeSlots.length ? Math.ceil(left0 / 2 / freeSlots.length) + 2 : 0;
-  const [found, couples, trips, topics] = await Promise.all([
+  /* Accounts: their posts with the replies, about three cards each. */
+  const threadNeed = xAccounts().length ? Math.ceil(left0 / 3) + 1 : 0;
+  const [found, couples, trips, topics, threadRows] = await Promise.all([
     collectJokes(topicWords, onlySpecial ? 0 : left0, {
       headlines, only: freeSlots.length > 0,
       must: freeSlots.length && topicSlots.every(s => s.free) ? [...new Set(freeSlots.flatMap(s => termsOf(s.label, jokeLang())).map(w => w.toLowerCase()))] : [],
@@ -4420,6 +4487,7 @@ async function collect() {
     collectRomance(romanceNeed, romancePlace).catch(e => { console.warn(e); return []; }),
     collectTravel(travelNeed, travelPlace).catch(e => { console.warn(e); return []; }),
     Promise.all(freeSlots.map(s => collectTopic(s, perFree).catch(e => { console.warn(e); return []; }))),
+    collectAccounts(threadNeed).catch(e => { console.warn(e); return []; }),
   ]);
   const topicRows = topics.flat();
   /* A comment found both as a joke and under a couple plays once, as the joke. */
@@ -4432,12 +4500,12 @@ async function collect() {
   const jokeRows = found.map(j => ({ headline: j.text, text: j.text, link: j.url, source: 'X @' + j.handle, x: true, cat: 'REPLY', joke: true, topic: j.topic, place: topicPlace[j.topic] || 'middle' }));
   const coupleRows = couples.map(r => ({ ...r, headline: r.story.a.text, joke: true }));
   if (S.again) return null;
-  if (!sequence.length && !jokeRows.length && !coupleRows.length && !trips.length && !topicRows.length) return { empty: true };
+  if (!sequence.length && !jokeRows.length && !coupleRows.length && !trips.length && !topicRows.length && !threadRows.length) return { empty: true };
   say('Reading the text');
   progress(0.75);
   /* Fit the cards to Items: reports, couples and places first, then jokes fill the rest.
      A comment without room for two cards keeps only the whole comment. */
-  const all = sequence.concat(coupleRows, trips, topicRows, jokeRows);
+  const all = sequence.concat(threadRows, coupleRows, trips, topicRows, jokeRows);
   const cards = await cardsFrom(all, lang.id);
   if (S.again) return null;
   let left = N;
@@ -4452,6 +4520,11 @@ async function collect() {
         r.story.cheers = r.story.cheers.slice(0, left - 2);
         r.keys = coupleKeys(r);
         c.forEach(card => { card.key = r.keys; });
+      } else if (r.thread) {
+        c = c.slice(0, left);
+        r.story.replies = r.story.replies.slice(0, left - 1);
+        r.keys = threadKeys(r.story);
+        c.forEach(card => { card.key = r.keys; });
       } else c = c.filter(card => card._main).slice(0, left);
     }
     if (!c.length) return;
@@ -4462,7 +4535,7 @@ async function collect() {
   const band = { top: 0, middle: 1, bottom: 2 };
   const extra = [];
   ['top', 'middle', 'bottom'].forEach(b => {
-    const lists = [topicRows, jokeRows, coupleRows, trips].map(list => list.filter(r => r._cards && (band[r.place] === undefined ? 'middle' : r.place) === b));
+    const lists = [threadRows, topicRows, jokeRows, coupleRows, trips].map(list => list.filter(r => r._cards && (band[r.place] === undefined ? 'middle' : r.place) === b));
     for (let k = 0; lists.some(l => l.length); k++) {
       const l = lists[k % lists.length];
       if (l.length) extra.push(l.shift());
@@ -4481,7 +4554,7 @@ function normItem(it) {
   const head = arr(it.head).map(up).slice(0, 3);
   return {
     kw: up(it.kw || (head[0] || '').split(' ')[0]).slice(0, 16) || 'NEWS',
-    cat: up(it.cat || 'NEWS'), topic: up(it.topic || ''),
+    cat: up(it.cat || 'NEWS'), topic: /^@/.test(String(it.topic || '')) ? String(it.topic).trim().slice(0, 16) : up(it.topic || ''),
     head: head.length ? head : [up(it.kw) || 'NEWS'],
     sub: arr(it.sub).slice(0, 3).map(l => String(l).trim().split(/\s+/).map(w => SMALL.has(w.toLowerCase()) ? w.toLowerCase() : w.toUpperCase()).join(' ')),
     jp: arr(it.jp).slice(0, 8),
@@ -5483,7 +5556,7 @@ E.setMusicCredit(TRACKS[0].credit);
 /* A newer copy on the site: load it, so a copy the browser kept from before is not shown.
    version.json names the latest build of each page; it is read past the browser's cache. */
 function watchVersion(key, url) {
-  const BUILD = '45182824e63e';
+  const BUILD = '750baf39143d';
   if (location.protocol === 'file:' || BUILD.indexOf('BUILD_ID') >= 0) return;
   /* At the start it may reload at once; later it waits while a video is being made or saved. */
   const check = first => {
