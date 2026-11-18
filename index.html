@@ -186,7 +186,7 @@ pre#sources { white-space: pre-wrap; font: 12px/1.5 ui-monospace,Menlo,monospace
   </div>
   <p id="caption" class="caption">Opening Reply News…</p>
   <div id="modeChips" class="music mode"><button type="button" data-mode="match">Matching</button><button type="button" data-mode="reply">Replies</button></div>
-  <p id="matchNote" class="note match-note" hidden>A post that wishes for a boyfriend and a post that wishes for a girlfriend are put together by this page. The two did not write to each other.</p>
+  <p id="matchNote" class="note match-note" hidden>Two short posts by two people are put together where they read as an exchange. The two did not write to each other.</p>
   <p class="music-label" id="genreLabel">Genres</p>
   <div id="genreChips" class="music"></div>
   <form id="ask" class="ask" autocomplete="off">
@@ -2195,7 +2195,7 @@ const JA = {
   'Choose X, read the post and send it. The words were copied: paste them if they are missing.': '共有メニューでXを選び、内容を確認して送信してください。文面はコピー済みです。入っていなければ貼り付けてください。',
   'Not sent yet. Press Send on X again.': 'まだ送っていません。もう一度「Xで送る」を押してください。',
   'The video was downloaded. Attach it to the post that opened, read it and send it.': '動画をダウンロードしました。開いた投稿画面に添付し、内容を確認して送信してください。',
-  'A post that wishes for a boyfriend and a post that wishes for a girlfriend are put together by this page. The two did not write to each other.': '「彼氏がほしい」側の投稿と「彼女がほしい」側の投稿を、話題や気持ちが合いそうな組み合わせで自動で並べています（恋人がいる人の投稿は使いません）。二人が実際にやりとりしたものではありません。',
+  'Two short posts by two people are put together where they read as an exchange. The two did not write to each other.': '二人の短い投稿を、掛け合いになりそうな組み合わせで自動で並べています。二人が実際にやりとりしたものではありません。',
   'Reply News': 'リプライニュース', 'Reply News settings': 'リプライニュースの設定', 'Opening Reply News…': 'リプライニュースを開いています…',
   'Humor': 'ユーモア', 'News': 'ニュース', 'Pull down to refresh': '引っ張って更新', 'Release to refresh': '離すと更新',
   'Back to video': '動画に戻る', 'Play': '再生', 'Pause': '一時停止', 'Update': '更新', 'Creating…': '作成中…',
@@ -3315,7 +3315,7 @@ async function readLink(link) {
 function readBox(raw) { const link = onlyLink(raw); return link ? readLink(link) : Promise.resolve(readPaste(raw)); }
 function talkCards(t, langId) {
   /* A match says so on every card that shows a post: the page put the two together, they did not write to each other. */
-  const corner = t.match ? (langId === 'en' ? 'AUTO MATCH' : '自動マッチング') : (t.word || '');
+  const corner = t.match ? (langId === 'en' ? 'MATCH' : 'マッチング') : (t.word || '');
   /* A talk from the day's data plays with one reply; a pasted talk with every reply that was pasted. */
   return threadCards({ thread: true, match: !!t.match, story: { post: t.post, replies: t.id ? t.replies.slice(0, 1) : t.replies }, hook: t.word || '', corner }, langId);
 }
@@ -3343,25 +3343,24 @@ async function addTalk(postRaw, replyRaw) {
 const XAPI = 'https://raw.githubusercontent.com/Githitosh/githito.xapi/api/v1/';
 let FEED = [];
 /* Matching News' data from the same API: posts, and lines that can answer a post they were not written to. */
-let MATCH = { posts: [], lines: [] };
+let MATCH = { pairs: [] };
 let AUTO = [];
 let NEXT = null;
 let QUERY = '';
 let feedAt = 0;
 const SHOWN = new Set();
 const goodTalks = list => (Array.isArray(list) ? list : []).filter(t => t && t.id && t.post && t.post.text && Array.isArray(t.replies) && t.replies.some(r => r && r.text));
-const GONE = /元カレ|元カノ|元彼|別れ(?:た(?!く)|て(?!ほし|欲し)|まし)|失恋|振られ|フラれ|ふられ|片思い|片想い|クリぼっち|独り身|フリー/;
-const goodMatch = d => ({
-  /* Matching is for posts about love only. */
-  posts: (d && Array.isArray(d.posts) ? d.posts : []).filter(p => p && p.id && p.handle && p.text && p.url && p.genre === 'romance')
-    .map(p => ({ ...p, side: p.side === 'boyfriend' || p.side === 'girlfriend' ? p.side : '', wish: !!p.wish }))
-    /* A match is for people who are free: a post that tells of a partner the writer has is left out. */
-    .filter(p => (p.free != null ? !!p.free : !p.side || p.wish || GONE.test(p.text))),
-  lines: (d && Array.isArray(d.lines) ? d.lines : []).filter(l => l && l.id && l.handle && l.text && l.url && l.to),
-});
+/* Matching News' data: short sayings, and the pairs githito.xapi made of them (which saying opens,
+   which answers, by which rule, on which word). */
+const goodMatch = d => {
+  const says = new Map((d && Array.isArray(d.says) ? d.says : []).filter(x => x && x.id && x.handle && x.text && x.url).map(x => [x.id, x]));
+  const pairs = (d && Array.isArray(d.pairs) ? d.pairs : []).map(p => ({ a: says.get(p && p.a), b: says.get(p && p.b), kind: String((p && p.kind) || ''), word: String((p && p.word) || '') }))
+    .filter(p => p.a && p.b && p.a.id !== p.b.id && p.a.handle.toLowerCase() !== p.b.handle.toLowerCase());
+  return { pairs };
+};
 function cachedFeed() {
   try { FEED = goodTalks(JSON.parse(store.get('feed.' + uiLang(), '[]'))); } catch (e) { FEED = []; }
-  try { MATCH = goodMatch(JSON.parse(store.get('match.' + uiLang(), '{}'))); } catch (e) { MATCH = { posts: [], lines: [] }; }
+  try { MATCH = goodMatch(JSON.parse(store.get('match.' + uiLang(), '{}'))); } catch (e) { MATCH = { pairs: [] }; }
 }
 async function loadFeed() {
   feedAt = Date.now();
@@ -3379,55 +3378,23 @@ async function loadFeed() {
   const talks = a ? goodTalks(a.talks) : [];
   if (a && (talks.length || !FEED.length)) { FEED = talks; store.set('feed.' + lang, JSON.stringify(talks)); got = true; }
   const m = goodMatch(b);
-  if (canMatch(m.posts)) { MATCH = { posts: m.posts, lines: [] }; store.set('match.' + lang, JSON.stringify({ posts: m.posts })); got = true; }
+  if (m.pairs.length) { MATCH = m; store.set('match.' + lang, JSON.stringify({ says: b.says, pairs: b.pairs })); got = true; }
   return got;
 }
 /* ---------- Matching News ---------- */
-/* Two posts about love are shown as a match, as a matching app would put two people together: one that
-   speaks of a boyfriend and one that speaks of a girlfriend. githito.xapi reads the side from the partner
-   each post names; nobody's gender is stated here or there. The two are chosen to go together: they
-   speak of the same thing, or both wish for a partner. Only people who are free are matched: a post
-   that tells of a partner the writer has is left out. A post that names neither side can stand in
-   when one side runs short. Every card that shows a post says the page made the match, and both
-   people's posts are linked. */
+/* Two short things, said by two people, are shown as an exchange, as a matching app would put two
+   people together: かわいい ー かっこいい, いい天気だな ー そうだね, 大阪万博いつ始まるの？ ー 博多万博の後.
+   githito.xapi decides which sayings go together (a word and the word that answers it, a question and
+   a saying with its word, two words of one family, a remark and a word of agreement) and gives the
+   pairs; this page draws from them. The two did not write to each other: every card that shows a
+   saying says it is a match, and both people's posts are linked. */
 const mode = () => (store.get('mode', 'match') === 'reply' ? 'reply' : 'match');
-/* A match needs two posts, one of which names its side. */
-const canMatch = posts => posts.length > 1 && posts.some(p => p.side);
-const matchOn = () => mode() === 'match' && canMatch(MATCH.posts);
-/* What a post speaks of: words in kanji, katakana or Latin letters, without the words of love
-   themselves and the words every post has. */
-const PLAIN_WORDS = new Set(('彼氏 彼女 恋人 恋愛 元カレ 元カノ 今日 昨日 明日 今年 去年 来年 今月 来月 最近 自分 一緒 本当 時間 普通 人生 最高 大事 予定 毎日 一番 今回 今度 '
-  + '大好 好き 気持 結局 全部 絶対 最初 最後 一人 二人 人間 意味 感じ 相手 場所 生活 理由 自体 以上 以外 以前 全然 多分 何故 無理 必要 大丈夫 可愛 実感').split(' '));
-const topics = text => [...new Set((String(text || '').match(/[一-龯々〆ヶ]{2,}|[ァ-ヴー]{3,}|[A-Za-z]{3,}/g) || []).map(w => w.toLowerCase()).filter(w => !PLAIN_WORDS.has(w)))];
-/* How well two posts go together; null when they are not a match at all (the same person, two of
-   the same side, or neither naming a side). One of each side counts most, then a subject they share,
-   then both wishing for a partner. */
-function goesWith(p, q) {
-  if (p.id === q.id || p.handle.toLowerCase() === q.handle.toLowerCase()) return null;
-  if (p.side === q.side) return null;
-  const mine = new Set(topics(q.text));
-  const shared = topics(p.text).filter(w => mine.has(w));
-  const gone = x => GONE.test(x.text);
-  return { score: (p.side && q.side ? 5 : 0) + 4 * Math.min(2, shared.length) + (p.wish && q.wish ? 3 : 0) + (gone(p) && gone(q) ? 2 : 0), shared };
-}
-/* The match for a post: the post that goes with it best, one not yet played first; a little chance
-   keeps the same two from always meeting. used: the posts already in this video. */
-function matchFor(p, used) {
-  let best = null;
-  MATCH.posts.forEach(q => {
-    if (used && used.has(q.id)) return;
-    const g = goesWith(p, q);
-    if (!g) return;
-    const score = g.score + Math.random() * 2 - (SHOWN.has('m' + q.id) ? 1.5 : 0);
-    if (!best || score > best.score) best = { q, score, shared: g.shared };
-  });
-  if (!best) return null;
-  /* The one who wishes opens, and the other answers; when both or neither do, either may open. */
-  const q = best.q;
-  const [a, b] = (p.wish && !q.wish) || (p.wish === q.wish && Math.random() < 0.5) ? [p, q] : [q, p];
-  const word = best.shared.find(w => charLen(w) <= 8) || '';
+const matchOn = () => mode() === 'match' && MATCH.pairs.length > 0;
+const pairKey = p => 'm' + p.a.id + '_' + p.b.id;
+/* A pair as a talk: the opening saying, then the answering one. */
+function matchOf(p) {
   const bare = x => ({ id: x.id, handle: x.handle, text: x.text, url: x.url });
-  return { id: 'm' + a.id + '_' + b.id, match: true, genre: 'romance', word: word && a.text.toLowerCase().includes(word) ? a.text.substr(a.text.toLowerCase().indexOf(word), word.length) : '', post: bare(a), replies: [bare(b)] };
+  return { id: pairKey(p), match: true, kind: p.kind, genre: 'match', word: p.word, post: bare(p.a), replies: [bare(p.b)] };
 }
 /* The name on the page and in the video, the lit button, the note and the room for two links. */
 function paintMode() {
@@ -3437,12 +3404,12 @@ function paintMode() {
   if ($('home').dataset.name !== name) { $('home').dataset.name = name; $('home').textContent = name; }
   document.title = LOOK.brand[uiLang()] || name;
   document.querySelectorAll('#modeChips button').forEach(b => b.classList.toggle('on', b.dataset.mode === mode()));
-  $('modeChips').hidden = !canMatch(MATCH.posts);
+  $('modeChips').hidden = !MATCH.pairs.length;
   $('matchNote').hidden = !on;
   $('sendRow').hidden = !on;
   document.querySelector('.linkbox').classList.toggle('two', on);
 }
-const hasGenre = id => (matchOn() ? MATCH.posts.some(p => p.genre === id) : FEED.some(t => t.genre === id));
+const hasGenre = id => FEED.some(t => t.genre === id);
 function pickedGenres() { try { const v = JSON.parse(store.get('genres', '[]')); return Array.isArray(v) ? v : []; } catch (e) { return []; } }
 function genreOfChip(chip) { const g = GENRES.find(x => x.name.toLowerCase() === chip.label.toLowerCase()); return g ? g.id : ''; }
 /* Searching the day's talks: every word typed must be in the post, a reply, or the word it was found by. */
@@ -3453,8 +3420,8 @@ function says(t, q) {
 /* The talks a video may draw from: those that say the words typed, or else those of the chosen genres
    (every genre when none is chosen). */
 function talkPool() {
-  /* Matching News draws posts; each one's match is found when the video is made. */
-  const all = matchOn() ? MATCH.posts.map(p => ({ id: 'm' + p.id, genre: p.genre, word: p.word || '', post: p })) : FEED;
+  /* Matching News draws from the pairs. */
+  const all = matchOn() ? MATCH.pairs.map(matchOf) : FEED;
   if (QUERY) return all.filter(t => says(t, QUERY));
   /* Matching has one genre, love. */
   if (matchOn()) return all;
@@ -3472,46 +3439,54 @@ function pickAuto(skip) {
      video always has its sets. Once all were played, the round starts again. */
   let fresh = free.filter(t => !SHOWN.has(t.id));
   if (!fresh.length) { pool.forEach(t => SHOWN.delete(t.id)); fresh = free; }
-  let order = mix(fresh).concat(mix(free.filter(t => !fresh.includes(t))), mix(pool.filter(t => !free.includes(t))));
+  const order = mix(fresh).concat(mix(free.filter(t => !fresh.includes(t))), mix(pool.filter(t => !free.includes(t))));
   const on = matchOn();
+  /* Among matches not played yet, the ones that answer most plainly come first: a word and its answer,
+     a question and its answer, then two words of one family, a shared word, and agreement last. */
   if (on) {
-    /* The rarer side opens first, so that as many matches as can be have one of each side. */
-    const count = k => MATCH.posts.filter(p => p.side === k).length;
-    const rare = count('girlfriend') <= count('boyfriend') ? 'girlfriend' : 'boyfriend';
-    const rank = t => (SHOWN.has(t.id) ? 3 : 0) + (t.post.side === rare ? 0 : t.post.side ? 1 : 2);
-    order = order.map((t, k) => [rank(t), k, t]).sort((x, y) => x[0] - y[0] || x[1] - y[1]).map(x => x[2]);
+    const rank = t => (SHOWN.has(t.id) ? 10 : 0) + ({ echo: 0, ask: 0, kin: 1, same: 2, agree: 3 }[t.kind] ?? 2);
+    order.sort((x, y) => rank(x) - rank(y));
   }
   const langId = uiLang();
   /* As many sets as chosen, the pasted talks among them; never more cards than a video holds. */
   const room = total() - TALKS.length;
   const out = [];
+  /* In a video of matches nobody speaks twice, and no one rule fills it: at most two pairs that turn
+     on agreement and three on a shared word, while other pairs are there to take. */
   const used = new Set();
+  const kinds = {};
+  const cap = { agree: 2, same: 3 };
+  const take = strict => {
+    for (const t of order) {
+      if (out.length >= room) break;
+      if (out.includes(t)) continue;
+      if (on) {
+        if (used.has(t.post.id) || used.has(t.replies[0].id) || used.has('@' + t.post.handle.toLowerCase()) || used.has('@' + t.replies[0].handle.toLowerCase())) continue;
+        if (strict && cap[t.kind] && (kinds[t.kind] || 0) >= cap[t.kind]) continue;
+      }
+      const c = talkCards(t, langId).length;
+      if (n + c > MAX_ITEMS) continue;
+      out.push(t);
+      if (on) { [t.post, t.replies[0]].forEach(x => { used.add(x.id); used.add('@' + x.handle.toLowerCase()); }); kinds[t.kind] = (kinds[t.kind] || 0) + 1; }
+      n += c;
+    }
+  };
   let n = TALKS.reduce((k, t) => k + talkCards(t, langId).length, 0);
-  for (const x of order) {
-    if (out.length >= room) break;
-    if (on && used.has(x.post.id)) continue;
-    const t = on ? matchFor(x.post, used) : x;
-    if (!t) continue;
-    const c = talkCards(t, langId).length;
-    if (n + c > MAX_ITEMS) continue;
-    out.push(t);
-    if (on) { used.add(t.post.id); used.add(t.replies[0].id); }
-    n += c;
-  }
+  take(true);
+  if (on && out.length < room) take(false);
   return out;
 }
 /* The video that is about to play: the one prepared while the last one played, when it still fits. */
 function chooseAuto(prepared) {
   AUTO = prepared && NEXT && NEXT.length ? NEXT : pickAuto();
   NEXT = null;
-  /* Both posts of a match count as played. */
-  AUTO.forEach(t => { if (t.match) { SHOWN.add('m' + t.post.id); SHOWN.add('m' + t.replies[0].id); } else SHOWN.add(t.id); });
+  AUTO.forEach(t => SHOWN.add(t.id));
 }
 /* While a video plays, the next one is chosen and its letters' fonts are fetched, so it starts without a wait. */
 function prepareNext() {
   NEXT = null;
   if (!FEED.length && !matchOn()) return;
-  const next = pickAuto(new Set(AUTO.flatMap(t => (t.match ? ['m' + t.post.id, 'm' + t.replies[0].id] : [t.id]))));
+  const next = pickAuto(new Set(AUTO.map(t => t.id)));
   if (!next.length) return;
   NEXT = next;
   const langId = uiLang();
@@ -3602,11 +3577,12 @@ function threadCards(r, langId) {
   cards.push(post);
   st.replies.forEach(m => {
     /* The reply is shown as it is, large, with no mark before it. The line at the foot says who: a reply
-       names the post it answers (→); a match names nobody, the two are only shown together (×). */
+       names the post it answers (→); a match shows the two names side by side with a dash (a cross
+       between two names reads as the two being at odds). */
     const reply = one(m, who(m.handle) + (!r.match && st.post.handle ? ' → @' + st.post.handle : ''));
     cards.push({
       ...post, head: reply.head, sub: [], jp: reply.jp, pre: [post._shown],
-      src: r.match ? who(st.post.handle) + ' × @' + m.handle : reply.src, url: m.url, _main: false, _both: true,
+      src: r.match ? who(st.post.handle) + ' ー @' + m.handle : reply.src, url: m.url, _main: false, _both: true,
     });
   });
   /* Under a match, both people's own posts are linked for as long as it plays. */
@@ -4646,7 +4622,7 @@ function initUI() {
     const v = $('askText').value.replace(/\s+/g, ' ').trim();
     $('askText').blur();
     if (!v) return;
-    if (!(matchOn() ? MATCH.posts.some(p => says({ post: p, word: p.word }, v)) : FEED.some(t => says(t, v)))) { say("No talks say that in today's data.", true); return; }
+    if (!(matchOn() ? MATCH.pairs.some(p => says(matchOf(p), v)) : FEED.some(t => says(t, v)))) { say("No talks say that in today's data.", true); return; }
     QUERY = v;
     $('askText').value = '';
     nextVideo(false);
@@ -4756,7 +4732,7 @@ E.setMusicCredit(TRACKS[0].credit);
 /* A newer copy on the site: load it, so a copy the browser kept from before is not shown.
    version.json names the latest build of each page; it is read past the browser's cache. */
 function watchVersion(key, url) {
-  const BUILD = '92a421ad9b7d';
+  const BUILD = '95f4cb9f226e';
   if (location.protocol === 'file:' || BUILD.indexOf('BUILD_ID') >= 0) return;
   /* At the start it may reload at once; later it waits while a video is being made or saved. */
   const check = first => {

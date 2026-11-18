@@ -26,18 +26,21 @@ service. The fonts (Noto Serif JP, Noto Sans JP, Tinos; SIL Open Font License) a
 
 ## Matching News
 
-The page opens in **Matching**: two posts about love are shown together, the way a matching app puts
-two people together.
+The page opens in **Matching**: two short things said by two people are shown as an exchange, the way
+a matching app puts two people together.
 
-- One genre only: love. The genre buttons show in Replies only.
-- The data is `v1/match-<lang>.json` in githito.xapi: people's own posts about love, each with its side
-  (the partner it names: a boyfriend or a girlfriend), whether it wishes for one, and whether its writer
-  is free. Nobody's gender is judged or shown.
-- A match is a boyfriend-side post with a girlfriend-side post that goes with it: they speak of the same
-  thing, or both wish for a partner. Only people who are free are matched (a post that tells of a
-  partner the writer has is left out), never two of the same side, never the same person.
-- Every card that shows a post says 自動マッチング (Auto match), the last card of a set names both
-  people (`X @a × @b`), and under the video there are two links, one to each person's own post.
+    かわいい ー かっこいい              a word and the word that answers it
+    大阪万博いつ始まるの？ ー 博多万博の後     a question, and a short saying with its word
+    ディズニーランドと間違えた ー 今USJ      two words of one family
+    いい天気だな ー そうだね             a remark, and a word of agreement
+
+- The data is `v1/match-<lang>.json` in githito.xapi: short sayings (posts and replies, read from X) and
+  the pairs made of them. Which sayings go together is decided there, by rule; this page draws from
+  the pairs. Nobody speaks twice in one video, and no one rule fills it.
+- The two did not write to each other. A real reply is never shown as a match with the post it answers.
+- Every card that shows a saying says マッチング (Match). The last card of a set names both people with a
+  dash between them (`X @a ー @b`; a cross would read as the two being at odds), and under the video there
+  are two links, one to each person's own post.
 - The **Replies** button goes back to Reply News: the replies really written to each post.
 - **Send to the two** (under a match): a first press makes a video of that one set; a second press opens
   the viewer's own X with the video and with words that name both people and link their two posts
