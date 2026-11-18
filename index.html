@@ -4141,6 +4141,8 @@ async function collectJokes(topics, need, opts) {
       const must = (opts && opts.must) || [];
       if (must.length && !must.some(w => (got.text + ' ' + String((st && st.text) || '')).toLowerCase().includes(w))) return;
       got.topic = baseOf.get(q) || q;
+      got.id = statusId(st);
+      got.parent = parentOf(st);
       got.q = q;
       const ks = jokeKeys(got);
       if (ks.some(k => past.has(k) || now.has(k) || keys.has(k))) return;
@@ -4737,21 +4739,52 @@ async function collectAccounts(need) {
   return threads.map(t => ({ thread: true, joke: true, story: t, headline: t.post.text, cat: 'REPLY', corner: '@' + t.post.handle, place: 'top', keys: threadKeys(t) }));
 }
 /* One card for the post, then one for each reply. */
+/* A post and the replies to it. The post: its opening words alone, then the whole post.
+   Each reply: the whole reply alone, then the post and the reply together (when both fit on a card). */
+function openingOf(text, lang) {
+  const t = String(text || '').trim();
+  const n = charLen(t);
+  const max = lang === 'en' ? 40 : 14;
+  const parts = (lang === 'en' ? t.split(/(?<=[,.!?])\s+/) : t.split(/(?<=[、。！？!?])|\s+/)).map(x => x.trim()).filter(Boolean);
+  let out = '';
+  for (const part of parts) {
+    const next = lang === 'en' && out ? out + ' ' + part : out + part;
+    if (charLen(next) > max) break;
+    out = next;
+    if (charLen(out) >= (lang === 'en' ? 12 : 5)) break;
+  }
+  out = out.replace(/[、。,.\s]+$/, '');
+  return charLen(out) >= 2 && charLen(out) <= n - 3 ? out : '';
+}
 function threadCards(r, langId) {
   const one = (m, src) => {
     const cjk = CJK.test(m.text);
     const en = cjk ? (m._en || '') : m.text;
     const ja = cjk ? m.text : (m._ja || '');
     const card = storyFrom({ headline: m.text, link: m.url, source: m.handle, x: true, cat: 'REPLY' }, en || m.text, ja, langId);
-    return { ...card, topic: r.corner, cat: 'REPLY', src, url: m.url, key: r.keys };
+    const shown = langId !== 'en' && CJK.test(ja || en) ? (ja || en) : (en || m.text);
+    return { ...card, topic: r.corner || card.topic, cat: 'REPLY', src, url: m.url, key: r.keys, _main: true, _shown: shown };
   };
   const st = r.story;
-  return [one(st.post, 'X @' + st.post.handle), ...st.replies.map(m => one(m, 'X @' + m.handle + ' → @' + st.post.handle))];
+  const post = one(st.post, 'X @' + st.post.handle);
+  const lang = CJK.test(post._shown) ? 'ja' : 'en';
+  const cards = [];
+  const open = openingOf(post._shown, lang);
+  if (open) {
+    const bare = open.replace(/[\p{Extended_Pictographic}\u200d\ufe0f!！?？〜~…✨♪\s\d、。,.]/gu, '');
+    const kw = bare && charLen(bare) <= 6 ? bare : (lang === 'ja' ? jaWord(open) : storyWord(open, ''));
+    cards.push({ ...post, kw, head: [open], sub: [], jp: [], _main: false, _tease: true });
+  }
+  cards.push(post);
+  st.replies.forEach(m => {
+    const reply = one(m, 'X @' + m.handle + ' → @' + st.post.handle);
+    cards.push(reply);
+    if (charLen(post._shown) + charLen(reply._shown) <= (lang === 'en' ? 260 : 130)) {
+      cards.push({ ...post, jp: post.jp.concat('→ ' + reply._shown), src: reply.src, url: m.url, _main: false, _both: true });
+    }
+  });
+  return cards;
 }
-
-/* ---------- two cards for each comment ---------- */
-/* The first card shows the short part (すごーい), the second the whole comment
-   (兼六園の雪吊りすごーい). Only the posted words are shown, with no added explanation. */
 const REACT = {
   ja: /(?:すご[ーぉおいっ〜~]*い?|すげ[ーぇえっ]*|スゴ[ーイい]*|やば[いぁーっ]*|ヤバ[いイー]*|かわい[いー〜]*|可愛[いー]*|きれ[いー]+|綺麗|キレイ|美し[いー]*|最高|さいこう|絶景|感動|圧巻|エモ[いー]*|尊[いー]*|うま[いー]+|美味し[いー]*|おいし[いー]*|楽し[いー]*|たのし[いー]*|ワロタ|爆笑|笑笑|ウケる|面白[いー]*|おもしろ[いー]*|草)[^、。！？!?\n]{0,6}[！!？?〜~ーｗw笑✨♪…]*[\s\p{Extended_Pictographic}‍️]*$/u,
   en: /\b(?:wow+|omg|amazing|stunning|beautiful|gorgeous|breathtaking|incredible|insane|lol+|lmao+|haha\w*)\b[^.!?\n]{0,20}[.!?]*[\s\p{Extended_Pictographic}‍️]*$/iu,
@@ -5029,7 +5062,26 @@ async function collect() {
     r.story.cheers = r.story.cheers.filter(c => !jokeKeySet.has('id:' + c.id) && !jokeKeySet.has('t:' + squash(c.text).slice(0, 50)));
     r.keys = coupleKeys(r);
   });
-  const jokeRows = found.map(j => ({ headline: j.text, text: j.text, link: j.url, source: 'X @' + j.handle, x: true, cat: 'REPLY', joke: true, topic: j.topic, place: topicPlace[j.topic] || 'middle' }));
+  /* A joke is a reply: the post it answers is read too, so the video shows the post, then the reply,
+     then both together. The first jokes get this; one whose post cannot be read plays alone. */
+  const withPost = found.filter(j => j.parent && j.parent.id).slice(0, Math.ceil(left0 / 3) + 2);
+  const parents = await Promise.all(withPost.map(j => within(fetchStatus(j.parent.id), fast() ? 4000 : 7000, null)));
+  withPost.forEach((j, i) => {
+    const st = parents[i];
+    if (!st) return;
+    const post = { handle: handleOf(st) || j.parent.who, text: postText(st), url: st.url || '', id: j.parent.id };
+    const n = charLen(post.text);
+    if (!post.handle || n < 4 || n > (j.lang === 'en' ? 280 : 140) || !askOk(st, post.text) || heavy(post.text) || post.handle.toLowerCase() === j.handle.toLowerCase()) return;
+    if (!post.url) post.url = 'https://x.com/' + post.handle + '/status/' + post.id;
+    j.post = post;
+  });
+  if (S.again) return null;
+  const jokeRows = found.map(j => {
+    const place = topicPlace[j.topic] || 'middle';
+    if (!j.post) return { headline: j.text, text: j.text, link: j.url, source: 'X @' + j.handle, x: true, cat: 'REPLY', joke: true, topic: j.topic, place };
+    const story = { post: j.post, replies: [{ handle: j.handle, text: j.text, url: j.url, id: j.id }] };
+    return { thread: true, joke: true, story, headline: j.post.text, text: j.text, link: j.url, cat: 'REPLY', topic: j.topic, place, keys: threadKeys(story).concat(jokeKeys({ text: j.text, link: j.url })) };
+  });
   const coupleRows = couples.map(r => ({ ...r, headline: r.story.a.text, joke: true }));
   if (S.again) return null;
   if (!sequence.length && !jokeRows.length && !coupleRows.length && !trips.length && !topicRows.length && !threadRows.length) return { empty: true };
@@ -5053,9 +5105,14 @@ async function collect() {
         r.keys = coupleKeys(r);
         c.forEach(card => { card.key = r.keys; });
       } else if (r.thread) {
+        /* Too many cards: the opening words go first, then the cards that show post and reply together. */
+        if (c.length > left) c = c.filter(card => !card._tease);
+        if (c.length > left) c = c.filter(card => !card._both);
         c = c.slice(0, left);
-        r.story.replies = r.story.replies.slice(0, left - 1);
-        r.keys = threadKeys(r.story);
+        if (c.length < 2) return;
+        const kept = new Set(c.map(card => card.url));
+        r.story.replies = r.story.replies.filter(m => kept.has(m.url));
+        r.keys = threadKeys(r.story).concat(r.text ? jokeKeys({ text: r.text, link: r.link }) : []);
         c.forEach(card => { card.key = r.keys; });
       } else c = c.filter(card => card._main).slice(0, left);
     }
@@ -6147,7 +6204,7 @@ E.setMusicCredit(TRACKS[0].credit);
 /* A newer copy on the site: load it, so a copy the browser kept from before is not shown.
    version.json names the latest build of each page; it is read past the browser's cache. */
 function watchVersion(key, url) {
-  const BUILD = '3444e9299a14';
+  const BUILD = 'c3a8fe7ba09c';
   if (location.protocol === 'file:' || BUILD.indexOf('BUILD_ID') >= 0) return;
   /* At the start it may reload at once; later it waits while a video is being made or saved. */
   const check = first => {
