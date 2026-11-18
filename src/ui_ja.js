@@ -8,6 +8,7 @@
 
 const JA = {
   // Header and buttons
+  'Shibuya': '渋谷', '2002 World Cup final': '2002年のワールドカップ決勝',
   'Reply News': 'リプライニュース', 'Reply News settings': 'リプライニュースの設定', 'Opening Reply News…': 'リプライニュースを開いています…',
   'Humor': 'ユーモア', 'News': 'ニュース', 'Pull down to refresh': '引っ張って更新', 'Release to refresh': '離すと更新',
   'Back to video': '動画に戻る', 'Play': '再生', 'Pause': '一時停止', 'Update': '更新', 'Creating…': '作成中…',
@@ -37,8 +38,8 @@ const JA = {
   'Genres': 'ジャンル', 'Lineup': 'ラインナップ', 'Apply lineup': 'ラインナップを反映',
   'One request on each line. The number of stories comes from Items under the video.':
     '1行に1つずつ書きます。本数は動画の下の「表示数」で決まります。',
-  "One request on each line. Jokes sets where the jokes play. Romance adds couples: a loving post, the partner's reply, and what others said, marked 恋愛 in the corner. Travel adds what people said at famous places, marked 観光. Each comment shows its short part first, then the whole comment. The number of items comes from Items under the video. Leave the lineup empty for a mix of all genres.":
-    '1行に1つずつ書きます。「ジョーク」はジョークを入れる位置を決めます。「恋愛」はカップル（甘い投稿、相手の返事、まわりのコメント。右上に「恋愛」と表示）を入れます。「観光」は観光地での投稿を入れます（右上に「観光」と表示）。コメントは、まず短いひと言を出し、次にコメント全体を出します。本数は動画の下の「表示数」で決まります。空にすると全ジャンルから選びます。',
+  "One request on each line: a genre, or anything you like, such as a place or an event (Shibuya, 2002 World Cup final). The video then plays posts on X about it. Jokes sets where the jokes play. Romance adds couples' talk, marked 恋愛 in the corner, and Travel adds what people said at famous places, marked 観光. Each comment shows its short part first, then the whole comment. The number of items comes from Items under the video. Leave the lineup empty for a mix of all genres.":
+    '1行に1つずつ書きます。ジャンルのほか、場所や出来事など何でも書けます（例：渋谷、2002年のワールドカップ決勝）。書いたことについてのXの投稿を流します。「ジョーク」はジョークを入れる位置を決めます。「恋愛」はカップルの会話を入れ（右上に「恋愛」と表示）、「観光」は観光地での投稿を入れます（右上に「観光」と表示）。コメントは、まず短いひと言を出し、次にコメント全体を出します。本数は動画の下の「表示数」で決まります。空にすると全ジャンルから選びます。',
   'Space': '宇宙', 'Politics': '政治', 'Science': '科学', 'Culture': '文化', 'Local': '地域', 'Entertainment': 'エンタメ',
   'Public safety': '治安', 'Sports': 'スポーツ', 'Food': '食', 'Restaurant': 'レストラン', 'Romance': '恋愛',
   'Musk X': 'マスク氏のX', 'SpaceX': 'SpaceX', 'Nikkei': '日経', 'ABC': 'ABC', 'Jokes': 'ジョーク',

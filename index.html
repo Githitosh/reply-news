@@ -197,8 +197,8 @@ pre#sources { white-space: pre-wrap; font: 12px/1.5 ui-monospace,Menlo,monospace
       <label>Genres</label>
       <div id="genreChips" class="music"></div>
       <button type="button" id="lineupGo">Lineup</button>
-      <textarea id="lineup" rows="8" spellcheck="false" placeholder="Politics&#10;Sports&#10;Romance&#10;Jokes"></textarea>
-      <p class="note">One request on each line. Jokes sets where the jokes play. Romance adds couples: a loving post, the partner's reply, and what others said, marked 恋愛 in the corner. Travel adds what people said at famous places, marked 観光. Each comment shows its short part first, then the whole comment. The number of items comes from Items under the video. Leave the lineup empty for a mix of all genres.</p>
+      <textarea id="lineup" rows="8" spellcheck="false" placeholder="Shibuya&#10;2002 World Cup final&#10;Romance&#10;Jokes"></textarea>
+      <p class="note">One request on each line: a genre, or anything you like, such as a place or an event (Shibuya, 2002 World Cup final). The video then plays posts on X about it. Jokes sets where the jokes play. Romance adds couples' talk, marked 恋愛 in the corner, and Travel adds what people said at famous places, marked 観光. Each comment shows its short part first, then the whole comment. The number of items comes from Items under the video. Leave the lineup empty for a mix of all genres.</p>
       <button id="applyLine" type="button">Apply lineup</button>
       <div class="music hides">
         <button type="button" id="hideSensitive" aria-pressed="false">Hide sensitive posts</button>
@@ -2159,6 +2159,7 @@ if (typeof module === "object" && typeof module.exports === "object") Object.ass
 
 const JA = {
   // Header and buttons
+  'Shibuya': '渋谷', '2002 World Cup final': '2002年のワールドカップ決勝',
   'Reply News': 'リプライニュース', 'Reply News settings': 'リプライニュースの設定', 'Opening Reply News…': 'リプライニュースを開いています…',
   'Humor': 'ユーモア', 'News': 'ニュース', 'Pull down to refresh': '引っ張って更新', 'Release to refresh': '離すと更新',
   'Back to video': '動画に戻る', 'Play': '再生', 'Pause': '一時停止', 'Update': '更新', 'Creating…': '作成中…',
@@ -2188,8 +2189,8 @@ const JA = {
   'Genres': 'ジャンル', 'Lineup': 'ラインナップ', 'Apply lineup': 'ラインナップを反映',
   'One request on each line. The number of stories comes from Items under the video.':
     '1行に1つずつ書きます。本数は動画の下の「表示数」で決まります。',
-  "One request on each line. Jokes sets where the jokes play. Romance adds couples: a loving post, the partner's reply, and what others said, marked 恋愛 in the corner. Travel adds what people said at famous places, marked 観光. Each comment shows its short part first, then the whole comment. The number of items comes from Items under the video. Leave the lineup empty for a mix of all genres.":
-    '1行に1つずつ書きます。「ジョーク」はジョークを入れる位置を決めます。「恋愛」はカップル（甘い投稿、相手の返事、まわりのコメント。右上に「恋愛」と表示）を入れます。「観光」は観光地での投稿を入れます（右上に「観光」と表示）。コメントは、まず短いひと言を出し、次にコメント全体を出します。本数は動画の下の「表示数」で決まります。空にすると全ジャンルから選びます。',
+  "One request on each line: a genre, or anything you like, such as a place or an event (Shibuya, 2002 World Cup final). The video then plays posts on X about it. Jokes sets where the jokes play. Romance adds couples' talk, marked 恋愛 in the corner, and Travel adds what people said at famous places, marked 観光. Each comment shows its short part first, then the whole comment. The number of items comes from Items under the video. Leave the lineup empty for a mix of all genres.":
+    '1行に1つずつ書きます。ジャンルのほか、場所や出来事など何でも書けます（例：渋谷、2002年のワールドカップ決勝）。書いたことについてのXの投稿を流します。「ジョーク」はジョークを入れる位置を決めます。「恋愛」はカップルの会話を入れ（右上に「恋愛」と表示）、「観光」は観光地での投稿を入れます（右上に「観光」と表示）。コメントは、まず短いひと言を出し、次にコメント全体を出します。本数は動画の下の「表示数」で決まります。空にすると全ジャンルから選びます。',
   'Space': '宇宙', 'Politics': '政治', 'Science': '科学', 'Culture': '文化', 'Local': '地域', 'Entertainment': 'エンタメ',
   'Public safety': '治安', 'Sports': 'スポーツ', 'Food': '食', 'Restaurant': 'レストラン', 'Romance': '恋愛',
   'Musk X': 'マスク氏のX', 'SpaceX': 'SpaceX', 'Nikkei': '日経', 'ABC': 'ABC', 'Jokes': 'ジョーク',
@@ -3558,7 +3559,8 @@ function classifyRequest(text) {
   const genre = GENRES.find(g => g.name.toLowerCase() === low || (g.q.JP && name.includes(g.q.JP.split(' ')[0]) && g.q.JP.split(' ')[0].length > 1));
   if (genre) return Object.assign(requestForGenre(genre), { label: name });
   if (/スポーツ|^sports$/.test(low)) return requestForGenre(GENRES.find(g => g.id === 'sports'));
-  return { type: 'gdelt', q: name, cat: name.toUpperCase().slice(0, 16), source: 'News', label: name };
+  /* Anything else is a free request (渋谷, 2002年のワールドカップ決勝): posts about it, read with the help of Wikipedia. */
+  return { type: 'gdelt', q: name, cat: name.toUpperCase().slice(0, 16), source: 'News', label: name, free: true };
 }
 function requestForGenre(g) {
   const name = g.name;
@@ -3790,7 +3792,7 @@ async function collectJokes(topics, need, opts) {
   const addQ = q => { if (q && queries.indexOf(q) < 0) queries.push(q); };
   topics.forEach(t => addQ(String(t).trim()));
   xAccounts().forEach(h => addQ('to:' + h));
-  (lang === 'en' ? ['news', 'today', 'trending', 'weird'] : ['ニュース', '今日', '話題', 'トレンド']).forEach(addQ);
+  if (!(opts && opts.only)) (lang === 'en' ? ['news', 'today', 'trending', 'weird'] : ['ニュース', '今日', '話題', 'トレンド']).forEach(addQ);
   const build = q => `${q} ${FUNNY_Q[lang]} ${replies && !/^to:/.test(q) ? 'filter:replies ' : ''}lang:${lang}${xRange()}`;
   const headlines = (opts && opts.headlines) || [];
   const rows = [];
@@ -3802,6 +3804,9 @@ async function collectJokes(topics, need, opts) {
     lists.flat().forEach(({ st, q }) => {
       const got = replyOf(st, lang);
       if (!got) return;
+      /* For a free request, a joke must be about it. */
+      const must = (opts && opts.must) || [];
+      if (must.length && !must.some(w => (got.text + ' ' + String((st && st.text) || '')).toLowerCase().includes(w))) return;
       got.topic = q;
       const ks = jokeKeys(got);
       if (ks.some(k => past.has(k) || now.has(k) || keys.has(k))) return;
@@ -4101,6 +4106,88 @@ async function collectTravel(need, place) {
     .map(t => ({ headline: t.text, text: t.text, link: t.url, source: 'X @' + t.handle, x: true, cat: 'TRAVEL', joke: true, travel: true, spot: t.spot, where: t.where, place: place || 'middle' }));
 }
 
+/* ---------- free requests: anything typed in the lineup ---------- */
+/* The words of a request: 2002年のワールドカップ決勝 → 2002, ワールドカップ, 決勝. */
+function termsOf(text, lang) {
+  const t = String(text || '').replace(/[「」『』（）()【】"“”'’!！?？]/g, ' ').trim();
+  if (!t) return [];
+  if (lang === 'en' || !CJK.test(t)) return [...new Set(t.split(/\s+/).filter(w => w.length >= 2 && !/^(the|of|and|in|on|at|for|an|to|about|from|with)$/i.test(w)))].slice(0, 5);
+  const out = [];
+  t.split(/について|に関する|における|での|の|[\s、・,]+/).forEach(part => {
+    (part.match(/[0-9０-９]{2,4}|[ァ-ヴー]{2,}|[一-龯々]+|[A-Za-z][A-Za-z0-9.\-]+/g) || []).forEach(r => { if ([...r].length >= 2) out.push(r); });
+  });
+  return [...new Set(out.length ? out : [t])].slice(0, 5);
+}
+/* What the request is about, from Wikipedia: the best page's title and the words its summary leans on. */
+const WIKI_STOP = /^(日本|大会|試合|開催|国際|世界|地域|一般|現在|以下|以上|最初|最後|今回|当時|自身|ほか|一つ|代表|東京都|日本国|所在|位置|存在|使用|中心|主要|最大|一部|後半|前半)$/;
+async function wikiOf(text, lang) {
+  const host = lang === 'en' ? 'en' : 'ja';
+  try {
+    const sres = await withTimeout(fetch(`https://${host}.wikipedia.org/w/api.php?action=query&list=search&srlimit=1&format=json&origin=*&srsearch=` + encodeURIComponent(text)), 7000);
+    const hit = sres.ok ? (((await sres.json()).query || {}).search || [])[0] : null;
+    if (!hit || !hit.title) return { title: '', words: [] };
+    const pres = await withTimeout(fetch(`https://${host}.wikipedia.org/api/rest_v1/page/summary/` + encodeURIComponent(hit.title)), 7000);
+    const extract = pres.ok ? String((await pres.json()).extract || '') : '';
+    const own = new Set(termsOf(text, lang).concat(termsOf(hit.title, lang)).map(w => w.toLowerCase()));
+    const count = new Map();
+    const found = lang === 'en'
+      ? (extract.match(/\b[A-Z][a-zA-Z]{3,}(?:\s[A-Z][a-zA-Z]{2,})?/g) || []).filter(w => !/^(The|This|That|They|There|With|From|After|Before|During|When|Which|While|Their|These|Since|Also|Under)\b/.test(w))
+      : (extract.match(/[ァ-ヴー]{3,12}|[一-龯々]{2,4}/g) || []);
+    found.forEach((w, i) => { if (!own.has(w.toLowerCase()) && !WIKI_STOP.test(w)) count.set(w, (count.get(w) || 0) + 10 - Math.min(9, i / 4)); });
+    const words = [...count.entries()].sort((a, b) => b[1] - a[1]).map(e => e[0]).slice(0, 4);
+    return { title: hit.title, words };
+  } catch (e) { console.warn(e); return { title: '', words: [] }; }
+}
+const AD = /PR|広告|キャンペーン|プレゼント企画|応募|フォロー[&＆]|RTで|リツイートで|セール|クーポン|予約受付|販売中|\bgiveaway\b|\bsale\b|\bpromo\b|\bdiscount\b|\bsponsored\b/i;
+/* Posts and replies on X about a free request. The request is read in the language of the posts. */
+async function collectTopic(slot, need) {
+  if (!need || !sourceOn('x')) return [];
+  const lang = jokeLang();
+  let text = String(slot.label || '').trim();
+  try {
+    if (lang === 'en' && CJK.test(text)) text = (await translateMany([text], 'en'))[0] || text;
+    else if (lang === 'ja' && !CJK.test(text) && /[A-Za-z]/.test(text)) { const t = (await translateMany([text], 'ja'))[0]; if (t && CJK.test(t)) text = t; }
+  } catch (e) { console.warn(e); }
+  say('Searching ' + slot.label);
+  const main = termsOf(text, lang);
+  const wiki = await wikiOf(text, lang);
+  const key = main.slice().sort((a, b) => b.length - a.length)[0] || text;
+  const queries = [main.join(' ')];
+  const titleTerms = termsOf(wiki.title, lang);
+  if (titleTerms.length && squash(titleTerms.join('')) !== squash(main.join(''))) queries.push(titleTerms.join(' '));
+  if (wiki.words.length) queries.push(`${key} (${wiki.words.join(' OR ')})`);
+  const lists = await Promise.all(queries.map(q => searchX(`${q} -filter:retweets lang:${lang}${xRange()}`)));
+  const terms = [...new Set(main.concat(titleTerms, wiki.words).map(w => w.toLowerCase()))];
+  const past = seenSet(SEEN_JOKES);
+  const now = playingKeys();
+  const keys = new Set();
+  const authors = new Set();
+  const rows = [];
+  lists.flat().forEach(st => {
+    const handle = handleOf(st);
+    const raw = String((st && st.text) || '');
+    const body = postText(st);
+    if (!handle || !body || authors.has(handle.toLowerCase())) return;
+    if (UNSAFE.test(body) || VIOLENT.test(body) || sensitive(body, st) || AD.test(raw) || (raw.match(/[#＃]/g) || []).length > 3) return;
+    const n = charLen(body);
+    if (lang === 'ja' ? (n < 6 || n > 140 || !/[぀-ヿ]/.test(body)) : (n < 12 || n > 240)) return;
+    const low = (raw + ' ' + body).toLowerCase();
+    const hits = terms.filter(w => low.includes(w)).length;
+    if (!hits) return;
+    const url = st.url || '';
+    const ks = jokeKeys({ text: body, link: url });
+    if (ks.some(k => past.has(k) || now.has(k) || keys.has(k))) return;
+    ks.forEach(k => keys.add(k));
+    authors.add(handle.toLowerCase());
+    const allMain = main.every(w => low.includes(w.toLowerCase()));
+    const react = (WOW[lang] && WOW[lang].test(body)) || isFunny(body, lang);
+    rows.push({ handle, text: body, url, score: (allMain ? 6 : low.includes(key.toLowerCase()) ? 4 : 1) + Math.min(3, hits) + (react ? 3 : 0) + (n <= 60 ? 2 : 0) + Math.random() * 2 });
+  });
+  const corner = charLen(slot.label) <= 12 ? slot.label : [...slot.label].slice(0, 11).join('') + '…';
+  return rows.sort((a, b) => b.score - a.score).slice(0, need)
+    .map(t => ({ headline: t.text, text: t.text, link: t.url, source: 'X @' + t.handle, x: true, cat: 'REPLY', joke: true, corner, place: 'middle' }));
+}
+
 /* ---------- two cards for each comment ---------- */
 /* The first card shows the short part (すごーい), the second the whole comment
    (兼六園の雪吊りすごーい). Only the posted words are shown, with no added explanation. */
@@ -4123,7 +4210,7 @@ function beats(r, card, langId) {
   const ja = langId !== 'en' && CJK.test(card.head.join('') + (card.jp[0] || ''));
   const text = ja ? (r._shownJa || r.headline) : (r._shownEn || r.headline);
   const lang = ja ? 'ja' : 'en';
-  const corner = r.travel ? (ja ? '観光' : 'TRAVEL') : card.topic;
+  const corner = r.corner || (r.travel ? (ja ? '観光' : 'TRAVEL') : card.topic);
   const main = { ...card, topic: corner, cat: r.travel ? 'TRAVEL' : card.cat, jp: card.jp.slice(), _main: true };
   const tease = teaserOf(text, lang);
   if (tease) {
@@ -4245,6 +4332,7 @@ async function collect() {
   const slots = parseLineup(lineupText());
   const SPECIAL = new Set(['jokes', 'romance', 'travel']);
   const topicSlots = slots.filter(s => !SPECIAL.has(s.type));
+  const freeSlots = topicSlots.filter(s => s.free);
   const used = new Set();
   let sequence = [];
   let jokeAt = -1;
@@ -4275,15 +4363,17 @@ async function collect() {
        and today's news in each chosen genre, in the genres' Top, Middle, Bottom order. */
     say('Searching X');
     progress(0.1);
-    topicSlots.forEach(s => topicWords.push(s.who ? 'to:' + s.who : (s.topic || s.q || s.gdelt || s.label)));
-    if (topicWords.length < 3 && !onlySpecial) {
+    topicSlots.filter(s => !s.free).forEach(s => topicWords.push(s.who ? 'to:' + s.who : (s.topic || s.q || s.gdelt || s.label)));
+    /* A free request: jokes about the same thing, and nothing else is added. */
+    freeSlots.forEach(s => topicWords.push(termsOf(s.label, jokeLang()).join(' ')));
+    if (topicWords.length < 3 && !onlySpecial && !freeSlots.length) {
       const chosen = shuffle(genreChoices().filter(g => g.on && g.id !== 'romance' && g.id !== 'travel')).slice(0, 6);
       const lists = await Promise.all(chosen.map(g => searchRows(g.q[country.id] || g.q.US, up(g.name)).then(rows => rows.filter(allowedRow)).catch(() => [])));
       chosen.forEach((g, i) => {
         lists[i].slice(0, 3).forEach(r => keywordsFor(r.headline, jokeLang()).forEach(w => { topicWords.push(w); topicPlace[w] = g.place; }));
       });
     }
-    if (topicWords.length < 3 && !onlySpecial) {
+    if (topicWords.length < 3 && !onlySpecial && !freeSlots.length) {
       const news = await homeNews(new Set(), 8).catch(() => []);
       news.forEach(r => keywordsFor(r.headline, jokeLang()).forEach(w => topicWords.push(w)));
     }
@@ -4314,11 +4404,18 @@ async function collect() {
   progress(0.55);
   /* Jokes fill whatever the couples and places leave, so ask for enough to fill the rest on their own. */
   const left0 = Math.max(0, N - sequence.length);
-  const [found, couples, trips] = await Promise.all([
-    collectJokes(topicWords, onlySpecial ? 0 : left0, { headlines }),
+  /* Free requests: posts about each, about two cards a post, with a few spare. */
+  const perFree = freeSlots.length ? Math.ceil(left0 / 2 / freeSlots.length) + 2 : 0;
+  const [found, couples, trips, topics] = await Promise.all([
+    collectJokes(topicWords, onlySpecial ? 0 : left0, {
+      headlines, only: freeSlots.length > 0,
+      must: freeSlots.length && topicSlots.every(s => s.free) ? [...new Set(freeSlots.flatMap(s => termsOf(s.label, jokeLang())).map(w => w.toLowerCase()))] : [],
+    }),
     collectRomance(romanceNeed, romancePlace).catch(e => { console.warn(e); return []; }),
     collectTravel(travelNeed, travelPlace).catch(e => { console.warn(e); return []; }),
+    Promise.all(freeSlots.map(s => collectTopic(s, perFree).catch(e => { console.warn(e); return []; }))),
   ]);
+  const topicRows = topics.flat();
   /* A comment found both as a joke and under a couple plays once, as the joke. */
   const jokeKeySet = new Set(found.flatMap(j => jokeKeys({ text: j.text, link: j.url })));
   const coupleKeys = r => [r.story.a, r.story.b, ...r.story.cheers].flatMap(m => ['id:' + m.id, 't:' + squash(m.text).slice(0, 50)]);
@@ -4329,12 +4426,12 @@ async function collect() {
   const jokeRows = found.map(j => ({ headline: j.text, text: j.text, link: j.url, source: 'X @' + j.handle, x: true, cat: 'REPLY', joke: true, topic: j.topic, place: topicPlace[j.topic] || 'middle' }));
   const coupleRows = couples.map(r => ({ ...r, headline: r.story.a.text, joke: true }));
   if (S.again) return null;
-  if (!sequence.length && !jokeRows.length && !coupleRows.length && !trips.length) return { empty: true };
+  if (!sequence.length && !jokeRows.length && !coupleRows.length && !trips.length && !topicRows.length) return { empty: true };
   say('Reading the text');
   progress(0.75);
   /* Fit the cards to Items: reports, couples and places first, then jokes fill the rest.
      A comment without room for two cards keeps only the whole comment. */
-  const all = sequence.concat(coupleRows, trips, jokeRows);
+  const all = sequence.concat(coupleRows, trips, topicRows, jokeRows);
   const cards = await cardsFrom(all, lang.id);
   if (S.again) return null;
   let left = N;
@@ -4359,7 +4456,7 @@ async function collect() {
   const band = { top: 0, middle: 1, bottom: 2 };
   const extra = [];
   ['top', 'middle', 'bottom'].forEach(b => {
-    const lists = [jokeRows, coupleRows, trips].map(list => list.filter(r => r._cards && (band[r.place] === undefined ? 'middle' : r.place) === b));
+    const lists = [topicRows, jokeRows, coupleRows, trips].map(list => list.filter(r => r._cards && (band[r.place] === undefined ? 'middle' : r.place) === b));
     for (let k = 0; lists.some(l => l.length); k++) {
       const l = lists[k % lists.length];
       if (l.length) extra.push(l.shift());
@@ -5115,11 +5212,11 @@ function initUI() {
   $('backDock').onclick = closeStudio;
   $('home').onclick = () => { closeStudio(); window.scrollTo(0, 0); refreshMarket(); };
   if (Q.get('edit') === '1') openStudio();
-  /* Reply News opens upright (portrait) until another layout is chosen. */
+  /* Reply News starts on Auto: portrait on phones, landscape on computers, until another layout is chosen. */
   const forced = Q.get('format');
-  let savedLayout = store.get('layout', 'phone');
+  let savedLayout = store.get('layout', 'auto');
   if (savedLayout === 'wide') savedLayout = 'pc';
-  $('layout').value = forced === 'pc' || forced === 'youtube' ? forced : (forced === 'x' ? 'phone' : (['auto', 'phone', 'x', 'youtube', 'pc'].includes(savedLayout) ? savedLayout : 'phone'));
+  $('layout').value = forced === 'pc' || forced === 'youtube' ? forced : (forced === 'x' ? 'phone' : (['auto', 'phone', 'x', 'youtube', 'pc'].includes(savedLayout) ? savedLayout : 'auto'));
   $('layout').onchange = () => { if (!Q.get('format')) store.set('layout', $('layout').value); applyLayout(); };
   applyLayout();
   const arm = id => ['applyLine', 'apply', 'go'].forEach(x => $(x).classList.toggle('on', x === id));
@@ -5373,7 +5470,7 @@ E.setMusicCredit(TRACKS[0].credit);
 /* A newer copy on the site: load it, so a copy the browser kept from before is not shown.
    version.json names the latest build of each page; it is read past the browser's cache. */
 function watchVersion(key, url) {
-  const BUILD = '024d9eb2dd06';
+  const BUILD = '0bb98488bd68';
   if (location.protocol === 'file:' || BUILD.indexOf('BUILD_ID') >= 0) return;
   /* At the start it may reload at once; later it waits while a video is being made or saved. */
   const check = first => {
