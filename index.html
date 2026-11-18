@@ -45,7 +45,7 @@ main { padding: 0 16px calc(24px + env(safe-area-inset-bottom)); max-width: 1100
 #genreChips button.mine { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
 /* Settings: the rows of buttons that were under the video. */
 .studio .music { margin-top: 2px; }
-.terms-foot { text-align: center; font-size: 13px; margin: 22px 0 0; }
+.terms-foot { text-align: center; font-size: 13px; margin: 56px 0 0; padding: 18px 0 8px; border-top: 1px solid var(--line); }
 .terms-foot a, a.terms { color: var(--mute); }
 .frame { position: relative; max-width: 100%; margin: 0 auto; transition: transform .18s ease; }
 .frame.pulling { transition: none; }
@@ -6021,7 +6021,7 @@ E.setMusicCredit(TRACKS[0].credit);
 /* A newer copy on the site: load it, so a copy the browser kept from before is not shown.
    version.json names the latest build of each page; it is read past the browser's cache. */
 function watchVersion(key, url) {
-  const BUILD = '02777a5c776d';
+  const BUILD = '75a658d4b26b';
   if (location.protocol === 'file:' || BUILD.indexOf('BUILD_ID') >= 0) return;
   /* At the start it may reload at once; later it waits while a video is being made or saved. */
   const check = first => {
