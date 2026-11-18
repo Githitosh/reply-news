@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111214">
+<script>document.documentElement.dataset.theme = 'dark';
+try { document.documentElement.dataset.theme = localStorage.getItem('replyNews.theme') || 'dark'; } catch (e) {}</script>
+<title>利用規約 / Terms of Use — リプライニュース</title>
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=2">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=2">
+<style>
+:root { --bg:#ffffff; --card:#f1f2f4; --line:#d9dbe0; --ink:#16181c; --mute:#62666d; --acc:#6b7078; }
+:root[data-theme="beige"] { --bg:#f7f1e6; --card:#fffaf2; --line:#e4d8c4; --ink:#1c140c; --mute:#6d6458; --acc:#9a5b12; }
+:root[data-theme="pink"] { --bg:#fff6f9; --card:#ffffff; --line:#f2d4df; --ink:#2b1620; --mute:#7c5e6a; --acc:#d6457a; }
+:root[data-theme="sky"] { --bg:#f3f8fd; --card:#ffffff; --line:#d3e2f2; --ink:#10202f; --mute:#58697a; --acc:#2a7bc8; }
+:root[data-theme="mint"] { --bg:#f2fbf7; --card:#ffffff; --line:#cfe9dd; --ink:#11231b; --mute:#56706a; --acc:#1f9a6a; }
+:root[data-theme="dark"] { --bg:#111214; --card:#1b1c1f; --line:#2d2f34; --ink:#f1f2f4; --mute:#9ea3ab; --acc:#f0c36b; }
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.8 "Hiragino Sans","Noto Sans JP",system-ui,sans-serif; }
+main { max-width: 720px; margin: 0 auto; padding: calc(16px + env(safe-area-inset-top)) 18px calc(40px + env(safe-area-inset-bottom)); }
+nav { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 8px; font-size: 14px; }
+a { color: var(--acc); word-break: break-all; }
+h1 { font: 700 22px/1.4 "Hiragino Mincho ProN","Noto Serif JP",serif; margin: 18px 0 4px; }
+h2 { font-size: 16px; margin: 26px 0 6px; padding-top: 12px; border-top: 1px solid var(--line); }
+.date { color: var(--mute); font-size: 13px; margin: 0 0 12px; }
+ul { padding-left: 1.3em; margin: 6px 0; }
+li { margin: 4px 0; }
+.lang { margin-top: 44px; }
+</style>
+</head>
+<body>
+<main>
+  <nav><a href="./">← リプライニュースに戻る</a><a href="#en">English</a></nav>
+
+  <section lang="ja">
+    <h1>リプライニュース 利用規約</h1>
+    <p class="date">制定日：2026年11月18日</p>
+    <p>この利用規約（以下「本規約」）は、リプライニュース（https://githitosh.github.io/reply-news/ 、以下「本サービス」）の利用条件を定めるものです。本サービスは、運営者（GitHub：Githitosh、以下「運営者」）が提供しています。本サービスを利用した時点で、本規約に同意したものとみなします。</p>
+
+    <h2>1. 利用できる方</h2>
+    <ul>
+      <li>本規約に同意し、適用される法令のもとで本サービスを利用できる方が利用できます。</li>
+      <li>本サービスには、性的な表現を含む投稿が表示されることがあります（主に「恋愛」のジャンル）。18歳未満の方は、設定の「センシティブを非表示」を点けてご利用ください。</li>
+      <li>会社などの団体のために利用する場合、その団体に代わって本規約に同意する権限があるものとします。</li>
+    </ul>
+
+    <h2>2. プライバシー</h2>
+    <ul>
+      <li>本サービスに会員登録はありません。運営者は、利用者の個人情報を集めたり保存したりしません。アクセス解析や広告の仕組みも使っていません。</li>
+      <li>設定（ジャンル、表示数、色など）は、利用者のブラウザの中だけに保存されます。ブラウザのデータを消すと元に戻ります。</li>
+      <li>動画を作るために、利用者のブラウザから次の外部サービスに直接つながります。その際、IPアドレスなどの通信情報が各サービスに送られ、各サービスの規約やプライバシーポリシーに従って扱われます。
+        <ul>
+          <li>Xの投稿の取得：FxTwitter（api.fxtwitter.com）</li>
+          <li>ニュースの取得：GDELT、Wikipedia</li>
+          <li>翻訳：Google翻訳</li>
+          <li>文字の表示：Google Fonts</li>
+          <li>利用者が追加したメディアの読み込み：allorigins、codetabs、corsproxy.io（直接読めない場合のみ）</li>
+        </ul>
+      </li>
+      <li>本サービスは GitHub Pages で公開しています。ページの配信にあたり、GitHub が通信情報を扱います。</li>
+    </ul>
+
+    <h2>3. 表示される内容</h2>
+    <ul>
+      <li>本サービスに表示される投稿・リプライ・記事（以下「コンテンツ」）は、Xの利用者や報道機関などが公開したものです。権利は、それぞれの投稿者・著作者にあります。</li>
+      <li>本サービスは、公開されているコンテンツを自動で集め、元の投稿へのリンクを添えて表示します。運営者がコンテンツを書いたり、内容を書き換えたりすることはありません（翻訳と、一部を抜き出しての表示を除きます）。</li>
+      <li>暴力や重い話題、広告は自動で除いていますが、完全ではありません。不快なものや誤ったものが表示されることがあり、運営者はコンテンツの正確さや適切さを保証しません。</li>
+      <li>ご自身の投稿を表示しないでほしい場合や、権利の侵害を見つけた場合は、下記のお問い合わせ先までお知らせください。確認のうえ対応します。</li>
+      <li>背景の写真と音楽は、パブリックドメインなど自由に使える素材を使い、出典を画面に表示しています。</li>
+    </ul>
+
+    <h2>4. 本サービスの利用</h2>
+    <ul>
+      <li>本サービスは無料で利用できます。</li>
+      <li>ダウンロードした動画に含まれる投稿の権利は、投稿者にあります。動画を共有・公開するときは、法令、Xの利用規約、投稿者の権利を守ってください。その責任は利用者が負います。</li>
+      <li>次のことをしてはいけません。
+        <ul>
+          <li>法令や公序良俗に反する利用</li>
+          <li>他人の権利（著作権、肖像権、プライバシーなど）を侵害する利用、誹謗中傷や嫌がらせ</li>
+          <li>本サービスや接続先の外部サービスに過大な負荷をかける利用（自動での大量アクセスなど）</li>
+          <li>運営者や投稿者になりすます利用</li>
+        </ul>
+      </li>
+      <li>本サービスのプログラムは GitHub（https://github.com/Githitosh/reply-news ）で公開しています。</li>
+      <li>運営者は、予告なく本サービスの内容を変えたり、提供をやめたりすることがあります。</li>
+    </ul>
+
+    <h2>5. 免責と責任の制限</h2>
+    <ul>
+      <li>本サービスは現状のまま提供されます。正確さ、特定の目的への適合、途切れずに使えることを保証しません。</li>
+      <li>外部サービスの停止や仕様の変更により、本サービスが使えなくなることがあります。</li>
+      <li>本サービスの利用やコンテンツによって生じた損害について、運営者は責任を負いません。ただし、運営者の故意または重大な過失による場合を除きます。</li>
+      <li>法令により運営者が責任を負う場合でも、運営者の故意または重大な過失による場合を除き、その範囲は通常生じる直接の損害に限ります。</li>
+    </ul>
+
+    <h2>6. 一般条項</h2>
+    <ul>
+      <li>運営者は、必要に応じて本規約を変更することがあります。変更後の規約は、このページに掲載した時点から効力を持ちます。</li>
+      <li>本規約は日本法に従います。本サービスに関する紛争は、運営者の住所地を管轄する地方裁判所を第一審の専属的合意管轄裁判所とします。</li>
+      <li>本規約の一部が無効とされた場合でも、残りの部分は引き続き有効です。</li>
+      <li>お問い合わせ：GitHub の Issues（<a href="https://github.com/Githitosh/reply-news/issues" target="_blank" rel="noopener">https://github.com/Githitosh/reply-news/issues</a>）</li>
+    </ul>
+  </section>
+
+  <section lang="en" id="en" class="lang">
+    <h1>Reply News Terms of Use</h1>
+    <p class="date">Effective: November 18, 2026</p>
+    <p>These Terms of Use ("Terms") set the conditions for using Reply News (https://githitosh.github.io/reply-news/ , the "Service"), provided by its operator (GitHub: Githitosh, the "Operator"). By using the Service you agree to these Terms. If the Japanese and English versions differ, the Japanese version prevails.</p>
+
+    <h2>1. Who may use the Service</h2>
+    <ul>
+      <li>Anyone who agrees to these Terms and may use the Service under the laws that apply to them.</li>
+      <li>The Service may show posts with sexual content (mainly in Romance). If you are under 18, turn on "Hide sensitive posts" in Settings.</li>
+      <li>If you use the Service for a company or other organization, you confirm you may accept these Terms on its behalf.</li>
+    </ul>
+
+    <h2>2. Privacy</h2>
+    <ul>
+      <li>There are no accounts. The Operator does not collect or store your personal information and uses no analytics or advertising.</li>
+      <li>Your settings (genres, items, color and so on) are kept only in your browser. Clearing your browser data resets them.</li>
+      <li>To make a video, your browser connects directly to these services, which receive your IP address and similar connection data and handle it under their own terms and privacy policies:
+        <ul>
+          <li>X posts: FxTwitter (api.fxtwitter.com)</li>
+          <li>News: GDELT, Wikipedia</li>
+          <li>Translation: Google Translate</li>
+          <li>Fonts: Google Fonts</li>
+          <li>Media you add: allorigins, codetabs, corsproxy.io (only when a site cannot be read directly)</li>
+        </ul>
+      </li>
+      <li>The Service is hosted on GitHub Pages; GitHub handles connection data to serve the page.</li>
+    </ul>
+
+    <h2>3. Content on the Service</h2>
+    <ul>
+      <li>Posts, replies and articles shown ("Content") were published by X users, news outlets and others, who keep their rights in them.</li>
+      <li>The Service gathers public Content automatically and shows it with a link to the original. The Operator does not write or alter Content, other than translating it or showing a short part of it.</li>
+      <li>Violence, hard news and ads are filtered out automatically, but not perfectly. Content may be offensive or inaccurate, and the Operator does not guarantee it.</li>
+      <li>If you want your post not to be shown, or you find an infringement, contact us below and we will look into it.</li>
+      <li>Background photos and music are public-domain or otherwise free material, credited on screen.</li>
+    </ul>
+
+    <h2>4. Using the Service</h2>
+    <ul>
+      <li>The Service is free.</li>
+      <li>Posts in a downloaded video belong to their authors. When you share or publish a video, follow the law, X's terms and the authors' rights; you are responsible for doing so.</li>
+      <li>Do not use the Service to break the law; to infringe others' rights (copyright, likeness, privacy) or to harass or defame anyone; to overload the Service or the services it connects to (for example, automated mass access); or to pretend to be the Operator or a post's author.</li>
+      <li>The Service's program is published on GitHub (https://github.com/Githitosh/reply-news ).</li>
+      <li>The Operator may change or stop the Service at any time without notice.</li>
+    </ul>
+
+    <h2>5. Disclaimers and limitation of liability</h2>
+    <ul>
+      <li>The Service is provided as is, without any guarantee that it is accurate, fit for a purpose, or always available.</li>
+      <li>The Service may stop working when an outside service stops or changes.</li>
+      <li>The Operator is not liable for damage arising from the Service or its Content, except in cases of the Operator's intent or gross negligence. Where the law makes the Operator liable, that liability is limited to ordinary, direct damage, except in cases of intent or gross negligence.</li>
+    </ul>
+
+    <h2>6. General</h2>
+    <ul>
+      <li>The Operator may change these Terms. Changed Terms take effect when posted on this page.</li>
+      <li>These Terms are governed by the laws of Japan. The district court with jurisdiction over the Operator's address has exclusive jurisdiction in the first instance.</li>
+      <li>If any part of these Terms is held invalid, the rest stays in effect.</li>
+      <li>Contact: GitHub Issues (<a href="https://github.com/Githitosh/reply-news/issues" target="_blank" rel="noopener">https://github.com/Githitosh/reply-news/issues</a>)</li>
+    </ul>
+    <p><a href="./">← Back to Reply News</a></p>
+  </section>
+</main>
+</body>
+</html>

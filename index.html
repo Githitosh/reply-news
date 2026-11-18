@@ -45,6 +45,8 @@ main { padding: 0 16px calc(24px + env(safe-area-inset-bottom)); max-width: 1100
 #genreChips button.mine { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
 /* Settings: the rows of buttons that were under the video. */
 .studio .music { margin-top: 2px; }
+.terms-foot { text-align: center; font-size: 13px; margin: 22px 0 0; }
+.terms-foot a, a.terms { color: var(--mute); }
 .frame { position: relative; max-width: 100%; margin: 0 auto; transition: transform .18s ease; }
 .frame.pulling { transition: none; }
 /* PC layout: landscape, as wide as the page and the screen height allow. */
@@ -172,6 +174,7 @@ pre#sources { white-space: pre-wrap; font: 12px/1.5 ui-monospace,Menlo,monospace
   <p id="caption" class="caption">Opening Reply News…</p>
   <p class="music-label">Genres</p>
   <div id="genreChips" class="music"></div>
+  <p class="terms-foot"><a class="terms" href="terms.html" target="_blank" rel="noopener">Terms of use</a></p>
 
   <div id="studio" class="studio" hidden>
     <div class="studio-bar"><button type="button" id="backVideo">Back to video</button></div>
@@ -254,6 +257,7 @@ pre#sources { white-space: pre-wrap; font: 12px/1.5 ui-monospace,Menlo,monospace
       <div id="sprog"><i></i></div>
       <div id="out" class="row"></div>
       <p class="note site-link">Public page: <a href="https://githitosh.github.io/reply-news/" target="_blank" rel="noopener">https://githitosh.github.io/reply-news/</a></p>
+      <p class="note site-link"><a class="terms" href="terms.html" target="_blank" rel="noopener">Terms of use</a></p>
       <p class="note site-link">Program repository: <a href="https://github.com/Githitosh/reply-news" target="_blank" rel="noopener">https://github.com/Githitosh/reply-news</a></p>
     </section>
 
@@ -2193,7 +2197,7 @@ const JA = {
   'At the end': '最後まで再生したら', 'Repeat': '繰り返す',
   'Add an account to load its posts and the replies to them.': 'アカウントを追加すると、そのアカウントの投稿と、返信を読み込みます。',
   'Web': 'ウェブ', 'Media': 'メディア', 'Public page:': '公開ページ：', 'Replies': 'リプライ', 'Clear': '消す', 'Reading the post': '投稿を読み込んでいます',
-  'Words, @account or post URL': '言葉・@アカウント・URL', 'Program repository:': 'プログラムの保存先：', 'Searching the web': 'ウェブを探しています',
+  'Words, @account or post URL': '言葉・@アカウント・URL', 'Program repository:': 'プログラムの保存先：', 'Terms of use': '利用規約', 'Searching the web': 'ウェブを探しています',
   "Type a site's address or a homepage (asahi.com, https://www.example.co.jp/) to add its newest posts. Press a name to remove it.": 'サイトのアドレスや企業などのホームページ（asahi.com、https://www.example.co.jp/）を入れて「追加」を押すと、そのサイトの新着を読み込みます。名前を押すと外せます。',
   "Reports are chosen by this page's own rules, not by a search engine or ads: newest first from open sources (GDELT and Wikipedia's current events), the same share for every genre, at most two from one site, and drawn at random.":
     '記事は、検索エンジンや広告の順位ではなく、このページ独自のルールで選びます。公開されている情報源（GDELT とウィキペディアの「最近の出来事」）から新しい順に集め、どのジャンルも同じ数ずつ、1つのサイトから2件まで、その中からランダムに選びます。',
@@ -5737,9 +5741,13 @@ function initUI() {
     const next = COUNTRIES.find(c => c.id === countryBox.value);
     if (next) langBox.value = next.lang;
     saveMarket();
+    paintTerms();
     refreshMarket();
   };
-  langBox.onchange = () => { saveMarket(); refreshMarket(); };
+  /* The terms open in the chosen language. */
+  const paintTerms = () => document.querySelectorAll('a.terms').forEach(a => { a.href = 'terms.html' + (langBox.value === 'en' ? '#en' : ''); });
+  paintTerms();
+  langBox.onchange = () => { saveMarket(); paintTerms(); refreshMarket(); };
   $('date').onchange = () => scheduleRefresh(0);
   const saved = (store.get('formats', '') || '').split(',').filter(f => FORMATS[f]);
   const on = saved.length ? saved : Object.keys(FORMATS);
@@ -5914,7 +5922,7 @@ E.setMusicCredit(TRACKS[0].credit);
 /* A newer copy on the site: load it, so a copy the browser kept from before is not shown.
    version.json names the latest build of each page; it is read past the browser's cache. */
 function watchVersion(key, url) {
-  const BUILD = '02eab785747f';
+  const BUILD = 'fc207cbc46ec';
   if (location.protocol === 'file:' || BUILD.indexOf('BUILD_ID') >= 0) return;
   /* At the start it may reload at once; later it waits while a video is being made or saved. */
   const check = first => {

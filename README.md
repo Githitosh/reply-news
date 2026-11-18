@@ -45,6 +45,7 @@ what plays.
 
 - `index.html` – the page, built by `build.py` (one self-contained file)
 - `version.json` – the build id; an old copy kept by the browser loads the new one
+- `terms.html` – the terms of use (Japanese, then English), linked under the genres and in Settings
 - `src/reply.html` – the page source
 - `src/engine.js` – draws the video (1080×1920 portrait, 1920×1080 landscape)
 - `src/ui_ja.js` – Japanese for the page's own words
