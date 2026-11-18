@@ -186,7 +186,7 @@ pre#sources { white-space: pre-wrap; font: 12px/1.5 ui-monospace,Menlo,monospace
   </div>
   <p id="caption" class="caption">Opening Reply News…</p>
   <div id="modeChips" class="music mode"><button type="button" data-mode="match">Matching</button><button type="button" data-mode="reply">Replies</button></div>
-  <p id="matchNote" class="note match-note" hidden>A post about love and a reply are put together at random. The reply was written to another post.</p>
+  <p id="matchNote" class="note match-note" hidden>Two short posts by two people are put together at random. They were not written to each other.</p>
   <p class="music-label" id="genreLabel">Genres</p>
   <div id="genreChips" class="music"></div>
   <form id="ask" class="ask" autocomplete="off">
@@ -476,8 +476,8 @@ async function addTalk(postRaw, replyRaw) {
    The last file read is kept in this browser, so the next visit starts at once and reads the new file meanwhile. */
 const XAPI = 'https://raw.githubusercontent.com/Githitosh/githito.xapi/api/v1/';
 let FEED = [];
-/* Matching News' data from the same API: posts, and lines that can answer a post they were not written to. */
-let MATCH = { posts: [], lines: [] };
+/* Matching News' data from the same API: pre-made pairs of two sayings, or (older) posts and lines. */
+let MATCH = { says: [], pairs: [], posts: [], lines: [] };
 const USED = new Set();
 let AUTO = [];
 let NEXT = null;
@@ -485,14 +485,33 @@ let QUERY = '';
 let feedAt = 0;
 const SHOWN = new Set();
 const goodTalks = list => (Array.isArray(list) ? list : []).filter(t => t && t.id && t.post && t.post.text && Array.isArray(t.replies) && t.replies.some(r => r && r.text));
-const goodMatch = d => ({
-  /* Matching is for posts about love only. */
-  posts: (d && Array.isArray(d.posts) ? d.posts : []).filter(p => p && p.id && p.handle && p.text && p.url && p.genre === 'romance'),
-  lines: (d && Array.isArray(d.lines) ? d.lines : []).filter(l => l && l.id && l.handle && l.text && l.url && l.to),
-});
+const goodMatch = d => {
+  const says = (d && Array.isArray(d.says) ? d.says : []).filter(s => s && s.id && s.handle && s.text && s.url);
+  const byId = new Map(says.map(s => [s.id, s]));
+  const pairs = (d && Array.isArray(d.pairs) ? d.pairs : []).filter(p => {
+    const o = byId.get(p.a), r = byId.get(p.b);
+    return o && r && o.id !== r.id && o.handle.toLowerCase() !== r.handle.toLowerCase();
+  });
+  const byId = Object.fromEntries(says.map(s => [s.id, s]));
+  return {
+    says, byId, pairs,
+    posts: (d && Array.isArray(d.posts) ? d.posts : []).filter(p => p && p.id && p.handle && p.text && p.url && p.genre === 'romance'),
+    lines: (d && Array.isArray(d.lines) ? d.lines : []).filter(l => l && l.id && l.handle && l.text && l.url && l.to),
+  };
+};
+/* One pre-made pair as a talk: the opening saying is the post, the answer is the reply. */
+function pairTalk(p) {
+  const o = (MATCH.byId || {})[p.a], r = (MATCH.byId || {})[p.b];
+  if (!o || !r) return null;
+  return {
+    id: 'p' + p.a + '|' + p.b, match: true, genre: 'match', word: p.word || '', pairKind: p.kind || '',
+    post: { id: o.id, handle: o.handle, text: o.text, url: o.url },
+    replies: [{ id: r.id, handle: r.handle, text: r.text, url: r.url }],
+  };
+}
 function cachedFeed() {
   try { FEED = goodTalks(JSON.parse(store.get('feed.' + uiLang(), '[]'))); } catch (e) { FEED = []; }
-  try { MATCH = goodMatch(JSON.parse(store.get('match.' + uiLang(), '{}'))); } catch (e) { MATCH = { posts: [], lines: [] }; }
+  try { MATCH = goodMatch(JSON.parse(store.get('match.' + uiLang(), '{}'))); } catch (e) { MATCH = { says: [], byId: {}, pairs: [], posts: [], lines: [] }; }
 }
 async function loadFeed() {
   feedAt = Date.now();
@@ -510,16 +529,16 @@ async function loadFeed() {
   const talks = a ? goodTalks(a.talks) : [];
   if (a && (talks.length || !FEED.length)) { FEED = talks; store.set('feed.' + lang, JSON.stringify(talks)); got = true; }
   const m = goodMatch(b);
-  if (m.posts.length && m.lines.length) { MATCH = m; store.set('match.' + lang, JSON.stringify(m)); got = true; }
+  if (m.pairs.length || (m.posts.length && m.lines.length)) { MATCH = m; store.set('match.' + lang, JSON.stringify(m)); got = true; }
   return got;
 }
 /* ---------- Matching News ---------- */
-/* A person's post about love is shown with a reply that somebody else wrote to some other post, drawn at
-   random, as a matching app would put two people together. githito.xapi keeps only replies that bring no subject of
-   their own (a laugh, a "really?"), and says which words a reply needs the post to say ("needs"), so the
-   two read as a talk. Every card says that the match is random, and both people's posts are linked. */
+/* Two short things two people said, put together at random (pairs in the API). Echo pairs (好きだよ / 私も),
+   kin pairs (ディズニー / USJ), and mismatches with nothing in common. Older data falls back to a post plus
+   a line that fits its words. Every card says the match is random; both people's own posts are linked. */
 const mode = () => (store.get('mode', 'match') === 'reply' ? 'reply' : 'match');
-const matchOn = () => mode() === 'match' && MATCH.posts.length > 0 && MATCH.lines.length > 0;
+const matchPairs = () => MATCH.pairs.length > 0;
+const matchOn = () => mode() === 'match' && (matchPairs() || (MATCH.posts.length > 0 && MATCH.lines.length > 0));
 /* What a post says, as words: runs of kanji, of katakana, of Latin letters, of digits. */
 const wordRuns = text => (String(text || '').match(/[一-龯々〆ヶ]+|[ァ-ヴー]{2,}|[A-Za-zＡ-Ｚａ-ｚ]{2,}|[0-9０-９]+/g) || []).map(w => w.toLowerCase());
 /* A line fits a post when the two are different people, the line was not written to this post or to its
@@ -542,7 +561,8 @@ function matchFor(p, taken) {
   const tied = fit.filter(l => (l.needs || []).length);
   const open = fit.filter(l => !(l.needs || []).length);
   const unused = list => { const f = list.filter(l => !USED.has(l.id)); return f.length ? f : list; };
-  const from = tied.length && (!open.length || Math.random() < 0.7) ? unused(tied) : unused(open);
+  /* Mismatches read funnier than replies that echo the post's words — prefer lines with no needs. */
+  const from = open.length ? unused(open) : unused(tied);
   const l = from[Math.floor(Math.random() * from.length)];
   return {
     id: 'm' + p.id, match: true, genre: p.genre, word: p.word || '',
@@ -558,12 +578,12 @@ function paintMode() {
   if ($('home').dataset.name !== name) { $('home').dataset.name = name; $('home').textContent = name; }
   document.title = LOOK.brand[uiLang()] || name;
   document.querySelectorAll('#modeChips button').forEach(b => b.classList.toggle('on', b.dataset.mode === mode()));
-  $('modeChips').hidden = !(MATCH.posts.length && MATCH.lines.length);
+  $('modeChips').hidden = !(matchPairs() || (MATCH.posts.length && MATCH.lines.length));
   $('matchNote').hidden = !on;
   $('sendRow').hidden = !on;
   document.querySelector('.linkbox').classList.toggle('two', on);
 }
-const hasGenre = id => (matchOn() ? MATCH.posts.some(p => p.genre === id) : FEED.some(t => t.genre === id));
+const hasGenre = id => (matchOn() ? (matchPairs() || MATCH.posts.some(p => p.genre === id)) : FEED.some(t => t.genre === id));
 function pickedGenres() { try { const v = JSON.parse(store.get('genres', '[]')); return Array.isArray(v) ? v : []; } catch (e) { return []; } }
 function genreOfChip(chip) { const g = GENRES.find(x => x.name.toLowerCase() === chip.label.toLowerCase()); return g ? g.id : ''; }
 /* Searching the day's talks: every word typed must be in the post, a reply, or the word it was found by. */
@@ -573,11 +593,17 @@ function says(t, q) {
 }
 /* The talks a video may draw from: those that say the words typed, or else those of the chosen genres
    (every genre when none is chosen). */
+function matchSays(t, q) {
+  const hay = (t.post.text + ' ' + (t.replies && t.replies[0] ? t.replies[0].text : '')).toLowerCase();
+  return String(q || '').toLowerCase().split(/\s+/).filter(Boolean).every(w => hay.includes(w));
+}
 function talkPool() {
-  /* Matching News draws posts; the reply is matched when the video is made. */
-  const all = matchOn() ? MATCH.posts.map(p => ({ id: 'm' + p.id, genre: p.genre, word: p.word || '', post: p })) : FEED;
-  if (QUERY) return all.filter(t => says(t, QUERY));
-  /* Matching has one genre, love. */
+  const all = matchOn()
+    ? (matchPairs()
+      ? MATCH.pairs.map(pairTalk).filter(Boolean)
+      : MATCH.posts.map(p => ({ id: 'm' + p.id, genre: p.genre, word: p.word || '', post: p })))
+    : FEED;
+  if (QUERY) return all.filter(t => (matchPairs() ? matchSays : says)(t, QUERY));
   if (matchOn()) return all;
   const picked = pickedGenres().filter(id => all.some(t => t.genre === id));
   return all.filter(t => !picked.length || picked.includes(t.genre));
@@ -603,8 +629,8 @@ function pickAuto(skip) {
   let n = TALKS.reduce((k, t) => k + talkCards(t, langId).length, 0);
   for (const x of order) {
     if (out.length >= room) break;
-    const t = on ? matchFor(x.post, taken) : x;
-    if (!t) continue;
+    let t = x;
+    if (on && !matchPairs()) { t = matchFor(x.post, taken); if (!t) continue; }
     const c = talkCards(t, langId).length;
     if (n + c > MAX_ITEMS) continue;
     out.push(t);
@@ -1755,7 +1781,9 @@ function initUI() {
     const v = $('askText').value.replace(/\s+/g, ' ').trim();
     $('askText').blur();
     if (!v) return;
-    if (!(matchOn() ? MATCH.posts.some(p => says({ post: p, word: p.word }, v)) : FEED.some(t => says(t, v)))) { say("No talks say that in today's data.", true); return; }
+    if (!(matchOn()
+      ? (matchPairs() ? MATCH.pairs.some(p => { const t = pairTalk(p); return t && matchSays(t, v); }) : MATCH.posts.some(p => says({ post: p, word: p.word }, v)))
+      : FEED.some(t => says(t, v)))) { say("No talks say that in today's data.", true); return; }
     QUERY = v;
     $('askText').value = '';
     nextVideo(false);
