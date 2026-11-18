@@ -34,4 +34,4 @@ Settings: layout, color, story length, wallpaper, music and language.
 - `assets/`: wallpapers, music and fonts.
 - `python3 build.py` writes `index.html` and `version.json`.
 
-The version that searched X through a search API is kept under the tag `with-search-api`.
+The version that searched X through a search API is the commit `9c0432e` in this repository's history.
