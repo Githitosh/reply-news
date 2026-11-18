@@ -130,6 +130,7 @@ pre#sources { white-space: pre-wrap; font: 12px/1.5 ui-monospace,Menlo,monospace
 #out.show { display: flex; }
 #out .btn { flex: 1 1 30%; font-size: 14px; }
 .set-title { margin: 0; font: 700 18px "Noto Serif JP",serif; color: var(--ink); }
+.site-link a { color: var(--acc); word-break: break-all; }
 [hidden] { display: none !important; }
 </style>
 </head>
@@ -211,6 +212,14 @@ pre#sources { white-space: pre-wrap; font: 12px/1.5 ui-monospace,Menlo,monospace
       <p class="note">Sensitive posts play at the start: couples' talk in Romance may be suggestive or sexual; jokes and places stay clean. Light Hide sensitive posts to leave them out everywhere. Violence and hard news such as deaths, accidents, disasters, illness, bullying and discrimination never play.</p>
       <label>Sources</label>
       <div id="sourceFilters" class="filters"></div>
+      <label for="mediaIn">Media</label>
+      <div class="x-add">
+        <input id="mediaIn" type="text" spellcheck="false" placeholder="asahi.com">
+        <button type="button" id="addMedia">Add</button>
+      </div>
+      <div id="mediaList" class="music"></div>
+      <p class="note">Type a site's address (asahi.com) or name to add its reports. Press a name to remove it.</p>
+      <p class="note">Reports are chosen by this page's own rules, not by a search engine or ads: newest first from open sources (GDELT and Wikipedia's current events), the same share for every genre, at most two from one site, and drawn at random.</p>
       <label for="xUser">X accounts</label>
       <div class="x-add">
         <input id="xUser" type="text" autocomplete="username" spellcheck="false" placeholder="@name">
@@ -229,7 +238,7 @@ pre#sources { white-space: pre-wrap; font: 12px/1.5 ui-monospace,Menlo,monospace
       <div id="status">Opening Reply News…</div>
       <div id="sprog"><i></i></div>
       <div id="out" class="row"></div>
-      <label class="check"><input type="checkbox" id="forget"> Forget what has played (stories and jokes can play again)</label>
+      <p class="note site-link">Public page: <a href="https://githitosh.github.io/reply-news/" target="_blank" rel="noopener">https://githitosh.github.io/reply-news/</a></p>
     </section>
 
     <details>
@@ -2167,6 +2176,11 @@ const JA = {
   'Shibuya': '渋谷', '2002 World Cup final': '2002年のワールドカップ決勝',
   'At the end': '最後まで再生したら', 'Repeat': '繰り返す',
   'Add an account to load its posts and the replies to them.': 'アカウントを追加すると、そのアカウントの投稿と、返信を読み込みます。',
+  'Web': 'ウェブ', 'Media': 'メディア', 'Public page:': '公開ページ：', 'Searching the web': 'ウェブを探しています',
+  "Type a site's address (asahi.com) or name to add its reports. Press a name to remove it.": 'サイトのアドレス（asahi.com）か名前を入れて「追加」を押すと、そのメディアの記事を読み込みます。名前を押すと外せます。',
+  "Reports are chosen by this page's own rules, not by a search engine or ads: newest first from open sources (GDELT and Wikipedia's current events), the same share for every genre, at most two from one site, and drawn at random.":
+    '記事は、検索エンジンや広告の順位ではなく、このページ独自のルールで選びます。公開されている情報源（GDELT とウィキペディアの「最近の出来事」）から新しい順に集め、どのジャンルも同じ数ずつ、1つのサイトから2件まで、その中からランダムに選びます。',
+  "Type the site's address, like asahi.com": 'asahi.com のようにサイトのアドレスを入れてください',
   'Reply News': 'リプライニュース', 'Reply News settings': 'リプライニュースの設定', 'Opening Reply News…': 'リプライニュースを開いています…',
   'Humor': 'ユーモア', 'News': 'ニュース', 'Pull down to refresh': '引っ張って更新', 'Release to refresh': '離すと更新',
   'Back to video': '動画に戻る', 'Play': '再生', 'Pause': '一時停止', 'Update': '更新', 'Creating…': '作成中…',
@@ -2255,6 +2269,8 @@ const PATTERNS = [
   [/^Reading (.+)$/, m => `${m[1].split(', ').map(tr).join('、')}を読み込んでいます`],
   [/^Loading (@\w+)$/, m => `${m[1]}を読み込んでいます`],
   [/^Removed (@\w+)$/, m => `${m[1]}を外しました`],
+  [/^Removed (.+)$/, m => `${m[1]}を外しました`],
+  [/^Added (.+)$/, m => `${m[1]}を追加しました`],
   [/^Already added (@\w+)$/, m => `${m[1]}はもう追加されています`],
   [/^No posts from (.+) yet$/, m => `${m[1]}の投稿はまだありません`],
   [/^Could not read the JSON: (.*)$/, m => `JSONを読めませんでした：${m[1]}`],
@@ -3093,35 +3109,30 @@ const GENRES = [
   { id: 'romance', name: 'Romance', place: 'middle', q: { JP: '恋愛', US: 'dating relationship' } },
   { id: 'travel', name: 'Travel', place: 'middle', q: { JP: '観光', US: 'travel sightseeing' } },
 ];
+/* Sources: X (on at the start) and Web (open reports, off at the start). Other media are typed in. */
 const SOURCES = [
-  { id: 'x', name: 'X', group: 'X and web' },
-  { id: 'web', name: 'Other web', group: 'X and web' },
-  { id: 'bbc', name: 'BBC', group: 'International' },
-  { id: 'abc', name: 'ABC', group: 'International' },
-  { id: 'reuters', name: 'Reuters', group: 'International' },
-  { id: 'nikkei', name: 'Nikkei', group: 'Japanese media' },
+  { id: 'x', name: 'X' },
+  { id: 'web', name: 'Web' },
 ];
-const RSS = {
-  nikkei: 'https://assets.wor.jp/rss/rdf/nikkei/news.rdf',
-  bbc: 'https://feeds.bbci.co.uk/news/rss.xml',
-  abc: 'https://feeds.abcnews.com/abcnews/topstories',
-  sport: 'https://feeds.bbci.co.uk/sport/rss.xml',
-  science: 'https://feeds.bbci.co.uk/news/science_and_environment/rss.xml',
-  politics: 'https://feeds.bbci.co.uk/news/politics/rss.xml',
-  culture: 'https://feeds.bbci.co.uk/news/entertainment_and_arts/rss.xml',
+/* Words for each genre, in each country. One or two are drawn at random each time, so no single word leads. */
+const GENRE_WORDS = {
+  space: { JP: ['宇宙', 'ロケット', '人工衛星', 'JAXA', '天体'], US: ['space', 'NASA', 'rocket', 'satellite', 'astronomy'] },
+  politics: { JP: ['政治', '国会', '選挙', '首相', '政府'], US: ['politics', 'Congress', 'election', 'senate', 'governor'] },
+  science: { JP: ['科学', '研究', '発見', '実験', '論文'], US: ['science', 'research', 'scientists', 'discovery', 'study'] },
+  culture: { JP: ['文化', '美術', '展覧会', '伝統', '博物館'], US: ['culture', 'museum', 'art', 'exhibition', 'heritage'] },
+  local: { JP: ['地域', '町', '村', '市役所', '商店街'], US: ['local', 'town', 'city council', 'community', 'neighborhood'] },
+  entertainment: { JP: ['芸能', '映画', 'ドラマ', 'アニメ', '音楽'], US: ['movie', 'TV show', 'music', 'celebrity', 'concert'] },
+  safety: { JP: ['警察', '防犯', '交通安全', '消防'], US: ['police', 'public safety', 'fire department', 'traffic safety'] },
+  sports: { JP: ['スポーツ', '野球', 'サッカー', '大相撲', 'バスケ'], US: ['sports', 'NFL', 'NBA', 'baseball', 'soccer'] },
+  food: { JP: ['食べ物', 'グルメ', 'スイーツ', 'ラーメン', '料理'], US: ['food', 'recipe', 'snack', 'dessert', 'cooking'] },
+  restaurant: { JP: ['レストラン', 'カフェ', '飲食店', '新店舗'], US: ['restaurant', 'cafe', 'diner', 'chef'] },
 };
-const SOURCE_LABEL = { nikkei: 'Nikkei', bbc: 'BBC', abc: 'ABC', reuters: 'Reuters' };
-/* Reuters has no open feed: its stories come from a news search limited to reuters.com. */
-function feedOf(id) {
-  if (id !== 'reuters') return RSS[id];
-  return searchFeed('site:reuters.com').replace('(site%3Areuters.com)', 'site%3Areuters.com');
+function genreWords(g) {
+  const c = market().country.id;
+  const w = GENRE_WORDS[g.id];
+  return w ? (w[c] || w.US) : [g.q[c] || g.q.US];
 }
-/* Feeds for an empty lineup, by country. */
-const HOME_FEEDS = { JP: ['nikkei'], US: ['bbc', 'abc', 'reuters'] };
-const HOME_TOPICS = {
-  JP: ['話題', '日本', '政治', '経済', 'スポーツ', '科学', '国際', '社会', '文化', '芸能', 'グルメ', '動物'],
-  US: ['news', 'politics', 'business', 'sports', 'technology', 'world', 'science', 'entertainment', 'odd news', 'animals', 'food', 'travel'],
-};
+const pick = list => list[Math.floor(Math.random() * list.length)];
 const CHIPS = [
   { label: 'Space', line: 'Space' },
   { label: 'Politics', line: 'Politics' },
@@ -3137,8 +3148,6 @@ const CHIPS = [
   { label: 'Travel', line: 'Travel' },
   { label: 'Musk X', line: 'Musk X' },
   { label: 'SpaceX', line: 'SpaceX' },
-  { label: 'Nikkei', line: 'Nikkei' },
-  { label: 'ABC', line: 'ABC' },
   { label: 'Jokes', line: 'Jokes' },
 ];
 const SMALL = new Set(['to', 'and', 'of', 'on', 'for', 'from', 'in', 'at', 'by', 'with', 'the', 'a', 'an', 'into', 'vs']);
@@ -3207,18 +3216,6 @@ function market() {
 function feedMode() { return $('feed').value === 'x' ? 'x' : 'news'; }
 function chosenDate() { const v = $('date').value; return /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : todayJST(); }
 function pastDay() { const d = chosenDate(); return d !== todayJST() ? d : ''; }
-function edition() {
-  const { country, lang } = market();
-  const feed = lang.id === 'both' ? (country.id === 'JP' ? 'ja' : 'en') : lang.id;
-  const hl = feed === 'ja' ? 'ja' : 'en-US';
-  return { hl, gl: country.id, ceid: country.id + ':' + (feed === 'ja' ? 'ja' : 'en') };
-}
-function searchFeed(query) {
-  const e = edition();
-  const day = pastDay();
-  const range = day ? ' after:' + day + ' before:' + addDays(day, 1) : ' when:2d';
-  return 'https://news.google.com/rss/search?q=' + encodeURIComponent('(' + query + ')' + range) + '&hl=' + encodeURIComponent(e.hl) + '&gl=' + e.gl + '&ceid=' + encodeURIComponent(e.ceid);
-}
 /* The language of the jokes: Japanese replies in Japanese, English replies in English. */
 function jokeLang() {
   const { country, lang } = market();
@@ -3292,40 +3289,72 @@ function addAccount() {
 function savedJson(key) { try { return JSON.parse(store.get(key, '{}')) || {}; } catch (e) { return {}; } }
 /* Every genre is used, in its usual place; the lineup chooses what to play. */
 function genreChoices() { return GENRES.map(g => ({ ...g, on: true })); }
-/* Sources taken out of the settings (NHK, Asahi, Yomiuri, AP, CNN, The New York Times):
-   never read, and their stories are skipped. Abroad means BBC, ABC and Reuters only. */
-const GONE = new Set(['nhk', 'asahi', 'yomiuri', 'ap', 'cnn', 'nyt']);
+/* X is on and Web is off at the start. */
+const SOURCE_START = { x: true, web: false };
 function sourceOn(id) {
-  if (GONE.has(id)) return false;
   const box = document.querySelector('.srcf[value="' + id + '"]');
   if (box) return box.checked;
-  return savedJson('sourcesOn')[id] !== false;
+  const saved = savedJson('sources2');
+  return id in saved ? saved[id] !== false : !!SOURCE_START[id];
 }
+/* Media typed in: a site's address, or a name this page knows the address of. */
+const MEDIA_SITES = {
+  'nhk': 'nhk.or.jp', '朝日': 'asahi.com', '朝日新聞': 'asahi.com', '読売': 'yomiuri.co.jp', '読売新聞': 'yomiuri.co.jp',
+  '毎日': 'mainichi.jp', '毎日新聞': 'mainichi.jp', '日経': 'nikkei.com', '日本経済新聞': 'nikkei.com', '産経': 'sankei.com',
+  '産経新聞': 'sankei.com', '東京新聞': 'tokyo-np.co.jp', '共同': 'kyodo', '共同通信': 'kyodo', '時事': 'jiji.com', '時事通信': 'jiji.com',
+  '北國新聞': 'hokkoku.co.jp', '中日新聞': 'chunichi.co.jp',
+  'bbc': 'bbc.com', 'cnn': 'cnn.com', 'reuters': 'reuters.com', 'ap': 'apnews.com', 'abc': 'abcnews.go.com', 'nyt': 'nytimes.com',
+  'new york times': 'nytimes.com', 'guardian': 'theguardian.com', 'npr': 'npr.org', 'al jazeera': 'aljazeera.com',
+};
+function domainOf(name) {
+  const raw = String(name || '').trim();
+  const t = raw.toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').split(/[/?#\s]/)[0];
+  if (/^[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(t)) return t;
+  return MEDIA_SITES[t] || MEDIA_SITES[raw] || '';
+}
+function mediaList() {
+  let list = [];
+  try { list = JSON.parse(store.get('media', '[]')); } catch (e) { list = []; }
+  return (Array.isArray(list) ? list : []).filter(m => domainOf(m)).slice(0, 12);
+}
+function saveMedia(list) {
+  const out = [];
+  (list || []).forEach(m => { const d = domainOf(m); if (d && !out.some(x => domainOf(x) === d) && out.length < 12) out.push(String(m).trim()); });
+  store.set('media', JSON.stringify(out));
+  paintMedia();
+}
+function paintMedia() {
+  const box = $('mediaList');
+  if (!box) return;
+  box.innerHTML = '';
+  mediaList().forEach(m => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = m + ' ×';
+    b.onclick = () => { saveMedia(mediaList().filter(x => x !== m)); say('Removed ' + m); refreshMarket(); };
+    box.appendChild(b);
+  });
+}
+function addMedia() {
+  const raw = $('mediaIn').value.trim();
+  $('mediaIn').value = '';
+  if (!raw) return;
+  if (!domainOf(raw)) { say("Type the site's address, like asahi.com"); return; }
+  if (mediaList().some(m => domainOf(m) === domainOf(raw))) { say('Already added ' + raw); return; }
+  saveMedia(mediaList().concat(raw));
+  say('Added ' + raw);
+  refreshMarket();
+}
+/* The genre a report is about, by the genre's own words (both languages). The first genre that matches wins. */
 function matchedGenre(text, countryId) {
   const hay = String(text || '').toLowerCase();
-  let hit = null;
-  GENRES.forEach(g => {
-    const words = (g.q[countryId] || g.q.US).toLowerCase().split(/\s+/).filter(w => w.length > 1);
-    const en = g.q.US.toLowerCase().split(/\s+/).filter(w => w.length > 2);
-    if (words.concat(en).some(w => hay.includes(w))) hit = g;
-  });
-  return hit;
+  return GENRES.find(g => {
+    const own = GENRE_WORDS[g.id] ? GENRE_WORDS[g.id].JP.concat(GENRE_WORDS[g.id].US) : [];
+    const words = own.concat((g.q[countryId] || g.q.US).split(/\s+/), g.q.US.split(/\s+/)).map(w => w.toLowerCase()).filter(w => w.length > 1);
+    return words.some(w => (/^[a-z ]+$/.test(w) ? new RegExp('\\b' + w + '\\b').test(hay) : hay.includes(w)));
+  }) || null;
 }
-function sourceId(row) {
-  const s = String((row && row.source) || '') + ' ' + String((row && row.link) || '');
-  if (row && (row.x || /^x\b/i.test(String(row.source || '')))) return 'x';
-  if (/nhk/i.test(s)) return 'nhk';
-  if (/reuters|ロイター/i.test(s)) return 'reuters';
-  if (/associated press|\bap news\b|apnews\.com/i.test(s)) return 'ap';
-  if (/nikkei|日経/i.test(s)) return 'nikkei';
-  if (/\bbbc\b|bbc\.co/i.test(s)) return 'bbc';
-  if (/\babc\b|abcnews|abc\.go\.com/i.test(s)) return 'abc';
-  if (/\bcnn\b|cnn\.com/i.test(s)) return 'cnn';
-  if (/new york times|\bnyt\b|nytimes\.com/i.test(s)) return 'nyt';
-  if (/asahi|朝日/i.test(s)) return 'asahi';
-  if (/yomiuri|読売/i.test(s)) return 'yomiuri';
-  return 'web';
-}
+function sourceId(row) { return row && (row.x || /^x\b/i.test(String(row.source || ''))) ? 'x' : 'web'; }
 /* Violence never plays in Reply News; there is no setting for it. */
 function violentHidden() { return true; }
 /* Hard news never plays in Reply News, in any setting: deaths, accidents, disasters, illness, bullying, discrimination. */
@@ -3344,11 +3373,11 @@ function saveFilters() {
     const box = document.querySelector('.srcf[value="' + s.id + '"]');
     sources[s.id] = !!(box && box.checked);
   });
-  store.set('sourcesOn', JSON.stringify(sources));
+  store.set('sources2', JSON.stringify(sources));
   store.set('hideSensitive3', sensitiveHidden() ? '1' : '0');
 }
 function buildFilters() {
-  const savedS = savedJson('sourcesOn');
+  const savedS = savedJson('sources2');
   /* Hide sensitive posts starts off: sensitive couple talk plays until the button is lit. */
   [['hideSensitive', 'hideSensitive3']].forEach(([id, key]) => {
     const b = $(id);
@@ -3372,7 +3401,7 @@ function buildFilters() {
     input.type = 'checkbox';
     input.className = 'srcf';
     input.value = s.id;
-    input.checked = savedS[s.id] !== false;
+    input.checked = s.id in savedS ? savedS[s.id] !== false : !!SOURCE_START[s.id];
     input.onchange = () => { saveFilters(); refreshMarket(); };
     lab.appendChild(input);
     lab.appendChild(document.createTextNode(s.name));
@@ -3380,21 +3409,16 @@ function buildFilters() {
   });
 }
 
-/* ---------- what has played: never play it again ---------- */
-const SEEN_NEWS = 'seenNews';
-const SEEN_JOKES = 'seenJokes';
-function seenSet(key) {
-  let list = [];
-  try { list = JSON.parse(store.get(key, '[]')); } catch (e) { list = []; }
-  if (key === SEEN_NEWS) { try { list = list.concat(JSON.parse(store.get('seen', '[]'))); } catch (e) {} }
-  return new Set(Array.isArray(list) ? list : []);
-}
+/* ---------- what has played: remembered in this visit only ---------- */
+/* Nothing piles up in storage: the choice is random each time, and only what played in this visit is skipped. */
+const SEEN_NEWS = 'news';
+const SEEN_JOKES = 'jokes';
+const RECENT = { news: [], jokes: [] };
+function seenSet(key) { return new Set(RECENT[key] || []); }
 function remember(key, keys, cap) {
-  let prev = [];
-  try { prev = JSON.parse(store.get(key, '[]')); } catch (e) { prev = []; }
-  const all = keys.concat(Array.isArray(prev) ? prev : []).filter((k, i, a) => k && a.indexOf(k) === i).slice(0, cap);
-  store.set(key, JSON.stringify(all));
+  RECENT[key] = keys.concat(RECENT[key] || []).filter((k, i, a) => k && a.indexOf(k) === i).slice(0, cap);
 }
+try { ['seenNews', 'seenJokes', 'seen', 'gen'].forEach(k => localStorage.removeItem('replyNews.' + k)); } catch (e) {}
 function squash(text) { return String(text || '').toLowerCase().replace(/[\s　"'“”‘’「」『』（）()\[\]【】、。，．,.!?！？…・:：;；\-–—~〜ｗw]+/g, ''); }
 function newsKeys(row) {
   const keys = ['h:' + squash(row.headline).slice(0, 60)];
@@ -3419,63 +3443,12 @@ function playingKeys() {
   return keys;
 }
 
-/* ---------- news ---------- */
-let feedMemo = new Map();
-function beginCollect() { feedMemo = new Map(); }
-function rssItems(xml) {
-  const items = [];
-  const re = /<item\b[^>]*>([\s\S]*?)<\/item>/g;
-  let m;
-  const decode = s => String(s || '').replace(/<!\[CDATA\[|\]\]>/g, '').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'").trim();
-  while ((m = re.exec(xml))) {
-    const block = m[1];
-    const title = decode((block.match(/<title>([\s\S]*?)<\/title>/) || [])[1]);
-    const link = decode((block.match(/<link>([\s\S]*?)<\/link>/) || [])[1] || (block.match(/<link\b[^>]*rdf:resource="([^"]+)"/) || [])[1] || (block.match(/<guid[^>]*>([\s\S]*?)<\/guid>/) || [])[1]);
-    const pubDate = decode((block.match(/<pubDate>([\s\S]*?)<\/pubDate>/) || [])[1] || (block.match(/<dc:date>([\s\S]*?)<\/dc:date>/) || [])[1]);
-    if (title) items.push({ title, link, pubDate });
-  }
-  return items;
-}
-async function loadNewsRows(rss) {
-  try {
-    const res = await withTimeout(fetch('https://r.jina.ai/' + rss, { headers: { 'X-Return-Format': 'text' } }), 12000);
-    if (res.ok) {
-      const parsed = rssItems(await res.text());
-      if (parsed.length) return parsed;
-    }
-  } catch (e) { console.warn(e); }
-  try {
-    const res = await withTimeout(fetch('https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(rss) + '&count=20'), 8000);
-    if (res.ok) {
-      const j = await res.json();
-      if (j && j.status === 'ok') return (j.items || []).map(it => ({ title: it.title || '', link: it.link || '', pubDate: it.pubDate || '' }));
-    }
-  } catch (e) { console.warn(e); }
-  return [];
-}
-function cachedNews(url) {
-  if (!feedMemo.has(url)) feedMemo.set(url, loadNewsRows(url));
-  return feedMemo.get(url);
-}
-function splitHeadline(title) {
-  const raw = String(title || '').trim();
-  const parts = raw.split(/\s[-–—]\s/);
-  if (parts.length < 2) return { headline: raw, source: '' };
-  const tail = parts[parts.length - 1].trim();
-  const publisher = tail.length <= 32 && tail.split(/\s+/).length <= 4 && !/[.?!。]/.test(tail);
-  if (!publisher) return { headline: raw, source: '' };
-  return { headline: parts.slice(0, -1).join(' - ').trim(), source: tail };
-}
-function rowsFromItems(items, source, cat) {
-  const rows = [];
-  (items || []).forEach(it => {
-    const sp = splitHeadline(it.title);
-    if (!sp.headline || sp.headline.length < 8) return;
-    rows.push({ headline: sp.headline, link: it.link || '', pubDate: it.pubDate || '', cat: cat || 'NEWS', source: source || sp.source || 'News' });
-  });
-  return rows;
-}
-async function searchRows(query, cat) { return rowsFromItems(await cachedNews(searchFeed(query)), '', cat); }
+/* ---------- reports, chosen by this page's own fair rules ---------- */
+/* No search engine or ad ranking decides what plays. Reports come from open sources, newest first:
+   GDELT (an open database of news from sites around the world) and Wikipedia's current events,
+   written by volunteers. Then every genre gets the same share, one site gives at most two reports,
+   and the reports are drawn at random from what is left. */
+function beginCollect() {}
 function mergeRows(first, second) {
   const out = [];
   const seen = new Set();
@@ -3487,22 +3460,128 @@ function mergeRows(first, second) {
   });
   return out;
 }
+/* A report's title without the site's name at the end (… - 朝日新聞, … | site.jp). */
+function cleanTitle(title) {
+  const raw = String(title || '').replace(/\s+/g, ' ').trim();
+  const m = raw.match(/^(.*\S)\s+[-–—|｜]\s+([^|｜]{1,40})$/);
+  if (!m) return raw;
+  const tail = m[2].trim();
+  const site = /\.[a-z]{2,}$/i.test(tail) || (tail.split(/\s+/).length <= 4 && !/[.?!。？！]/.test(tail));
+  return site && m[1].length >= 8 ? m[1].trim() : raw;
+}
 let gdeltNext = 0;
-async function gdeltRows(query, cat, source) {
+function gdeltRange() {
+  const d = pastDay().replace(/-/g, '');
+  return d ? `&startdatetime=${d}000000&enddatetime=${d}235959` : '&timespan=3d';
+}
+async function gdeltList(query, max) {
   const wait = gdeltNext - Date.now();
   if (wait > 0) await sleep(wait);
   gdeltNext = Date.now() + 5200;
-  const url = 'https://api.gdeltproject.org/api/v2/doc/doc?query=' + encodeURIComponent(query) + '&mode=artlist&maxrecords=12&format=json&sort=datedesc&timespan=7d';
+  const url = 'https://api.gdeltproject.org/api/v2/doc/doc?query=' + encodeURIComponent(query) + '&mode=artlist&format=json&sort=datedesc&maxrecords=' + (max || 75) + gdeltRange();
   try {
-    const res = await withTimeout(fetch(url), 8000);
+    const res = await withTimeout(fetch(url), 10000);
     const text = await res.text();
     if (!res.ok || !text || text[0] !== '{') return [];
-    const j = JSON.parse(text);
-    return (j.articles || []).map(a => ({
-      headline: String(a.title || '').replace(/\s[-–—]\s[^-–—]+$/, '').trim(),
-      link: a.url || '', pubDate: a.seendate || '', cat: cat || 'NEWS', source: source || a.domain || 'News',
-    })).filter(r => r.headline);
+    return (JSON.parse(text).articles || []).map(a => ({
+      headline: cleanTitle(a.title),
+      link: a.url || '', pubDate: a.seendate || '', source: a.domain || 'Web', domain: a.domain || '', cat: 'NEWS', web: true,
+    })).filter(r => r.headline && r.headline.length >= 8);
   } catch (e) { console.warn(e); return []; }
+}
+function wikiPlain(line) {
+  return String(line || '')
+    .replace(/<ref[^>]*\/>/g, '').replace(/<ref[^>]*>[\s\S]*?<\/ref>/g, '').replace(/\{\{[^{}]*\}\}/g, '')
+    .replace(/\[\[(?:[^\]|]*\|)?([^\]]+)\]\]/g, '$1').replace(/\[https?:\/\/\S+\s+([^\]]+)\]/g, '$1').replace(/\[https?:\/\/\S+\]/g, '')
+    .replace(/'{2,}/g, '').replace(/<[^>]+>/g, '').replace(/^[*#:;\s]+/, '').replace(/\s+/g, ' ').trim();
+}
+/* Wikipedia's current events: Portal:最近の出来事 in Japanese, the day's Portal:Current events pages in English. */
+const MONTH_EN = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+async function wikiNews() {
+  const lang = jokeLang();
+  const day = new Date((chosenDate() || todayJST()) + 'T12:00:00+09:00');
+  const pages = lang === 'en'
+    ? [0, 1].map(k => { const d = new Date(day.getTime() - k * 864e5); return 'Portal:Current_events/' + d.getFullYear() + '_' + MONTH_EN[d.getMonth()] + '_' + d.getDate(); })
+    : ['Portal:最近の出来事'];
+  const lists = await Promise.all(pages.map(async page => {
+    try {
+      const res = await withTimeout(fetch(`https://${lang}.wikipedia.org/w/api.php?action=parse&prop=wikitext&format=json&origin=*&page=` + encodeURIComponent(page)), 9000);
+      if (!res.ok) return [];
+      const wt = String((((await res.json()).parse || {}).wikitext || {})['*'] || '');
+      const home = `https://${lang}.wikipedia.org/wiki/` + encodeURIComponent(page);
+      return wt.split('\n').filter(l => /^\*/.test(l)).map(l => {
+        const ref = (l.match(/https?:\/\/[^\s|\]}<]+/) || [])[0] || '';
+        return { headline: wikiPlain(l), link: ref || home, pubDate: '', source: 'Wikipedia', domain: ref ? ((ref.match(/^https?:\/\/([^/]+)/) || [])[1] || 'wikipedia.org') : 'wikipedia.org', cat: 'NEWS', web: true };
+      }).filter(r => charLen(r.headline) >= (lang === 'en' ? 40 : 15) && charLen(r.headline) <= 220);
+    } catch (e) { console.warn(e); return []; }
+  }));
+  return lists.flat();
+}
+/* Reports for some genres (or the words of a free request), from Web and the media typed in. */
+async function webRows(opts) {
+  const lang = jokeLang();
+  const domains = mediaList().map(domainOf).filter(Boolean);
+  const jobs = [];
+  const words = opts.words || (opts.genres || []).flatMap(g => shuffle(genreWords(g)).slice(0, 2));
+  const q = words.filter(w => w && [...w].length >= 2).map(w => (/\s/.test(w) ? `"${w}"` : w));
+  if (domains.length) {
+    say('Searching ' + mediaList().join(', '));
+    jobs.push(gdeltList(`(${domains.map(d => 'domain:' + d).join(' OR ')})`, 75).then(rows => rows.map(r => ({ ...r, media: true }))));
+  }
+  if (sourceOn('web') && q.length) {
+    say('Searching the web');
+    jobs.push(gdeltList(`(${q.join(' OR ')}) sourcelang:${lang === 'ja' ? 'japanese' : 'english'}`, 75));
+    if (!opts.words) jobs.push(wikiNews());
+  }
+  let rows = (await Promise.all(jobs)).flat();
+  /* For a free request, media reports are kept only when they are about it. */
+  if (opts.words) {
+    const low = opts.words.map(w => w.toLowerCase());
+    rows = rows.filter(r => !r.media || low.some(w => r.headline.toLowerCase().includes(w)));
+  }
+  return rows.filter(allowedRow);
+}
+/* Fair choice: the same share for each genre, at most two per site, drawn at random. */
+function fairPick(rows, need, genres, used) {
+  const { country } = market();
+  const past = seenSet(SEEN_NEWS);
+  const now = playingKeys();
+  const buckets = new Map();
+  mergeRows(rows, []).forEach(r => {
+    const keys = newsKeys(r);
+    if (keys.some(k => past.has(k) || now.has(k) || used.has(k))) return;
+    const g = matchedGenre(r.headline, country.id);
+    const rec = g && genres.find(x => x.id === g.id);
+    const id = rec ? rec.id : 'other';
+    if (!buckets.has(id)) buckets.set(id, []);
+    buckets.get(id).push({ ...r, place: rec ? rec.place : 'middle', cat: rec ? up(rec.name) : 'NEWS' });
+  });
+  const lists = shuffle([...buckets.values()].map(list => shuffle(list)));
+  const out = [];
+  const perSite = {};
+  /* At most two per site, or more when there are only a few sites (one medium typed in). */
+  const sites = new Set([...buckets.values()].flat().map(r => r.domain || r.source || 'web')).size || 1;
+  const cap = Math.max(2, Math.ceil(need / sites));
+  for (let round = 0; out.length < need && lists.some(l => l.length) && round < 200; round++) {
+    lists.forEach(l => {
+      while (out.length < need && l.length) {
+        const r = l.shift();
+        const site = r.domain || r.source || 'web';
+        if ((perSite[site] || 0) >= cap) continue;
+        perSite[site] = (perSite[site] || 0) + 1;
+        newsKeys(r).forEach(k => used.add(k));
+        out.push(r);
+        break;
+      }
+    });
+  }
+  const band = { top: 0, middle: 1, bottom: 2 };
+  return out.sort((a, b) => (band[a.place] ?? 1) - (band[b.place] ?? 1));
+}
+async function webNews(used, need) {
+  if (!need || (!sourceOn('web') && !mediaList().length)) return [];
+  const genres = genreChoices().filter(g => g.on && GENRE_WORDS[g.id]);
+  return fairPick(await webRows({ genres }), need, genres, used);
 }
 async function fxJson(url) {
   const res = await withTimeout(fetch(url), 9000);
@@ -3559,10 +3638,8 @@ function classifyRequest(text) {
     const topic = name.replace(/\s*(?:on\s+)?(?:x|twitter|エックス)\s*$/i, '').trim();
     return { type: 'x', q: topic || 'news', topic: topic || 'news', cat: 'X', label: name };
   }
-  if (/日経|nikkei/.test(low)) return { type: 'rss', rss: RSS.nikkei, gdelt: '日経 OR nikkei', cat: 'NIKKEI', source: 'Nikkei', label: name };
-  if (/^abc$|abc news/.test(low)) return { type: 'rss', rss: RSS.abc, gdelt: 'ABC news', cat: 'ABC', source: 'ABC', label: name };
-  if (/食文化|food culture|^food$|食べ物/.test(low)) return { type: 'gdelt', q: market().country.id === 'JP' ? '食べ物' : 'food', cat: 'FOOD', source: 'News', label: name };
-  if (/レストラン|^restaurant$/.test(low)) return { type: 'gdelt', q: market().country.id === 'JP' ? 'レストラン' : 'restaurant', cat: 'RESTAURANT', source: 'News', label: name };
+  if (/食文化|food culture|^food$|食べ物/.test(low)) return Object.assign(requestForGenre(GENRES.find(g => g.id === 'food')), { label: name });
+  if (/レストラン|^restaurant$/.test(low)) return Object.assign(requestForGenre(GENRES.find(g => g.id === 'restaurant')), { label: name });
   const genre = GENRES.find(g => g.name.toLowerCase() === low || (g.q.JP && name.includes(g.q.JP.split(' ')[0]) && g.q.JP.split(' ')[0].length > 1));
   if (genre) return Object.assign(requestForGenre(genre), { label: name });
   if (/スポーツ|^sports$/.test(low)) return requestForGenre(GENRES.find(g => g.id === 'sports'));
@@ -3571,26 +3648,15 @@ function classifyRequest(text) {
 }
 function requestForGenre(g) {
   const name = g.name;
-  const { country } = market();
-  const q = g.q[country.id] || g.q.US;
-  if (g.id === 'sports') return { type: 'rss', rss: RSS.sport, gdelt: country.id === 'JP' ? 'スポーツ' : 'sports', cat: 'SPORTS', source: 'BBC', label: name };
-  if (g.id === 'science') return { type: 'rss', rss: RSS.science, gdelt: country.id === 'JP' ? '科学' : 'science', cat: 'SCIENCE', source: 'BBC', label: name };
-  if (g.id === 'politics') return { type: 'rss', rss: RSS.politics, gdelt: country.id === 'JP' ? '政治' : 'politics', cat: 'POLITICS', source: 'BBC', label: name };
-  if (g.id === 'culture' || g.id === 'entertainment') return { type: 'rss', rss: RSS.culture, gdelt: q, cat: name.toUpperCase(), source: 'BBC', label: name };
-  if (g.id === 'food') return { type: 'gdelt', q, cat: 'FOOD', source: 'News', label: name };
-  if (g.id === 'restaurant') return { type: 'gdelt', q, cat: 'RESTAURANT', source: 'News', label: name };
-  if (g.id === 'space') return { type: 'rss', rss: RSS.science, hint: /space|nasa|rocket|satellite|telescope|宇宙|ロケット/i, gdelt: q, cat: 'SPACE', source: 'BBC', label: name };
-  if (g.id === 'local') return { type: 'gdelt', q, cat: 'LOCAL', source: 'News', label: name };
   if (g.id === 'romance') return { type: 'romance', cat: 'ROMANCE', label: name };
   if (g.id === 'travel') return { type: 'travel', cat: 'TRAVEL', label: name };
-  if (g.id === 'safety') return { type: 'rss', rss: RSS.bbc, hint: /police|arrest|crime|safety|security|警察|治安|逮捕/i, gdelt: q, cat: 'PUBLIC SAFETY', source: 'BBC', label: name };
-  return { type: 'gdelt', q, cat: name.toUpperCase(), source: 'News', label: name };
+  return { type: 'genre', genre: g.id, cat: up(name), label: name };
 }
 function allowedRow(r) {
   if (!r || !r.headline) return false;
   if (violentHidden() && VIOLENT.test(r.headline)) return false;
   if (sensitive(r.headline)) return false;
-  return sourceOn(sourceId(r));
+  return true;
 }
 async function rowsForSlot(slot) {
   let rows = [];
@@ -3598,13 +3664,11 @@ async function rowsForSlot(slot) {
     if (slot.type === 'x') {
       if (!sourceOn('x')) return [];
       rows = (await searchPosts(slot.q + xRange())).map(r => ({ ...r, cat: slot.cat || 'X' }));
-    } else if (slot.type === 'rss' && slot.rss) {
-      if (!pastDay()) rows = rowsFromItems(await cachedNews(slot.rss), slot.source, slot.cat);
-      if (slot.hint) rows = rows.filter(r => slot.hint.test(r.headline));
-      if (slot.gdelt) rows = mergeRows(rows, await searchRows(slot.gdelt, slot.cat));
-    } else if (slot.type === 'gdelt') {
-      rows = await searchRows(slot.q, slot.cat);
-      if (rows.length < (slot.count || 1)) rows = mergeRows(rows, await gdeltRows(slot.q, slot.cat, slot.source));
+    } else if (slot.type === 'genre') {
+      const g = GENRES.find(x => x.id === slot.genre);
+      rows = g ? await webRows({ genres: [g] }) : [];
+    } else if (slot.free) {
+      rows = await webRows({ words: termsOf(slot.label, jokeLang()) });
     }
   } catch (e) { console.warn(e); }
   return rows.filter(allowedRow);
@@ -3635,44 +3699,8 @@ function takeRows(rows, used, count, perSource) {
   if (perSource) pass(0);
   return out;
 }
-/* An empty lineup: the country's papers, then topic searches until five new reports are found. */
-async function homeNews(used, need) {
-  const { country } = market();
-  const ids = HOME_FEEDS[country.id] || HOME_FEEDS.JP;
-  const n = Number(store.get('gen', '0')) || 0;
-  store.set('gen', String(n + 1));
-  const order = ids.slice(n % ids.length).concat(ids.slice(0, n % ids.length));
-  const genres = genreChoices();
-  const shape = rows => rows.map(r => {
-    const g = matchedGenre(r.headline, country.id);
-    const rec = g ? genres.find(x => x.id === g.id) : null;
-    if (rec && !rec.on) return null;
-    return { ...r, place: rec ? rec.place : 'middle', cat: rec ? up(rec.name) : (r.cat || 'NEWS') };
-  }).filter(Boolean);
-  let pool = [];
-  if (!pastDay()) {
-    for (let i = 0; i < order.length; i++) {
-      if (S.again) break;
-      const id = order[i];
-      if (!sourceOn(id)) continue;
-      say('Searching ' + SOURCE_LABEL[id]);
-      progress(0.06 + 0.05 * i);
-      pool = mergeRows(pool, shape(rowsFromItems(await cachedNews(feedOf(id)), id === 'reuters' ? '' : SOURCE_LABEL[id], 'NEWS').filter(allowedRow)));
-    }
-  }
-  let fresh = shuffle(freshRows(pool, used));
-  const topics = shuffle(HOME_TOPICS[country.id] || HOME_TOPICS.JP);
-  for (let t = 0; fresh.length < need && t < topics.length && t < 6; t++) {
-    if (S.again) break;
-    say('Searching ' + topics[t]);
-    const more = shape((await searchRows(topics[t], 'NEWS')).filter(allowedRow));
-    pool = mergeRows(pool, more);
-    fresh = mergeRows(fresh, shuffle(freshRows(more, used)));
-  }
-  const picked = takeRows(fresh, used, need, 2);
-  const band = { top: 0, middle: 1, bottom: 2 };
-  return picked.sort((a, b) => (band[a.place] ?? 1) - (band[b.place] ?? 1));
-}
+/* An empty lineup: reports for all genres, chosen fairly (see fairPick). */
+async function homeNews(used, need) { return webNews(used, need); }
 
 /* ---------- jokes ---------- */
 const FUNNY_Q = { ja: '(笑 OR 草 OR ワロタ OR 面白い)', en: '(lol OR lmao OR haha OR hilarious)' };
@@ -4425,19 +4453,22 @@ async function collect() {
        and today's news in each chosen genre, in the genres' Top, Middle, Bottom order. */
     say('Searching X');
     progress(0.1);
-    topicSlots.filter(s => !s.free).forEach(s => topicWords.push(s.who ? 'to:' + s.who : (s.topic || s.q || s.gdelt || s.label)));
+    /* Genres give a word drawn at random from their own list; no news ranking is used. */
+    topicSlots.filter(s => !s.free).forEach(s => {
+      const g = s.genre && GENRES.find(x => x.id === s.genre);
+      const w = s.who ? 'to:' + s.who : g ? pick(genreWords(g)) : (s.topic || s.q || s.label);
+      topicWords.push(w);
+      if (g) topicPlace[w] = g.place;
+    });
     /* A free request: jokes about the same thing, and nothing else is added. */
     freeSlots.forEach(s => topicWords.push(termsOf(s.label, jokeLang()).join(' ')));
     if (topicWords.length < 3 && !onlySpecial && !freeSlots.length) {
-      const chosen = shuffle(genreChoices().filter(g => g.on && g.id !== 'romance' && g.id !== 'travel')).slice(0, 6);
-      const lists = await Promise.all(chosen.map(g => searchRows(g.q[country.id] || g.q.US, up(g.name)).then(rows => rows.filter(allowedRow)).catch(() => [])));
-      chosen.forEach((g, i) => {
-        lists[i].slice(0, 3).forEach(r => keywordsFor(r.headline, jokeLang()).forEach(w => { topicWords.push(w); topicPlace[w] = g.place; }));
+      /* An empty lineup: every genre has the same chance; each gives one word drawn at random. */
+      shuffle(genreChoices().filter(g => g.on && GENRE_WORDS[g.id])).slice(0, 6).forEach(g => {
+        const w = pick(genreWords(g));
+        topicWords.push(w);
+        topicPlace[w] = g.place;
       });
-    }
-    if (topicWords.length < 3 && !onlySpecial && !freeSlots.length) {
-      const news = await homeNews(new Set(), 8).catch(() => []);
-      news.forEach(r => keywordsFor(r.headline, jokeLang()).forEach(w => topicWords.push(w)));
     }
     jokeAt = 0;
   } else if (topicSlots.length) {
@@ -4451,7 +4482,6 @@ async function collect() {
       say('Searching ' + (slot.label || slot.cat || 'news'));
       progress(0.08 + 0.4 * slots.indexOf(slot) / slots.length);
       let rows = freshRows(await rowsForSlot(slot), used);
-      if (rows.length < slot.count && slot.type !== 'x') rows = mergeRows(rows, freshRows((await searchRows(slot.label, slot.cat)).filter(allowedRow), used));
       takeRows(shuffle(rows), used, slot.count, 0).forEach(r => sequence.push(r));
     }
   } else {
@@ -4771,8 +4801,8 @@ async function runAll(opts) {
   try {
     progress(1);
     await setScript(script, true);
-    remember(SEEN_NEWS, script.played.news, 1200);
-    remember(SEEN_JOKES, script.played.jokes, 3000);
+    remember(SEEN_NEWS, script.played.news, 600);
+    remember(SEEN_JOKES, script.played.jokes, 600);
     if (opts.export) await exportMP4(chosenFormats());
   } catch (e) {
     console.error(e);
@@ -5390,6 +5420,9 @@ function initUI() {
   saveAccounts(xAccounts());
   $('addX').onclick = addAccount;
   $('xUser').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addAccount(); } });
+  paintMedia();
+  $('addMedia').onclick = addMedia;
+  $('mediaIn').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addMedia(); } });
   const saveMarket = () => { store.set('country', countryBox.value); store.set('lang', langBox.value); };
   buildFilters();
   countryBox.onchange = () => {
@@ -5403,15 +5436,6 @@ function initUI() {
   const saved = (store.get('formats', '') || '').split(',').filter(f => FORMATS[f]);
   const on = saved.length ? saved : Object.keys(FORMATS);
   document.querySelectorAll('.fx').forEach(x => { x.checked = on.includes(x.value); x.onchange = () => store.set('formats', chosenFormats().join(',')); });
-  $('forget').checked = false;
-  $('forget').onchange = () => {
-    if (!$('forget').checked) return;
-    store.set(SEEN_NEWS, '[]');
-    store.set(SEEN_JOKES, '[]');
-    store.set('seen', '[]');
-    say('Forgot what has played. Stories and jokes can play again.');
-    setTimeout(() => { $('forget').checked = false; }, 1200);
-  };
   const lineup = $('lineup');
   lineup.value = store.get('lineup', '').split(/\n/).map(noCount).filter(Boolean).join('\n');
   store.set('lineup', lineup.value);
@@ -5547,7 +5571,7 @@ E.setMusicCredit(TRACKS[0].credit);
 /* A newer copy on the site: load it, so a copy the browser kept from before is not shown.
    version.json names the latest build of each page; it is read past the browser's cache. */
 function watchVersion(key, url) {
-  const BUILD = 'a4fe690adf45';
+  const BUILD = 'a72315b56440';
   if (location.protocol === 'file:' || BUILD.indexOf('BUILD_ID') >= 0) return;
   /* At the start it may reload at once; later it waits while a video is being made or saved. */
   const check = first => {

@@ -7,6 +7,26 @@ posts from famous places (観光), made in the browser. Settings, the item count
 (5 / 10 / 20), story length, wallpaper and music are chosen on the page, and
 Download saves the video as an MP4.
 
+## How posts and reports are chosen
+
+No search engine, news aggregator or ad ranking decides what plays. The page uses
+its own rules:
+
+- **X** (on at the start): posts and replies found by X search for words of each
+  genre (one word drawn at random per genre), a free request typed in the lineup,
+  or an added account. Jokes, couples' talk and travel posts are chosen by this
+  page's own word rules, never by likes or views.
+- **Web** (off at the start) and **media typed in** (a site's address, like
+  asahi.com): reports from GDELT, an open database of news from sites around the
+  world, newest first, and Wikipedia's current events, written by volunteers.
+- Every genre gets the same share, one site gives at most two reports (more only
+  when few sites are chosen), and the reports are drawn at random.
+- Nothing that has played is stored: only what played in this visit is skipped.
+
+Google Fonts (the typefaces) and Google's translation service (only when a post
+is in the other language) are the remaining outside services; neither chooses
+what plays.
+
 ## Files
 
 - `index.html` – the page, built by `build.py` (one self-contained file)
