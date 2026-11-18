@@ -3681,17 +3681,6 @@ function isFunny(text, lang) {
   const t = String(text || '').replace(/笑顔|笑み|民草|草の根/g, '');
   return /笑|ワロタ|ワロ[^ッ]|草草|(?:^|[\s　、。！？(（])草(?:$|[\s　、。！？)）])|[てでにのが]草(?=$|[\s　、。！？)）ｗw]|$)|ｗ{2,}|w{2,}|😂|🤣|😆|😅|面白い|冗談|ウケる/.test(t);
 }
-function focusJoke(text, lang) {
-  const chars = [...text];
-  const max = lang === 'en' ? 140 : 42;
-  if (chars.length <= max) return text;
-  const m = lang === 'en' ? text.match(/\b(lol|lmao|haha\w*|hilarious)\b|😂|🤣/i) : text.match(/笑|ワロタ|草草|ｗｗ|www|😂|🤣|😆|面白い|冗談|ウケる/);
-  const at = m ? [...text.slice(0, m.index)].length : 0;
-  const keep = max - 2;
-  const start = Math.max(0, at - Math.floor(keep * 0.4));
-  const slice = chars.slice(start, start + keep).join('').trim();
-  return (start ? '…' : '') + slice + (start + keep < chars.length ? '…' : '');
-}
 /* Comments that never play: adult words, minors, abuse. */
 /* Sexual words: only couples' talk may have them, and only with Hide sensitive posts off. */
 const ADULT = /セックス|エッチ|えっち|ｴｯﾁ|エロ|下ネタ|ヤる|ヤれ|体位|下着|裸|おっぱい|乳首|ちんこ|ちんちん|まんこ|射精|中出し|勃起|ムラムラ|性欲|童貞|処女|ラブホ|\bsex|nsfw|nude|naked|horny|kinky/i;
@@ -3732,8 +3721,10 @@ function replyOf(st, lang) {
     if ([...text].length < 8 || /ご冥福|追悼|亡くな|お悔やみ|ご逝去|死去/.test(text)) return null;
   }
   if (!isFunny(text, lang)) return null;
+  /* The whole comment always plays; one too long to read on a card is left out instead of cut. */
+  if (charLen(text) > (lang === 'en' ? 200 : 70)) return null;
   const url = (st && st.url) || '';
-  return { handle: author, text: focusJoke(text, lang), url, link: url, lang };
+  return { handle: author, text, url, link: url, lang };
 }
 function humorScore(text, headlines, lang) {
   let score = 0;
@@ -4176,7 +4167,7 @@ async function collectTopic(slot, need) {
     if (!handle || !body || authors.has(handle.toLowerCase())) return;
     if (UNSAFE.test(body) || VIOLENT.test(body) || sensitive(body, st) || AD.test(raw) || (raw.match(/[#＃]/g) || []).length > 3) return;
     const n = charLen(body);
-    if (lang === 'ja' ? (n < 6 || n > 140 || !/[぀-ヿ]/.test(body)) : (n < 12 || n > 240)) return;
+    if (lang === 'ja' ? (n < 6 || n > 90 || !/[぀-ヿ]/.test(body)) : (n < 12 || n > 220)) return;
     const low = (raw + ' ' + body).toLowerCase();
     const hits = terms.filter(w => low.includes(w)).length;
     if (!hits) return;
@@ -4214,7 +4205,7 @@ async function collectAccounts(need) {
       if (n >= per || handleOf(st).toLowerCase() !== h.toLowerCase()) return;
       const text = postText(st);
       const id = statusId(st);
-      if (!id || !ok(st, text) || charLen(text) < 4 || jokeKeys({ text, link: st.url || '' }).some(seen)) return;
+      if (!id || !ok(st, text) || charLen(text) < 4 || charLen(text) > (CJK.test(text) ? 120 : 260) || jokeKeys({ text, link: st.url || '' }).some(seen)) return;
       threads.push({ post: { handle: handleOf(st), text, url: st.url || '', id }, replies: [] });
       n++;
     });
@@ -5556,7 +5547,7 @@ E.setMusicCredit(TRACKS[0].credit);
 /* A newer copy on the site: load it, so a copy the browser kept from before is not shown.
    version.json names the latest build of each page; it is read past the browser's cache. */
 function watchVersion(key, url) {
-  const BUILD = '750baf39143d';
+  const BUILD = 'a4fe690adf45';
   if (location.protocol === 'file:' || BUILD.indexOf('BUILD_ID') >= 0) return;
   /* At the start it may reload at once; later it waits while a video is being made or saved. */
   const check = first => {
