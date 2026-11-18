@@ -3559,11 +3559,11 @@ function threadCards(r, langId) {
   cards.push({ ...post, head: [open], sub: [], jp: [], big: true, direct: false, _main: false, _tease: true });
   cards.push(post);
   st.replies.forEach(m => {
-    /* A reply names the post it answers (→). A match names nobody: the two are only shown together (×). */
+    /* The reply is shown as it is, large, with no mark before it. The line at the foot says who: a reply
+       names the post it answers (→); a match names nobody, the two are only shown together (×). */
     const reply = one(m, who(m.handle) + (!r.match && st.post.handle ? ' → @' + st.post.handle : ''));
-    const mark = r.match ? '× ' : '→ ';
     cards.push({
-      ...post, head: [mark + reply.head[0]].concat(reply.head.slice(1)), sub: [], jp: reply.jp, pre: [post._shown],
+      ...post, head: reply.head, sub: [], jp: reply.jp, pre: [post._shown],
       src: r.match ? who(st.post.handle) + ' × @' + m.handle : reply.src, url: m.url, _main: false, _both: true,
     });
   });
@@ -4618,7 +4618,7 @@ E.setMusicCredit(TRACKS[0].credit);
 /* A newer copy on the site: load it, so a copy the browser kept from before is not shown.
    version.json names the latest build of each page; it is read past the browser's cache. */
 function watchVersion(key, url) {
-  const BUILD = 'f1f27bf54991';
+  const BUILD = 'be6124d743a3';
   if (location.protocol === 'file:' || BUILD.indexOf('BUILD_ID') >= 0) return;
   /* At the start it may reload at once; later it waits while a video is being made or saved. */
   const check = first => {

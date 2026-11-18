@@ -700,11 +700,11 @@ function threadCards(r, langId) {
   cards.push({ ...post, head: [open], sub: [], jp: [], big: true, direct: false, _main: false, _tease: true });
   cards.push(post);
   st.replies.forEach(m => {
-    /* A reply names the post it answers (→). A match names nobody: the two are only shown together (×). */
+    /* The reply is shown as it is, large, with no mark before it. The line at the foot says who: a reply
+       names the post it answers (→); a match names nobody, the two are only shown together (×). */
     const reply = one(m, who(m.handle) + (!r.match && st.post.handle ? ' → @' + st.post.handle : ''));
-    const mark = r.match ? '× ' : '→ ';
     cards.push({
-      ...post, head: [mark + reply.head[0]].concat(reply.head.slice(1)), sub: [], jp: reply.jp, pre: [post._shown],
+      ...post, head: reply.head, sub: [], jp: reply.jp, pre: [post._shown],
       src: r.match ? who(st.post.handle) + ' × @' + m.handle : reply.src, url: m.url, _main: false, _both: true,
     });
   });
