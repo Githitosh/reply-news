@@ -3156,6 +3156,55 @@ function genreWords(g) {
   return w ? (w[c] || w.US) : [g.q[c] || g.q.US];
 }
 const pick = list => list[Math.floor(Math.random() * list.length)];
+/* ---------- search words that change every time ----------
+   The same words are not searched twice in a row. Each search adds a different word to the base
+   (サッカー 試合 for one post, サッカー alone for the next, サッカー 選手 after that), and the words
+   used lately wait their turn. Kept in memory for this visit only. */
+const FACETS = {
+  ja: ['今日', '最近', '話題', '感想', '好き', '初めて', '思い出', '写真', 'ついに', '久しぶり', 'みんな', 'やっぱり'],
+  en: ['today', 'just', 'finally', 'love', 'first time', 'remember', 'photo', 'again', 'everyone', 'best'],
+};
+const USED_Q = new Map();
+function variantsFor(base, extra, lang, k, tag) {
+  base = String(base || '').trim();
+  const key = (tag || '') + ':' + lang + ':' + base.toLowerCase();
+  const own = (extra || []).filter(w => w && !base.toLowerCase().includes(String(w).toLowerCase()));
+  const all = [...new Set([''].concat(own, FACETS[lang] || FACETS.en))];
+  let used = USED_Q.get(key) || [];
+  let fresh = all.filter(f => !used.includes(f));
+  if (fresh.length < k) { used = used.slice(-1); fresh = all.filter(f => !used.includes(f)); }
+  /* Words that belong to the topic (from Wikipedia) and everyday words take turns. */
+  const topical = shuffle(fresh.filter(f => own.includes(f)));
+  const rest = shuffle(fresh.filter(f => !own.includes(f)));
+  const out = [];
+  while (out.length < k && (topical.length || rest.length)) {
+    if (topical.length) out.push(topical.shift());
+    if (out.length < k && rest.length) out.push(rest.shift());
+  }
+  /* Every word gets its turn before one comes back. */
+  USED_Q.set(key, used.concat(out).slice(-Math.max(k, all.length - k)));
+  return out.map(f => (base + (f ? ' ' + f : '')).trim());
+}
+/* A word from a list that was not used lately (a genre's words take turns). */
+const USED_W = new Map();
+function pickFresh(list, key) {
+  const used = USED_W.get(key) || [];
+  let pool = list.filter(w => !used.includes(w));
+  if (!pool.length) pool = list.filter(w => w !== used[used.length - 1]);
+  if (!pool.length) pool = list;
+  const w = pick(pool);
+  USED_W.set(key, used.concat(w).slice(-Math.max(1, list.length - 1)));
+  return w;
+}
+/* Searches from a list, taking turns: about half of them each time, not the ones used last time. */
+function rotate(list, key, k) {
+  const used = USED_W.get(key) || [];
+  const fresh = shuffle(list.filter(q => !used.includes(q)));
+  const out = fresh.slice(0, k);
+  if (out.length < k) out.push(...shuffle(list.filter(q => !out.includes(q))).slice(0, k - out.length));
+  USED_W.set(key, out);
+  return out;
+}
 const CHIPS = [
   { label: 'Space', line: 'Space' },
   { label: 'Politics', line: 'Politics' },
@@ -3967,16 +4016,30 @@ function pickFunny(rows, n) {
   const ranked = rows.slice().sort((a, b) => b.score - a.score || a.text.length - b.text.length);
   const out = [];
   const handles = new Set();
-  const take = allowSame => ranked.forEach(row => {
+  /* One search gives only its share, so the jokes come from many different searches. */
+  const qOf = row => row.q || row.topic || '';
+  const cap = Math.max(1, Math.ceil(n / Math.max(1, new Set(rows.map(qOf)).size)));
+  const perQ = new Map();
+  const take = (allowSame, capped) => ranked.forEach(row => {
     if (out.length >= n || out.indexOf(row) >= 0) return;
     const who = row.handle.toLowerCase();
     if (!allowSame && handles.has(who)) return;
+    if (capped && (perQ.get(qOf(row)) || 0) >= cap) return;
     handles.add(who);
+    perQ.set(qOf(row), (perQ.get(qOf(row)) || 0) + 1);
     out.push(row);
   });
-  take(false);
-  if (out.length < n) take(true);
-  return out;
+  take(false, true);
+  if (out.length < n) take(true, true);
+  if (out.length < n) take(false, false);
+  if (out.length < n) take(true, false);
+  /* Two jokes from the same search do not play one after the other. */
+  const groups = new Map();
+  out.forEach(row => { const q = qOf(row); if (!groups.has(q)) groups.set(q, []); groups.get(q).push(row); });
+  const lists = [...groups.values()];
+  const mixed = [];
+  while (lists.some(l => l.length)) lists.forEach(l => { if (l.length) mixed.push(l.shift()); });
+  return mixed;
 }
 /* Funny posts about the topics. Jokes that played before are skipped, and more searches run until enough are new. */
 async function collectJokes(topics, need, opts) {
@@ -3986,8 +4049,14 @@ async function collectJokes(topics, need, opts) {
   const past = seenSet(SEEN_JOKES);
   const now = playingKeys();
   const queries = [];
-  const addQ = q => { if (q && queries.indexOf(q) < 0) queries.push(q); };
-  topics.forEach(t => addQ(String(t).trim()));
+  const baseOf = new Map();
+  const addQ = (q, base) => { if (q && queries.indexOf(q) < 0) { queries.push(q); baseOf.set(q, base || q); } };
+  /* Each word: two different searches (サッカー 試合, サッカー), changing every time. */
+  const words = topics.map(t => String(t).trim()).filter(Boolean);
+  words.forEach(t => {
+    if (/^to:/.test(t)) addQ(t, t);
+    else variantsFor(t, [], lang, words.length <= 6 ? 2 : 1, 'joke').forEach(q => addQ(q, t));
+  });
   if (!(opts && opts.only)) (lang === 'en' ? ['news', 'today', 'trending', 'weird'] : ['ニュース', '今日', '話題', 'トレンド']).forEach(addQ);
   const build = q => `${q} ${FUNNY_Q[lang]} ${replies && !/^to:/.test(q) ? 'filter:replies ' : ''}lang:${lang}${xRange()}`;
   const headlines = (opts && opts.headlines) || [];
@@ -4003,7 +4072,8 @@ async function collectJokes(topics, need, opts) {
       /* For a free request, a joke must be about it. */
       const must = (opts && opts.must) || [];
       if (must.length && !must.some(w => (got.text + ' ' + String((st && st.text) || '')).toLowerCase().includes(w))) return;
-      got.topic = q;
+      got.topic = baseOf.get(q) || q;
+      got.q = q;
       const ks = jokeKeys(got);
       if (ks.some(k => past.has(k) || now.has(k) || keys.has(k))) return;
       ks.forEach(k => keys.add(k));
@@ -4131,7 +4201,7 @@ async function collectRomance(need, place) {
   const past = seenSet(SEEN_JOKES);
   const now = playingKeys();
   say('Searching couples on X');
-  const queries = ROMANCE_Q[lang].concat(sensitiveHidden() ? [] : FLIRT_Q[lang]);
+  const queries = rotate(ROMANCE_Q[lang], 'romance:' + lang, Math.ceil(ROMANCE_Q[lang].length / 2) + 1).concat(sensitiveHidden() ? [] : FLIRT_Q[lang]);
   const lists = await Promise.all(queries.map(q => searchX(q + ' lang:' + lang + xRange())));
   const used = new Set();
   const cands = [];
@@ -4353,6 +4423,12 @@ function termsOf(text, lang) {
 }
 /* What the request is about, from Wikipedia: the best page's title and the words its summary leans on. */
 const WIKI_STOP = /^(日本|大会|試合|開催|国際|世界|地域|一般|現在|以下|以上|最初|最後|今回|当時|自身|ほか|一つ|代表|東京都|日本国|所在|位置|存在|使用|中心|主要|最大|一部|後半|前半)$/;
+const WIKI_MEMO = new Map();
+function wikiMemo(text, lang) {
+  const key = lang + ':' + text;
+  if (!WIKI_MEMO.has(key)) WIKI_MEMO.set(key, wikiOf(text, lang));
+  return WIKI_MEMO.get(key);
+}
 async function wikiOf(text, lang) {
   const host = lang === 'en' ? 'en' : 'ja';
   try {
@@ -4407,7 +4483,7 @@ async function askThreads(posts, need, lang, seen, sameText) {
     if (cards >= need) return;
     const fresh = lists[i].filter(m => !sameText.has(m.tk));
     if (!fresh.length) return;
-    const replies = fresh.slice(0, Math.min(3, need - cards - 1));
+    const replies = fresh.slice(0, Math.min(2, need - cards - 1));
     if (!replies.length) return;
     replies.forEach(m => sameText.add(m.tk));
     threads.push({ post, replies, spare: fresh.slice(replies.length) });
@@ -4469,27 +4545,44 @@ async function collectAsk(raw, need) {
   say('Searching ' + label);
   const terms = termsOf(text, lang);
   const query = terms.join(' ') || text;
-  const [found, answers] = await Promise.all([
-    searchX(`${query} -filter:replies -filter:retweets lang:${lang}${xRange()}`),
-    searchX(`${query} filter:replies lang:${lang}${xRange()}`),
+  /* Several searches with a different extra word each (渋谷 夜景, 渋谷, 渋谷 今日 …), changing every time;
+     the posts are taken one from each search in turn. */
+  const wiki = await wikiMemo(text, lang);
+  const variants = variantsFor(query, wiki.words, lang, Math.max(2, Math.min(5, Math.ceil(need / 3))), 'post');
+  const [lists, answers] = await Promise.all([
+    Promise.all(variants.map(q => searchX(`${q} -filter:replies -filter:retweets lang:${lang}${xRange()}`))),
+    searchX(`${variants[0]} filter:replies lang:${lang}${xRange()}`),
   ]);
   const low = t => String(t || '').toLowerCase();
   const words = terms.map(low);
   const authors = new Set();
-  const posts = [];
-  found.forEach(st => {
-    const post = asPost(st);
-    const n = charLen(post.text);
-    if (!post.handle || !post.id || authors.has(low(post.handle)) || !askOk(st, post.text) || st.replies === 0) return;
-    if (n < 4 || n > (lang === 'en' ? 280 : 140) || jokeKeys({ text: post.text, link: post.url }).some(seen)) return;
-    const body = low(String(st.text || '') + ' ' + post.text);
-    const hits = words.filter(w => body.includes(w)).length;
-    if (words.length && !hits) return;
-    authors.add(low(post.handle));
-    const many = typeof st.replies === 'number' ? Math.min(4, Math.log2(1 + st.replies)) : 1;
-    posts.push({ ...post, score: (hits === words.length ? 5 : hits) + many + (n <= 70 ? 2 : 0) + Math.random() * 2 });
+  const perList = lists.map(found => {
+    const mine = [];
+    found.forEach(st => {
+      const post = asPost(st);
+      const n = charLen(post.text);
+      if (!post.handle || !post.id || !askOk(st, post.text) || st.replies === 0) return;
+      if (n < 4 || n > (lang === 'en' ? 280 : 140) || jokeKeys({ text: post.text, link: post.url }).some(seen)) return;
+      const body = low(String(st.text || '') + ' ' + post.text);
+      const hits = words.filter(w => body.includes(w)).length;
+      if (words.length && !hits) return;
+      const many = typeof st.replies === 'number' ? Math.min(4, Math.log2(1 + st.replies)) : 1;
+      mine.push({ ...post, score: (hits === words.length ? 5 : hits) + many + (n <= 70 ? 2 : 0) + Math.random() * 2 });
+    });
+    return mine.sort((a, b) => b.score - a.score);
   });
-  posts.sort((a, b) => b.score - a.score);
+  const posts = [];
+  while (posts.length < 12 && perList.some(l => l.length)) {
+    perList.forEach(l => {
+      while (l.length) {
+        const p = l.shift();
+        if (posts.some(x => x.id === p.id) || authors.has(low(p.handle))) continue;
+        authors.add(low(p.handle));
+        posts.push(p);
+        break;
+      }
+    });
+  }
   const threads = await askThreads(posts.slice(0, Math.min(12, Math.ceil(need / 2) + 3)), need, lang, seen, sameText);
   /* Not enough: replies that themselves speak of the words, each shown under the post it answers. */
   let cards = threads.reduce((k, t) => k + 1 + t.replies.length, 0);
@@ -4763,7 +4856,7 @@ async function collect() {
     /* Genres give a word drawn at random from their own list; no news ranking is used. */
     topicSlots.filter(s => !s.free).forEach(s => {
       const g = s.genre && GENRES.find(x => x.id === s.genre);
-      const w = s.who ? 'to:' + s.who : g ? pick(genreWords(g)) : (s.topic || s.q || s.label);
+      const w = s.who ? 'to:' + s.who : g ? pickFresh(genreWords(g), 'g:' + g.id) : (s.topic || s.q || s.label);
       topicWords.push(w);
       if (g) topicPlace[w] = g.place;
     });
@@ -4772,7 +4865,7 @@ async function collect() {
     if (topicWords.length < 3 && !onlySpecial && !freeSlots.length) {
       /* An empty lineup: every genre has the same chance; each gives one word drawn at random. */
       shuffle(genreChoices().filter(g => g.on && GENRE_WORDS[g.id])).slice(0, 6).forEach(g => {
-        const w = pick(genreWords(g));
+        const w = pickFresh(genreWords(g), 'g:' + g.id);
         topicWords.push(w);
         topicPlace[w] = g.place;
       });
@@ -5928,7 +6021,7 @@ E.setMusicCredit(TRACKS[0].credit);
 /* A newer copy on the site: load it, so a copy the browser kept from before is not shown.
    version.json names the latest build of each page; it is read past the browser's cache. */
 function watchVersion(key, url) {
-  const BUILD = '77785bee59d6';
+  const BUILD = '02777a5c776d';
   if (location.protocol === 'file:' || BUILD.indexOf('BUILD_ID') >= 0) return;
   /* At the start it may reload at once; later it waits while a video is being made or saved. */
   const check = first => {

@@ -35,6 +35,12 @@ its own rules:
   world, newest first, and Wikipedia's current events, written by volunteers.
 - Every genre gets the same share, one site gives at most two reports (more only
   when few sites are chosen), and the reports are drawn at random.
+- Search words change every time, so the same words are never searched twice in a
+  row: each search adds a different word to the base (サッカー 試合 for one post,
+  サッカー alone for the next, サッカー 今日 after that; topic words come from
+  Wikipedia), and one post is taken from each search in turn. A genre's words, the
+  extra words and the couples' searches all take turns before one comes back, and
+  one search gives at most its share of the jokes.
 - Nothing that has played is stored: only what played in this visit is skipped.
 
 Google Fonts (the typefaces) and Google's translation service (only when a post
