@@ -3382,9 +3382,13 @@ function talkPool() {
 function pickAuto(skip) {
   const pool = talkPool();
   if (!pool.length) return [];
-  let fresh = pool.filter(t => !SHOWN.has(t.id) && !(skip && skip.has(t.id)));
-  if (!fresh.length) { pool.forEach(t => SHOWN.delete(t.id)); fresh = pool.filter(t => !(skip && skip.has(t.id))); }
-  if (!fresh.length) fresh = pool;
+  const mix = list => list.map(x => [Math.random(), x]).sort((a, b) => a[0] - b[0]).map(x => x[1]);
+  const free = pool.filter(t => !(skip && skip.has(t.id)));
+  /* The ones not played yet come first; when they do not fill the video, played ones follow, so a
+     video always has its sets. Once all were played, the round starts again. */
+  let fresh = free.filter(t => !SHOWN.has(t.id));
+  if (!fresh.length) { pool.forEach(t => SHOWN.delete(t.id)); fresh = free; }
+  const order = mix(fresh).concat(mix(free.filter(t => !fresh.includes(t))), mix(pool.filter(t => !free.includes(t))));
   const langId = uiLang();
   /* As many sets as chosen, the pasted talks among them; never more cards than a video holds. */
   const room = total() - TALKS.length;
@@ -3392,7 +3396,7 @@ function pickAuto(skip) {
   const on = matchOn();
   const taken = new Set();
   let n = TALKS.reduce((k, t) => k + talkCards(t, langId).length, 0);
-  for (const x of fresh.map(x => [Math.random(), x]).sort((a, b) => a[0] - b[0]).map(x => x[1])) {
+  for (const x of order) {
     if (out.length >= room) break;
     const t = on ? matchFor(x.post, taken) : x;
     if (!t) continue;
@@ -4547,7 +4551,7 @@ E.setMusicCredit(TRACKS[0].credit);
 /* A newer copy on the site: load it, so a copy the browser kept from before is not shown.
    version.json names the latest build of each page; it is read past the browser's cache. */
 function watchVersion(key, url) {
-  const BUILD = 'fdb32dee861b';
+  const BUILD = 'd403561f378d';
   if (location.protocol === 'file:' || BUILD.indexOf('BUILD_ID') >= 0) return;
   /* At the start it may reload at once; later it waits while a video is being made or saved. */
   const check = first => {
