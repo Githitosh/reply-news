@@ -186,7 +186,7 @@ pre#sources { white-space: pre-wrap; font: 12px/1.5 ui-monospace,Menlo,monospace
   </div>
   <p id="caption" class="caption">Opening Reply News…</p>
   <div id="modeChips" class="music mode"><button type="button" data-mode="match">Matching</button><button type="button" data-mode="reply">Replies</button></div>
-  <p id="matchNote" class="note match-note" hidden>Two short posts by two people are put together at random. They were not written to each other.</p>
+  <p id="matchNote" class="note match-note" hidden>Two people's posts about love, put together at random: a confession that lands, or a reply that plays along with a hint. They were not written to each other.</p>
   <p class="music-label" id="genreLabel">Genres</p>
   <div id="genreChips" class="music"></div>
   <form id="ask" class="ask" autocomplete="off">
@@ -485,14 +485,16 @@ let QUERY = '';
 let feedAt = 0;
 const SHOWN = new Set();
 const goodTalks = list => (Array.isArray(list) ? list : []).filter(t => t && t.id && t.post && t.post.text && Array.isArray(t.replies) && t.replies.some(r => r && r.text));
+/* A pair counts when it reads as romance: the reply accepts (land) or plays along with a hint (hint),
+   or it is a short couple exchange (好き / 私も). Food jokes and unrelated lines are left out. */
+const romancePair = p => p && (p.kind === 'land' || p.kind === 'hint' || (p.kind === 'echo' && /好き|会い|付き合|デート|告白|寂|幸せ|ただいま|おかえり|おやす/.test(p.word || '')));
 const goodMatch = d => {
   const says = (d && Array.isArray(d.says) ? d.says : []).filter(s => s && s.id && s.handle && s.text && s.url);
-  const byId = new Map(says.map(s => [s.id, s]));
-  const pairs = (d && Array.isArray(d.pairs) ? d.pairs : []).filter(p => {
-    const o = byId.get(p.a), r = byId.get(p.b);
-    return o && r && o.id !== r.id && o.handle.toLowerCase() !== r.handle.toLowerCase();
-  });
   const byId = Object.fromEntries(says.map(s => [s.id, s]));
+  const pairs = (d && Array.isArray(d.pairs) ? d.pairs : []).filter(p => {
+    const o = byId[p.a], r = byId[p.b];
+    return romancePair(p) && o && r && o.id !== r.id && o.handle.toLowerCase() !== r.handle.toLowerCase();
+  });
   return {
     says, byId, pairs,
     posts: (d && Array.isArray(d.posts) ? d.posts : []).filter(p => p && p.id && p.handle && p.text && p.url && p.genre === 'romance'),
@@ -529,16 +531,16 @@ async function loadFeed() {
   const talks = a ? goodTalks(a.talks) : [];
   if (a && (talks.length || !FEED.length)) { FEED = talks; store.set('feed.' + lang, JSON.stringify(talks)); got = true; }
   const m = goodMatch(b);
-  if (m.pairs.length || (m.posts.length && m.lines.length)) { MATCH = m; store.set('match.' + lang, JSON.stringify(m)); got = true; }
+  if (m.pairs.length) { MATCH = m; store.set('match.' + lang, JSON.stringify(m)); got = true; }
   return got;
 }
 /* ---------- Matching News ---------- */
-/* Two short things two people said, put together at random (pairs in the API). Echo pairs (好きだよ / 私も),
-   kin pairs (ディズニー / USJ), and mismatches with nothing in common. Older data falls back to a post plus
-   a line that fits its words. Every card says the match is random; both people's own posts are linked. */
+/* Romance only. A pair from the API is either a confession that the other person accepts (恋愛成立)
+   or a hint that the reply plays along with (匂わせに乗る). The two were not written to each other.
+   Every card says the match is random, and both people's own posts are linked. */
 const mode = () => (store.get('mode', 'match') === 'reply' ? 'reply' : 'match');
 const matchPairs = () => MATCH.pairs.length > 0;
-const matchOn = () => mode() === 'match' && (matchPairs() || (MATCH.posts.length > 0 && MATCH.lines.length > 0));
+const matchOn = () => mode() === 'match' && matchPairs();
 /* What a post says, as words: runs of kanji, of katakana, of Latin letters, of digits. */
 const wordRuns = text => (String(text || '').match(/[一-龯々〆ヶ]+|[ァ-ヴー]{2,}|[A-Za-zＡ-Ｚａ-ｚ]{2,}|[0-9０-９]+/g) || []).map(w => w.toLowerCase());
 /* A line fits a post when the two are different people, the line was not written to this post or to its
@@ -578,7 +580,7 @@ function paintMode() {
   if ($('home').dataset.name !== name) { $('home').dataset.name = name; $('home').textContent = name; }
   document.title = LOOK.brand[uiLang()] || name;
   document.querySelectorAll('#modeChips button').forEach(b => b.classList.toggle('on', b.dataset.mode === mode()));
-  $('modeChips').hidden = !(matchPairs() || (MATCH.posts.length && MATCH.lines.length));
+  $('modeChips').hidden = !matchPairs();
   $('matchNote').hidden = !on;
   $('sendRow').hidden = !on;
   document.querySelector('.linkbox').classList.toggle('two', on);
@@ -598,12 +600,8 @@ function matchSays(t, q) {
   return String(q || '').toLowerCase().split(/\s+/).filter(Boolean).every(w => hay.includes(w));
 }
 function talkPool() {
-  const all = matchOn()
-    ? (matchPairs()
-      ? MATCH.pairs.map(pairTalk).filter(Boolean)
-      : MATCH.posts.map(p => ({ id: 'm' + p.id, genre: p.genre, word: p.word || '', post: p })))
-    : FEED;
-  if (QUERY) return all.filter(t => (matchPairs() ? matchSays : says)(t, QUERY));
+  const all = matchOn() ? MATCH.pairs.map(pairTalk).filter(Boolean) : FEED;
+  if (QUERY) return all.filter(t => (matchOn() ? matchSays : says)(t, QUERY));
   if (matchOn()) return all;
   const picked = pickedGenres().filter(id => all.some(t => t.genre === id));
   return all.filter(t => !picked.length || picked.includes(t.genre));
@@ -629,8 +627,7 @@ function pickAuto(skip) {
   let n = TALKS.reduce((k, t) => k + talkCards(t, langId).length, 0);
   for (const x of order) {
     if (out.length >= room) break;
-    let t = x;
-    if (on && !matchPairs()) { t = matchFor(x.post, taken); if (!t) continue; }
+    const t = x;
     const c = talkCards(t, langId).length;
     if (n + c > MAX_ITEMS) continue;
     out.push(t);
@@ -1782,7 +1779,7 @@ function initUI() {
     $('askText').blur();
     if (!v) return;
     if (!(matchOn()
-      ? (matchPairs() ? MATCH.pairs.some(p => { const t = pairTalk(p); return t && matchSays(t, v); }) : MATCH.posts.some(p => says({ post: p, word: p.word }, v)))
+      ? MATCH.pairs.some(p => { const t = pairTalk(p); return t && matchSays(t, v); })
       : FEED.some(t => says(t, v)))) { say("No talks say that in today's data.", true); return; }
     QUERY = v;
     $('askText').value = '';

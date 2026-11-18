@@ -26,15 +26,16 @@ service. The fonts (Noto Serif JP, Noto Sans JP, Tinos; SIL Open Font License) a
 
 ## Matching News
 
-The page opens in **Matching**: two short posts by two different people are shown together at random,
-the way a matching app puts two people together (for example 好きだよ with 私も, or ディズニーシーで迷子 with 今USJ).
+The page opens in **Matching**: two people's posts about love, shown together at random.
+A pair is either a confession the other side accepts (好きだよ / わたしも) or a hint that the reply
+plays along with (彼氏が迎えに来てくれた / それもう付き合ってるじゃん).
 
 - Genre buttons show in Replies only.
-- The data is `v1/match-<lang>.json` in githito.xapi: about 2000 short sayings gathered with random
-  searches (fxtwitter for discovery only; the words saved come from X's official embed API), filtered in
-  three stages, then combined into `pairs` (echo, kin, mismatch, random, and similar rules in
-  `rules.mjs`). The page draws from those pairs; it does not search or match at play time.
-- The two were not written to each other, and are never the same person.
+- The data is `v1/match-<lang>.json` in githito.xapi. One run gathers short sayings with words of love
+  (fxtwitter only to find them; the words saved come from X's official embed API), filters them, and
+  writes `pairs` of kind `land` or `hint`. The page draws those pairs and skips the rest.
+- The two were not written to each other, and are never the same person. The same run also collects
+  ordinary talks for Replies.
 - Every card that shows a post or a reply says ランダムマッチング (Random match), the last card of a match names both people
   (`X @a × @b`), and under the video there are two links, one to each person's own post.
 - The **Replies** button goes back to Reply News: the replies really written to each post.
