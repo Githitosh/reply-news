@@ -10,9 +10,10 @@ const JA = {
   // Finding posts on X and pasting them
   'Find on X': 'Xで探す', 'Words or @account': '言葉・@アカウント', 'Add a talk': '会話を追加', 'In the video': '動画に入っている会話（押すと消えます）',
   'Post': '投稿', 'Reply': 'リプライ', 'Paste': '貼り付け', 'Add to the video': '動画に追加',
-  'Paste the post here': 'ここに投稿を貼り付け', 'Paste the reply here': 'ここにリプライを貼り付け',
-  'Press a genre to open the search on X. Copy a post and a reply there, then paste them here.': 'ジャンルを押すと、Xの検索が開きます。そこで投稿とリプライをコピーして、ここに貼り付けてください。',
-  'Opened X. Copy a post and a reply there, then paste them here.': 'Xを開きました。投稿とリプライをコピーして、ここに貼り付けてください。',
+  'Paste the post or its link': '投稿のリンクか、投稿の文を貼り付け', 'Paste the reply or its link': 'リプライのリンクか、リプライの文を貼り付け',
+  'Reading from X…': 'Xから読み込んでいます…', 'Could not read the post from its link. Paste its words instead.': 'リンクから投稿を読めませんでした。投稿の文を貼り付けてください。',
+  'Press a genre to open the search on X. Copy the links of a post and a reply there, then paste them here.': 'ジャンルを押すと、Xの検索が開きます。そこで投稿とリプライのリンクをコピーして、ここに貼り付けてください。',
+  'Opened X. Copy the links of a post and a reply there, then paste them here.': 'Xを開きました。投稿とリプライのリンクをコピーして、ここに貼り付けてください。',
   'Paste the post first.': '先に投稿を貼り付けてください。', 'Removed.': '消しました。',
   'Could not read what was copied. Press and hold the box and choose Paste.': 'コピーした内容を読めませんでした。入力欄を長押しして「貼り付け」を選んでください。',
   // Header and buttons

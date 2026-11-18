@@ -6,10 +6,11 @@ A short video of a post on X and a reply to it, made in the browser from what yo
 Each talk plays as four cards: the post's first word, the whole post, the whole reply,
 then the post and the reply together. Download saves the video as an MP4.
 
-## No outside services
+## What the page connects to
 
-The page connects to no other company's service: no search API, no news API, no translation, no
-font service. It only loads its own files (this repository, served by GitHub Pages). The fonts
+Its own files (this repository, served by GitHub Pages), and one thing outside: X's official embed
+API (`publish.x.com/oembed`, no key), only when a post's link is pasted, to read that post's words.
+No third-party search API, no news API, no translation, no font service. The fonts
 (Noto Serif JP, Noto Sans JP, Tinos; SIL Open Font License) are in `assets/fonts/`.
 
 ## Its own data service (`api/`)
@@ -29,12 +30,12 @@ Items in Settings sets how many cards they fill.
 1. Press a genre (or type words or an @account and press Enter). X's own search opens in a
    new tab, for one of the genre's words, drawn at random each time. Only posts that someone
    replied to are searched (`min_replies:1 -filter:replies`).
-2. Copy a post and a reply there.
+2. Copy the link of a post and the link of a reply there (Share, Copy link). Their words work too.
 3. Paste them into Post and Reply (the Paste buttons read what was copied) and press
-   Add to the video. A blank line between replies adds more than one.
+   Add to the video. More than one reply: one link on each line, or a blank line between their words.
 
-A post's address or an `@name` line in the pasted text gives the writer's name and the
-link shown in the video. The talks are kept in the browser only; the buttons under
+A pasted link gives the post's words, the writer's name and the link shown in the video. In pasted
+words, a post's address or an `@name` line gives the name and the link. The talks are kept in the browser only; the buttons under
 "In the video" remove them. A video holds up to 40 cards.
 
 Settings: layout, color, story length, wallpaper, music and language.

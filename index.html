@@ -178,12 +178,12 @@ pre#sources { white-space: pre-wrap; font: 12px/1.5 ui-monospace,Menlo,monospace
   <div class="compose">
     <label for="postIn">Post</label>
     <div class="paste-row">
-      <textarea id="postIn" rows="3" spellcheck="false" placeholder="Paste the post here"></textarea>
+      <textarea id="postIn" rows="3" spellcheck="false" placeholder="Paste the post or its link"></textarea>
       <button type="button" id="pastePost">Paste</button>
     </div>
     <label for="replyIn">Reply</label>
     <div class="paste-row">
-      <textarea id="replyIn" rows="2" spellcheck="false" placeholder="Paste the reply here"></textarea>
+      <textarea id="replyIn" rows="2" spellcheck="false" placeholder="Paste the reply or its link"></textarea>
       <button type="button" id="pasteReply">Paste</button>
     </div>
     <button type="button" id="addTalk" class="primary">Add to the video</button>
@@ -2150,9 +2150,10 @@ const JA = {
   // Finding posts on X and pasting them
   'Find on X': 'Xで探す', 'Words or @account': '言葉・@アカウント', 'Add a talk': '会話を追加', 'In the video': '動画に入っている会話（押すと消えます）',
   'Post': '投稿', 'Reply': 'リプライ', 'Paste': '貼り付け', 'Add to the video': '動画に追加',
-  'Paste the post here': 'ここに投稿を貼り付け', 'Paste the reply here': 'ここにリプライを貼り付け',
-  'Press a genre to open the search on X. Copy a post and a reply there, then paste them here.': 'ジャンルを押すと、Xの検索が開きます。そこで投稿とリプライをコピーして、ここに貼り付けてください。',
-  'Opened X. Copy a post and a reply there, then paste them here.': 'Xを開きました。投稿とリプライをコピーして、ここに貼り付けてください。',
+  'Paste the post or its link': '投稿のリンクか、投稿の文を貼り付け', 'Paste the reply or its link': 'リプライのリンクか、リプライの文を貼り付け',
+  'Reading from X…': 'Xから読み込んでいます…', 'Could not read the post from its link. Paste its words instead.': 'リンクから投稿を読めませんでした。投稿の文を貼り付けてください。',
+  'Press a genre to open the search on X. Copy the links of a post and a reply there, then paste them here.': 'ジャンルを押すと、Xの検索が開きます。そこで投稿とリプライのリンクをコピーして、ここに貼り付けてください。',
+  'Opened X. Copy the links of a post and a reply there, then paste them here.': 'Xを開きました。投稿とリプライのリンクをコピーして、ここに貼り付けてください。',
   'Paste the post first.': '先に投稿を貼り付けてください。', 'Removed.': '消しました。',
   'Could not read what was copied. Press and hold the box and choose Paste.': 'コピーした内容を読めませんでした。入力欄を長押しして「貼り付け」を選んでください。',
   // Header and buttons
@@ -3183,9 +3184,9 @@ async function loadAssets() {
 }
 
 /* ---------- the talks: what was pasted ---------- */
-/* This page fetches nothing from outside: no search service, no news service, no translation.
-   A genre opens X's own search in a new tab. The post and the reply are copied there and pasted here,
-   and the video is made from them. They are kept in this browser only. */
+/* This page uses no other company's service: no search service, no news service, no translation.
+   A genre opens X's own search in a new tab. A post and a reply are copied there (their links, or their
+   words) and pasted here, and the video is made from them. They are kept in this browser only. */
 const charLen = t => [...String(t || '')].length;
 function uiLang() { const el = $('lang'); return el && el.value === 'en' ? 'en' : 'ja'; }
 let TALKS = [];
@@ -3219,12 +3220,49 @@ function readPaste(raw) {
   return { text, handle, url };
 }
 /* A talk from the data service knows the word it was found by: that word is its first card and its corner. */
+/* ---------- a post's link: X's own embed API ---------- */
+/* When a box holds a post's link and nothing else, the post's words are read from X's official embed
+   API (publish.x.com/oembed). X publishes it for showing posts on other sites; it needs no key and
+   answers this site directly. It is asked only then, for that one post. It cannot search. */
+const X_LINK = /https?:\/\/(?:mobile\.|www\.)?(?:x|twitter)\.com\/([A-Za-z0-9_]{1,15})\/status(?:es)?\/(\d+)/i;
+function onlyLink(raw) {
+  const t = String(raw || '').trim();
+  const m = t.match(X_LINK);
+  if (!m || /^(?:i|home|search|explore)$/i.test(m[1])) return null;
+  const rest = t.replace(/https?:\/\/\S+/g, ' ').replace(/\s+/g, ' ').trim();
+  return charLen(rest) <= 2 ? { handle: m[1], id: m[2], url: 'https://x.com/' + m[1] + '/status/' + m[2] } : null;
+}
+async function readLink(link) {
+  const fail = () => new Error('Could not read the post from its link. Paste its words instead.');
+  let data = null;
+  try {
+    const res = await fetch('https://publish.x.com/oembed?omit_script=1&dnt=true&url=' + encodeURIComponent(link.url));
+    if (res.ok) data = await res.json();
+  } catch (e) { console.warn(e); }
+  if (!data || !data.html) throw fail();
+  /* The answer is the post as a quote: its words in the first paragraph. Read as text, never run. */
+  const p = new DOMParser().parseFromString(String(data.html), 'text/html').querySelector('blockquote p');
+  if (!p) throw fail();
+  p.querySelectorAll('br').forEach(b => b.replaceWith('\n'));
+  p.querySelectorAll('a').forEach(a => { if (/^(?:https?:\/\/|pic\.(?:twitter|x)\.com\/)|^[\w-]+(?:\.[\w-]+)+\//i.test(a.textContent || '')) a.remove(); });
+  const handle = (String(data.author_url || '').match(/(?:x|twitter)\.com\/([A-Za-z0-9_]{1,15})/i) || [])[1] || link.handle;
+  const text = readPaste(p.textContent).text;
+  if (!text) throw fail();
+  return { text, handle, url: 'https://x.com/' + handle + '/status/' + link.id };
+}
+/* A box: a link alone is read from X; anything else is the words themselves. */
+function readBox(raw) { const link = onlyLink(raw); return link ? readLink(link) : Promise.resolve(readPaste(raw)); }
 function talkCards(t, langId) { return threadCards({ thread: true, story: { post: t.post, replies: t.replies }, hook: t.word || '', corner: t.word || '' }, langId); }
 /* A new talk goes first, so the video starts with it. When the video is full, the oldest talk leaves. */
-function addTalk(postRaw, replyRaw) {
-  const post = readPaste(postRaw);
+async function addTalk(postRaw, replyRaw) {
+  const post = await readBox(postRaw);
   if (!post.text) return false;
-  const replies = String(replyRaw || '').replace(/\r/g, '').split(/\n[ \t]*\n/).map(readPaste).filter(r => r.text).slice(0, 4);
+  /* Replies: a blank line between two, or one link on each line. */
+  const parts = String(replyRaw || '').replace(/\r/g, '').split(/\n[ \t]*\n/).flatMap(part => {
+    const lines = part.split('\n').map(l => l.trim()).filter(Boolean);
+    return lines.length > 1 && lines.every(l => onlyLink(l)) ? lines : [part];
+  });
+  const replies = (await Promise.all(parts.map(readBox))).filter(r => r.text).slice(0, 4);
   TALKS.unshift({ post, replies });
   const langId = uiLang();
   while (TALKS.length > 1 && TALKS.reduce((k, t) => k + talkCards(t, langId).length, 0) > MAX_ITEMS) TALKS.pop();
@@ -3334,7 +3372,7 @@ function askUrl(v) {
 }
 function openOnX(url) {
   window.open(url, '_blank', 'noopener');
-  say('Opened X. Copy a post and a reply there, then paste them here.');
+  say('Opened X. Copy the links of a post and a reply there, then paste them here.');
 }
 
 const HOOK_SKIP = /^(?:今日|昨日|明日|最近|今夜|今朝|本日|今年|去年|来年|今週|先週|来週|自分|みんな|皆さん|皆様|さっき|なんか|ちょっと|やっぱり|ところで|そういえば|ちなみに|とりあえず|ほんとに|本当に|それで|だから|しかし|ただ|まじで|マジで|おはよう|こんにちは|こんばんは)/;
@@ -3383,7 +3421,7 @@ function threadCards(r, langId) {
     const en = cjk ? (m._en || '') : m.text;
     const ja = cjk ? m.text : (m._ja || '');
     const card = storyFrom({ headline: m.text, link: m.url, source: m.handle, x: true, cat: 'REPLY' }, en || m.text, ja, langId);
-    const shown = langId !== 'en' && CJK.test(ja || en) ? (ja || en) : (en || m.text);
+    const shown = (langId !== 'en' && CJK.test(ja || en) ? (ja || en) : (en || m.text)).replace(/\s+/g, ' ').trim();
     const corner = r.corner || (r.travel ? (langId !== 'en' && CJK.test(shown) ? '観光' : 'TRAVEL') : card.topic);
     return { ...card, topic: corner, cat: r.travel ? 'TRAVEL' : 'REPLY', src, url: m.url, key: r.keys, _main: true, _shown: shown };
   };
@@ -3695,7 +3733,7 @@ async function rebuild(autoplay) {
     $('seek').value = '0';
     $('storyLink').hidden = true;
     resetDownload();
-    say('Press a genre to open the search on X. Copy a post and a reply there, then paste them here.');
+    say('Press a genre to open the search on X. Copy the links of a post and a reply there, then paste them here.');
     return;
   }
   try { await setScript(script, autoplay !== false); }
@@ -4355,9 +4393,18 @@ function initUI() {
   };
   $('pastePost').onclick = () => pasteInto($('postIn'));
   $('pasteReply').onclick = () => pasteInto($('replyIn'));
-  $('addTalk').onclick = () => {
-    if (S.busy) return;
-    if (!addTalk($('postIn').value, $('replyIn').value)) { $('postIn').focus(); say('Paste the post first.', true); return; }
+  $('addTalk').onclick = async () => {
+    if (S.busy || $('addTalk').disabled) return;
+    const post = $('postIn').value;
+    const reply = $('replyIn').value;
+    const links = [post].concat(reply.split('\n')).some(l => onlyLink(l));
+    $('addTalk').disabled = true;
+    if (links) say('Reading from X…');
+    let ok = false;
+    try { ok = await addTalk(post, reply); }
+    catch (e) { console.warn(e); say(e.message || String(e), true); $('addTalk').disabled = false; return; }
+    $('addTalk').disabled = false;
+    if (!ok) { $('postIn').focus(); say('Paste the post first.', true); return; }
     $('postIn').value = '';
     $('replyIn').value = '';
     paintTalks();
@@ -4402,7 +4449,7 @@ E.setMusicCredit(TRACKS[0].credit);
 /* A newer copy on the site: load it, so a copy the browser kept from before is not shown.
    version.json names the latest build of each page; it is read past the browser's cache. */
 function watchVersion(key, url) {
-  const BUILD = '750dedff1ff0';
+  const BUILD = 'cca2e27096b1';
   if (location.protocol === 'file:' || BUILD.indexOf('BUILD_ID') >= 0) return;
   /* At the start it may reload at once; later it waits while a video is being made or saved. */
   const check = first => {

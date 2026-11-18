@@ -28,8 +28,8 @@
 **X公式APIの鍵（Bearer Token）が1つ必要です。** これが無いと、プログラムは何も集めず、ファイルも変えません。
 
 1. X の開発者向けページ（https://developer.x.com/ ）でアプリを作り、Bearer Token を発行します。
-   検索（recent search）が使えるプランが必要です。料金と読める件数はXが決めていて変わるので、
-   申し込む前にXのページで確認してください。
+   鍵を発行できるのはXだけで、Xのアカウントでの申し込みが必要です。料金は、読んだ投稿の数に応じて払う
+   方式（従量課金）が標準とされています。金額はXが決めていて変わるので、申し込む前にXのページで確認してください。
 2. GitHub のこのリポジトリで、Settings → Secrets and variables → Actions → New repository secret を開き、
    名前を `X_BEARER_TOKEN`、値を発行した鍵にして保存します。鍵はファイルに書かないでください。
 3. 定期実行を有効にします。このフォルダの `collect-talks.workflow.yml` を、リポジトリの
